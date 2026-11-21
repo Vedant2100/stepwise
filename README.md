@@ -1,6 +1,6 @@
 # Stepwise
 
-An agent that picks the next thing you should practice from a technical paper, and the form it should take.
+Give it an objective. It works out what kind of learning that takes and spawns the environment that fits: explain-back, step workspace, code sandbox or retrieval drill. Then it adapts as you go.
 
 See [THESIS.md](THESIS.md) for the hypothesis, scope and evaluation plan.
 
