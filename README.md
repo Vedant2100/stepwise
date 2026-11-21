@@ -1,4 +1,4 @@
-# Instinct
+# Stepwise
 
 An agent that picks the next thing you should practice from a technical paper, and the form it should take.
 

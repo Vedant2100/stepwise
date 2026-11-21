@@ -1,8 +1,8 @@
-# Instinct — Thesis (v0)
+# Stepwise — Thesis (v0)
 
 ## One line
 
-Given a technical source and a goal, Instinct decides **what to practice next and in which form**, and builds that small practice space from the source alone.
+Given a technical source and a goal, Stepwise decides **what to practice next and in which form**, and builds that small practice space from the source alone.
 
 ## The problem
 
@@ -45,7 +45,7 @@ Deliberately small.
 
 ## Evaluation
 
-- **Conditions:** (A) LLM chat over the paper, (B) fixed generated materials (summary + quiz), (C) Instinct.
+- **Conditions:** (A) LLM chat over the paper, (B) fixed generated materials (summary + quiz), (C) Stepwise.
 - **Material:** 2–3 papers, with each participant given a different one per condition (within-subjects, counterbalanced).
 - **Participants:** about 6–12 people (classmates). Small, and that will be stated plainly.
 - **Measures, all unassisted:**
