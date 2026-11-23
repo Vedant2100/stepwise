@@ -29,5 +29,6 @@ function devApi(env) {
 export default defineConfig(({ mode }) => ({
   plugins: [react(), tailwindcss(), devApi(loadEnv(mode, process.cwd(), ''))],
   worker: { format: 'es' },
+  optimizeDeps: { exclude: ['pyodide'] },
   test: { environment: 'node' },
 }))
