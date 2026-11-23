@@ -153,3 +153,6 @@ textarea:focus, input:focus, select:focus, button:focus-visible { outline: 3px s
 .flash .back { margin-top: 14px; padding-top: 14px; border-top: 1.5px dashed var(--line); font-weight: 800; background: linear-gradient(transparent 60%, var(--hl) 60%); color: inherit; display: inline-block; }
 .btn .kbd { color: inherit; border-color: currentColor; opacity: 0.7; }
 .sim { width: 100%; min-height: 380px; border: 1.5px solid var(--line); border-radius: 10px; background: var(--paper); }
+.steps li b.good { color: var(--good); font-size: 16px; }
+.steps li b.bad { color: var(--bad); font-size: 16px; }
+.flash .back { background: var(--hl); color: #141414; padding: 0 8px; border-radius: 4px; }

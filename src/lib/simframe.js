@@ -1,7 +1,7 @@
 // Builds the sandboxed page for a simulation. The model supplies only `compute`; our harness draws sliders and bars.
 // The iframe gets sandbox="allow-scripts" (no same-origin: no access to Stepwise's storage or cookies)
 // and this CSP blocks all network requests.
-const CSP = "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'"
+const CSP = "default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval'; style-src 'unsafe-inline'"
 
 export function simPage(sim, dark) {
   const config = JSON.stringify({ params: sim.params, compute: sim.compute, dark }).replace(/</g, '\\u003c')

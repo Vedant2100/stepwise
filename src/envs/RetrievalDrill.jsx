@@ -72,7 +72,7 @@ export default function DrillWorkspace({ exercise, onDone, active }) {
               <div className="row" style={{ margin: 0 }}>
                 {input && <span className="why">You said: “{input}”</span>}
                 <button className="btn ghost" onClick={() => mark(false)}>Missed it <span className="kbd">1</span></button>
-                <button className="btn" onClick={() => mark(true)} autoFocus>I had it <span className="kbd">2</span></button>
+                <button className="btn" onClick={() => mark(true)}>I had it <span className="kbd">2</span></button>
               </div>
             )}
           </>
