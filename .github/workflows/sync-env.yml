@@ -1,0 +1,26 @@
+name: Sync secrets to Vercel
+
+# Copies the model secrets from GitHub into the Vercel project. Run it by hand after changing a secret,
+# then redeploy (any push to main does that).
+on: workflow_dispatch
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      SCOPE: vedants-projects-e4341d10
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      STEPWISE_ACCESS_CODE: ${{ secrets.STEPWISE_ACCESS_CODE }}
+      STEPWISE_MODEL: ${{ secrets.STEPWISE_MODEL }}
+    steps:
+      - run: npm install --global vercel@latest
+      - run: vercel link --yes --project stepwise --scope "$SCOPE" --token "$VERCEL_TOKEN"
+      - name: Copy secrets
+        run: |
+          for name in ANTHROPIC_API_KEY STEPWISE_ACCESS_CODE STEPWISE_MODEL; do
+            if [ -n "${!name}" ]; then
+              printf '%s' "${!name}" | vercel env add "$name" production --force --sensitive --yes --scope "$SCOPE" --token "$VERCEL_TOKEN"
+              echo "Synced $name"
+            fi
+          done
