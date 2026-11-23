@@ -1,0 +1,19 @@
+name: Live prompt check
+
+# Runs real objectives through production /api/llm using the app's prompts and validators.
+on: workflow_dispatch
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node scripts/live-check.mjs
+        env:
+          URL: https://stepwise-topaz-nine.vercel.app
+          CODE: ${{ secrets.STEPWISE_ACCESS_CODE }}

@@ -5,7 +5,7 @@ import { verifyCode } from './runner.js'
 const nonEmpty = (a) => Array.isArray(a) && a.length > 0
 
 // Checks the shape of each environment's exercise, since it comes from the model.
-const VALID = {
+export const VALID = {
   explain: (x) => typeof x.question === 'string' && nonEmpty(x.rubric),
   steps: (x) => typeof x.problem === 'string' && nonEmpty(x.steps) && x.steps.every((s) => typeof s.expected === 'string'),
   code: (x) => typeof x.reference === 'string' && nonEmpty(x.tests) && x.tests.every((t) => typeof t.code === 'string'),
