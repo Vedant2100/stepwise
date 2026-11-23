@@ -38,17 +38,17 @@ npm run build
 
 The API key is read only by `api/llm.js` on the server, in local development and on Vercel alike. It is never sent to the browser.
 
-## Deploy (Vercel, via GitHub Actions)
+## Deploy
 
-Every push to `main` runs `.github/workflows/deploy.yml`: install, unit tests and `npm audit`, then it creates and links the Vercel project `stepwise` (first run only), copies the keys from GitHub secrets into Vercel as sensitive variables, builds and deploys to production. The URL appears in the run summary.
+Live at https://stepwise-topaz-nine.vercel.app. Vercel's GitHub integration deploys every push to `main`; GitHub Actions (`.github/workflows/checks.yml`) runs the tests, `npm audit` and the build on every push and pull request.
 
-One-time setup, in GitHub → Settings → Secrets and variables → Actions:
+Environment variables are set in Vercel → Project Settings → Environment Variables:
 
-| Secret | Required | Where to get it |
+| Variable | Required | Purpose |
 |---|---|---|
-| `VERCEL_TOKEN` | yes | vercel.com/account/tokens |
-| `ANTHROPIC_API_KEY` | yes | console.anthropic.com |
-| `STEPWISE_ACCESS_CODE` | no | Any passphrase. If set, users must enter it under Settings before the app calls the model, so strangers can't spend your key. |
+| `ANTHROPIC_API_KEY` | yes | Used only by the `/api/llm` function |
+| `STEPWISE_ACCESS_CODE` | recommended | If set, users enter it under Settings before the app calls the model, so strangers can't spend your key |
+| `STEPWISE_MODEL` | no | Model id; defaults to `claude-haiku-5-5`, the cheapest API model |
 
 ## How it fits together
 
