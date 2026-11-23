@@ -1,0 +1,28 @@
+name: Smoke test production
+
+# Checks the public site loads without a login and that /api/llm answers with a real model call.
+on: workflow_dispatch
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    env:
+      URL: https://stepwise-topaz-nine.vercel.app
+      CODE: ${{ secrets.STEPWISE_ACCESS_CODE }}
+    steps:
+      - name: Page is public
+        run: |
+          status=$(curl -s -o page.html -w '%{http_code}' "$URL/")
+          echo "GET / -> $status"
+          test "$status" = 200 && grep -q '<title>Stepwise</title>' page.html
+      - name: Model call works
+        run: |
+          curl -s -X POST "$URL/api/llm" -H 'content-type: application/json' -H "x-access-code: $CODE" \
+            -d '{"system":"Reply with a single JSON object only.","prompt":"Return {\"ok\": true}"}' | tee reply.json
+          grep -q '"text"' reply.json
+      - name: Wrong access code is refused
+        if: env.CODE != ''
+        run: |
+          status=$(curl -s -o /dev/null -w '%{http_code}' -X POST "$URL/api/llm" -H 'content-type: application/json' -H 'x-access-code: wrong' -d '{"system":"s","prompt":"p"}')
+          echo "wrong code -> $status"
+          test "$status" = 401
