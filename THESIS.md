@@ -1,4 +1,6 @@
-# Stepwise — Thesis (v0.1)
+# Stepwise — Thesis (v0.2)
+
+> **CS205 note:** the course grades a shipped app (feature depth 30%, breadth 25%, demo 20%, code quality and security 15%, AI usage 10%), not a study. The app below is the deliverable. The evaluation section is a stretch goal, and the app already logs what it would need (recommended vs. used environment, score, time).
 
 ## One line
 
