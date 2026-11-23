@@ -5,6 +5,10 @@ import Md from '../components/Md.jsx'
 import { runTests } from '../lib/runner.js'
 
 const extensions = [python()]
+const isDark = () => {
+  const t = document.documentElement.dataset.theme
+  return t ? t === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches
+}
 
 // The solution unlocks only after a run, and revealing it caps the score at 50.
 export default function CodeSandbox({ exercise, onDone }) {
@@ -15,9 +19,11 @@ export default function CodeSandbox({ exercise, onDone }) {
   const [revealed, setRevealed] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [sent, setSent] = useState(false)
 
   const passed = result ? result.tests.filter((t) => t.ok).length : 0
-  const score = Math.round((passed / exercise.tests.length) * (revealed ? 50 : 100))
+  const total = exercise.tests.length
+  const score = Math.round((passed / total) * (revealed ? 50 : 100))
 
   async function run() {
     setBusy(true)
@@ -32,34 +38,37 @@ export default function CodeSandbox({ exercise, onDone }) {
   }
 
   return (
-    <div className="space-y-4">
+    <>
       <Md>{exercise.brief}</Md>
-      <div className="overflow-hidden rounded-md border border-stone-300 text-sm dark:border-stone-700">
-        <CodeMirror value={code} height="260px" extensions={extensions} onChange={setCode} />
+      <div className="ide">
+        <CodeMirror value={code} minHeight="260px" maxHeight="70vh" extensions={extensions} theme={isDark() ? 'dark' : 'light'} onChange={setCode} readOnly={sent} />
+        <div className="tbar">
+          <span className={`sum ${result ? (passed === total ? 'good' : 'bad') : ''}`}>{result ? `${passed}/${total} passing` : `${total} tests ready`}</span>
+          <span className="why">checked against a reference solution</span>
+          <span className="row" style={{ margin: '0 0 0 auto' }}>
+            <button className="btn sm" onClick={run} disabled={busy || sent}>{busy ? (runs ? 'Running…' : 'Loading Python…') : 'Run tests'}</button>
+            <button className="btn ghost sm" onClick={() => setHints(hints + 1)} disabled={hints >= (exercise.hints?.length ?? 0)}>Hint</button>
+            <button className="btn ghost sm" onClick={() => setRevealed(true)} disabled={runs === 0 || revealed}>Solution</button>
+            {!sent && <button className="btn ghost sm" onClick={() => { setSent(true); onDone(score) }} disabled={runs === 0}>Record {score}/100</button>}
+          </span>
+        </div>
       </div>
-      <div className="flex flex-wrap gap-2">
-        <button className="btn" onClick={run} disabled={busy}>{busy ? (runs ? 'Running…' : 'Loading Python…') : 'Run tests'}</button>
-        <button className="btn-ghost" onClick={() => setHints(hints + 1)} disabled={hints >= (exercise.hints?.length ?? 0)}>Hint</button>
-        <button className="btn-ghost" onClick={() => setRevealed(true)} disabled={runs === 0 || revealed}>Show solution</button>
-        <button className="btn-ghost" onClick={() => onDone(score)} disabled={runs === 0}>Finish ({score}/100)</button>
-      </div>
-      {exercise.dropped > 0 && <p className="text-xs text-stone-500">{exercise.dropped} generated test(s) disagreed with the reference solution and were removed.</p>}
-      {exercise.hints?.slice(0, hints).map((h) => <p key={h} className="text-sm text-amber-700 dark:text-amber-400">Hint: {h}</p>)}
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      {result?.setup && <pre className="overflow-x-auto rounded bg-red-50 p-3 text-xs text-red-800 dark:bg-red-950 dark:text-red-200">{result.setup}</pre>}
+      {exercise.dropped > 0 && <p className="why">{exercise.dropped} generated test(s) disagreed with the reference solution and were removed.</p>}
+      {exercise.hints?.slice(0, hints).map((h) => <p key={h} className="nudge">{h}</p>)}
+      {error && <p className="bad">{error}</p>}
+      {result?.setup && <pre className="bad">{result.setup}</pre>}
       {result && (
-        <ul className="space-y-1 text-sm">
-          <li className="font-medium">{passed}/{exercise.tests.length} tests passing</li>
+        <div className="tests">
           {result.tests.map((t) => (
-            <li key={t.name}>
-              <span className={t.ok ? 'text-green-700 dark:text-green-400' : 'text-red-600'}>{t.ok ? '✓' : '✗'}</span> {t.name}
-              {!t.ok && <pre className="ml-5 whitespace-pre-wrap text-xs text-stone-500">{t.err}</pre>}
-            </li>
+            <div key={t.name} className={`tt ${t.ok ? 'pass' : 'fail'}`}>
+              <b>{t.ok ? 'pass' : 'fail'}</b>{t.name}
+              {!t.ok && <pre>{t.err}</pre>}
+            </div>
           ))}
-        </ul>
+        </div>
       )}
-      {result?.stdout && <pre className="overflow-x-auto rounded bg-stone-100 p-3 text-xs dark:bg-stone-800">{result.stdout}</pre>}
+      {result?.stdout && <pre>{result.stdout}</pre>}
       {revealed && <Md>{'```python\n' + exercise.reference + '\n```'}</Md>}
-    </div>
+    </>
   )
 }

@@ -8,9 +8,9 @@ export default function RetrievalDrill({ exercise, onDone }) {
   const [input, setInput] = useState('')
   const [shown, setShown] = useState(false)
   const [right, setRight] = useState(0)
+  const [sent, setSent] = useState(false)
 
   const cards = exercise.cards
-  const finished = k === cards.length
   const score = Math.round((right / cards.length) * 100)
 
   function mark(correct) {
@@ -25,39 +25,31 @@ export default function RetrievalDrill({ exercise, onDone }) {
     else setShown(true)
   }
 
-  if (finished) {
+  if (k === cards.length) {
     return (
-      <div className="space-y-2">
-        <p className="text-2xl font-semibold">{right}/{cards.length}</p>
-        <button className="btn" onClick={() => onDone(score)}>Continue</button>
+      <div className="res">
+        <div className="score">{right}/{cards.length}</div>
+        {!sent && <button className="btn" onClick={() => { setSent(true); onDone(score) }}>Record it</button>}
       </div>
     )
   }
 
   return (
-    <div className="space-y-4">
-      <p className="text-xs text-stone-500">Card {k + 1} of {cards.length}</p>
-      <p className="text-lg">{cards[k].front}</p>
-      <input
-        className="field"
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        onKeyDown={(e) => e.key === 'Enter' && !shown && reveal()}
-        disabled={shown}
-        autoFocus
-        aria-label="Your answer"
-      />
+    <>
+      <p className="why">Card {k + 1} of {cards.length}</p>
+      <div className="flash">{cards[k].front}</div>
+      <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && !shown && reveal()} disabled={shown} aria-label="Your answer" />
       {!shown ? (
-        <button className="btn" onClick={reveal}>Check</button>
+        <div className="row"><button className="btn" onClick={reveal}>Check</button></div>
       ) : (
-        <div className="space-y-2">
-          <p className="text-sm">Answer: <b>{cards[k].back}</b></p>
-          <div className="flex gap-2">
+        <>
+          <p className="nudge">Answer: <b>{cards[k].back}</b></p>
+          <div className="row">
             <button className="btn" onClick={() => mark(true)}>I had it</button>
-            <button className="btn-ghost" onClick={() => mark(false)}>Missed it</button>
+            <button className="btn ghost" onClick={() => mark(false)}>Missed it</button>
           </div>
-        </div>
+        </>
       )}
-    </div>
+    </>
   )
 }

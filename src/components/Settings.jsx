@@ -19,31 +19,28 @@ export default function Settings({ data, setData }) {
   }
 
   return (
-    <details className="card">
-      <summary className="cursor-pointer font-semibold">Settings &amp; data</summary>
-      <div className="mt-4 space-y-4 text-sm">
-        <label className="block space-y-1">
-          <span>Access code (only if the deployment asks for one)</span>
-          <input
-            className="field"
-            type="password"
-            value={code}
-            onChange={(e) => {
-              setCode(e.target.value)
-              localStorage.setItem(ACCESS_KEY, e.target.value)
-            }}
-          />
+    <>
+      <h3 style={{ marginTop: 0 }}>Settings &amp; data</h3>
+      <label>
+        <span className="why">Access code (only if this deployment asks for one)</span>
+        <input
+          type="password"
+          value={code}
+          onChange={(e) => {
+            setCode(e.target.value)
+            localStorage.setItem(ACCESS_KEY, e.target.value)
+          }}
+        />
+      </label>
+      <div className="row">
+        <button className="btn ghost sm" onClick={() => download(data)} disabled={!data.tracks.length}>Export JSON</button>
+        <label className="btn ghost sm">
+          Import JSON
+          <input type="file" accept=".json,application/json" hidden onChange={(e) => e.target.files[0] && importFile(e.target.files[0])} />
         </label>
-        <div className="flex flex-wrap items-center gap-2">
-          <button className="btn-ghost" onClick={() => download(data)} disabled={!data.tracks.length}>Export JSON</button>
-          <label className="btn-ghost cursor-pointer">
-            Import JSON
-            <input type="file" accept=".json,application/json" className="hidden" onChange={(e) => e.target.files[0] && importFile(e.target.files[0])} />
-          </label>
-        </div>
-        {message && <p>{message}</p>}
-        <p className="text-xs text-stone-500">Your progress is stored only in this browser. Export it to move it to another device.</p>
       </div>
-    </details>
+      {message && <p>{message}</p>}
+      <p className="why">Your progress is stored only in this browser. Export it to move it to another device.</p>
+    </>
   )
 }

@@ -89,3 +89,20 @@ describe('parseJSON', () => {
     expect(() => parseJSON('no json')).toThrow()
   })
 })
+
+describe('router', async () => {
+  const { normalizeRoute } = await import('./router.js')
+  const tracks = [{ id: 't1' }]
+
+  it('keeps valid choices', () => {
+    expect(normalizeRoute({ action: 'switch', env: 'code', trackId: 't1', say: 'ok' }, tracks))
+      .toEqual({ action: 'switch', env: 'code', trackId: 't1', say: 'ok', topic: '' })
+  })
+
+  it('turns unknown actions into chat and drops ids and environments that do not exist', () => {
+    expect(normalizeRoute({ action: 'hack', env: 'ide', trackId: 'nope' }, tracks))
+      .toMatchObject({ action: 'chat', env: null, trackId: null })
+    expect(normalizeRoute(null, tracks).action).toBe('chat')
+    expect(normalizeRoute({ action: 'toString' }, tracks).action).toBe('chat')
+  })
+})

@@ -8,6 +8,7 @@ export default function ExplainBack({ exercise, track, onDone }) {
   const [result, setResult] = useState(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [sent, setSent] = useState(false)
 
   async function submit() {
     setBusy(true)
@@ -22,41 +23,25 @@ export default function ExplainBack({ exercise, track, onDone }) {
   }
 
   return (
-    <div className="space-y-4">
+    <>
       <Md>{exercise.question}</Md>
-      <textarea
-        className="field h-40"
-        placeholder="Explain it in your own words…"
-        value={answer}
-        onChange={(e) => setAnswer(e.target.value)}
-        disabled={Boolean(result)}
-      />
+      <textarea rows={6} placeholder="Explain it in your own words…" value={answer} onChange={(e) => setAnswer(e.target.value)} disabled={Boolean(result)} aria-label="Your explanation" />
       {!result && (
-        <button className="btn" onClick={submit} disabled={busy || answer.trim().length < 10}>
-          {busy ? 'Grading…' : 'Submit'}
-        </button>
-      )}
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      {result && (
-        <div className="space-y-3">
-          <p className="text-2xl font-semibold">
-            {result.score}
-            <span className="text-sm font-normal text-stone-500"> /100</span>
-          </p>
-          <p className="text-sm font-medium">{result.verdict}</p>
-          {result.missing?.length > 0 && (
-            <div>
-              <h4 className="text-sm font-semibold">Missing</h4>
-              <ul className="list-disc pl-5 text-sm">{result.missing.map((m) => <li key={m}>{m}</li>)}</ul>
-            </div>
-          )}
-          <details>
-            <summary className="cursor-pointer text-sm">Model answer</summary>
-            <Md>{exercise.reference}</Md>
-          </details>
-          <button className="btn" onClick={() => onDone(result.score)}>Continue</button>
+        <div className="row">
+          <button className="btn" onClick={submit} disabled={busy || answer.trim().length < 10}>{busy ? 'Grading…' : 'Submit'}</button>
         </div>
       )}
-    </div>
+      {error && <p className="bad">{error}</p>}
+      {result && (
+        <div className="res">
+          <div className="score">{result.score}<small> /100</small></div>
+          <p><b>{result.verdict}</b></p>
+          {result.covered?.length > 0 && (<><h3>Solid</h3><ul>{result.covered.map((m) => <li key={m}>{m}</li>)}</ul></>)}
+          {result.missing?.length > 0 && (<><h3>Gaps</h3><ul>{result.missing.map((m) => <li key={m}>{m}</li>)}</ul></>)}
+          <details><summary>Model answer</summary><Md>{exercise.reference}</Md></details>
+          {!sent && <button className="btn" onClick={() => { setSent(true); onDone(result.score) }}>Record it</button>}
+        </div>
+      )}
+    </>
   )
 }

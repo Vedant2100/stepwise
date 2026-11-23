@@ -1,6 +1,5 @@
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
 import { callLLM } from './api/llm.js'
 
 // Serves api/llm.js during `npm run dev`, so local development matches Vercel.
@@ -27,7 +26,7 @@ function devApi(env) {
 }
 
 export default defineConfig(({ mode }) => ({
-  plugins: [react(), tailwindcss(), devApi(loadEnv(mode, process.cwd(), ''))],
+  plugins: [react(), devApi(loadEnv(mode, process.cwd(), ''))],
   worker: { format: 'es' },
   optimizeDeps: { exclude: ['pyodide'] },
   test: { environment: 'node' },

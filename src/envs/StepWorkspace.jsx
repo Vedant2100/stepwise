@@ -11,6 +11,7 @@ export default function StepWorkspace({ exercise, track, onDone }) {
   const [hinted, setHinted] = useState(false)
   const [feedback, setFeedback] = useState('')
   const [busy, setBusy] = useState(false)
+  const [sent, setSent] = useState(false)
 
   const i = done.length
   const finished = i === exercise.steps.length
@@ -40,37 +41,35 @@ export default function StepWorkspace({ exercise, track, onDone }) {
   }
 
   return (
-    <div className="space-y-4">
+    <>
       <Md>{exercise.problem}</Md>
-      <ol className="space-y-2">
+      <ol className="steps">
         {done.map((d, k) => (
-          <li key={k} className="rounded-md border border-stone-200 p-2 text-sm dark:border-stone-800">
-            <span className="mr-2 text-stone-500">Step {k + 1}</span>
-            <span className="font-mono">{d.answer}</span>
-            <span className="ml-2">{d.credit === 1 ? '✓' : d.credit > 0 ? '✓ (with help)' : '(shown)'}</span>
+          <li key={k}>
+            <b>Step {k + 1}</b>
+            <span className="mono">{d.answer}</span>
+            <span className={d.credit === 1 ? 'good' : 'why'}>{d.credit === 1 ? '✓' : d.credit > 0 ? '✓ with help' : 'shown'}</span>
           </li>
         ))}
       </ol>
       {!finished ? (
-        <div className="space-y-2">
-          <label className="text-sm font-medium" htmlFor="step">Step {i + 1} of {exercise.steps.length}</label>
-          <textarea id="step" className="field h-20 font-mono" value={input} onChange={(e) => setInput(e.target.value)} />
-          {hinted && <p className="text-sm text-amber-700 dark:text-amber-400">Hint: {exercise.steps[i].hint}</p>}
-          {feedback && <p className="text-sm text-red-600">{feedback}</p>}
-          <div className="flex gap-2">
+        <>
+          <label className="why" htmlFor="step">Step {i + 1} of {exercise.steps.length}</label>
+          <textarea id="step" className="mono" rows={3} value={input} onChange={(e) => setInput(e.target.value)} />
+          {hinted && <p className="nudge">{exercise.steps[i].hint}</p>}
+          {feedback && <p className="bad">{feedback}</p>}
+          <div className="row">
             <button className="btn" onClick={check} disabled={busy || !input.trim()}>{busy ? 'Checking…' : 'Check step'}</button>
-            <button className="btn-ghost" onClick={() => setHinted(true)} disabled={hinted || !exercise.steps[i].hint}>Hint</button>
-            <button className="btn-ghost" onClick={() => advance(exercise.steps[i].expected, 0)} disabled={tries === 0}>
-              Show this step
-            </button>
+            <button className="btn ghost sm" onClick={() => setHinted(true)} disabled={hinted || !exercise.steps[i].hint}>Hint</button>
+            <button className="btn ghost sm" onClick={() => advance(exercise.steps[i].expected, 0)} disabled={tries === 0}>Show this step</button>
           </div>
-        </div>
+        </>
       ) : (
-        <div className="space-y-2">
-          <p className="text-2xl font-semibold">{score}<span className="text-sm font-normal text-stone-500"> /100</span></p>
-          <button className="btn" onClick={() => onDone(score)}>Continue</button>
+        <div className="res">
+          <div className="score">{score}<small> /100</small></div>
+          {!sent && <button className="btn" onClick={() => { setSent(true); onDone(score) }}>Record it</button>}
         </div>
       )}
-    </div>
+    </>
   )
 }
