@@ -42,7 +42,7 @@ The API key is read only by `api/llm.js` on the server, in local development and
 
 Live at https://stepwise-topaz-nine.vercel.app. Vercel's GitHub integration deploys every push to `main`; GitHub Actions (`.github/workflows/checks.yml`) runs the tests, `npm audit` and the build on every push and pull request.
 
-Environment variables are set in Vercel → Project Settings → Environment Variables:
+Secrets live in GitHub (Settings → Secrets → Actions) alongside `VERCEL_TOKEN`. The manual **Sync secrets to Vercel** workflow copies them into the Vercel project, and the manual **Smoke test production** workflow checks that the site is public, that a real model call works and that a wrong access code is refused.
 
 | Variable | Required | Purpose |
 |---|---|---|
