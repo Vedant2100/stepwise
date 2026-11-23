@@ -3,7 +3,7 @@ import Composer from './components/Composer.jsx'
 import FeedItem from './components/FeedItem.jsx'
 import { makeExercise } from './lib/exercise.js'
 import { isMastered, recordAttempt } from './lib/learner.js'
-import { ask } from './lib/llm.js'
+import { ask, stopAll } from './lib/llm.js'
 import { validatePlan } from './lib/plan.js'
 import { ENVIRONMENTS, envFor, nextReviewAt, nextStep } from './lib/planner.js'
 import { planPrompt, system } from './lib/prompts.js'
@@ -59,7 +59,7 @@ export default function App() {
       await fn()
     } catch (e) {
       if (e.status === 401) push(item('access'))
-      else say(e.message, { err: true })
+      else say(e.message, { err: !e.stopped })
     }
     setBusy('')
   }
@@ -168,7 +168,7 @@ export default function App() {
       r = normalizeRoute(await ask(system(), routePrompt(text, dataRef.current.tracks, current)), dataRef.current.tracks)
     } catch (e) {
       setBusy('')
-      return e.status === 401 ? push(item('access')) : say(e.message, { err: true })
+      return e.status === 401 ? push(item('access')) : say(e.message, { err: !e.stopped })
     }
     setBusy('')
     if (r.say) say(r.say)
@@ -202,7 +202,12 @@ export default function App() {
           {feed.map((it) => (
             <FeedItem key={it.id} it={it} data={data} setData={setData} actions={actions} busy={Boolean(busy)} />
           ))}
-          {busy && <div className="msg t"><span className="dots">{busy}</span></div>}
+          {busy && (
+            <div className="msg t launch">
+              <span className="dots">{busy}</span>
+              <button className="btn ghost sm" onClick={stopAll}>Stop</button>
+            </div>
+          )}
           <div ref={end} />
         </main>
       </div>

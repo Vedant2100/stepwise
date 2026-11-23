@@ -118,3 +118,4 @@ textarea:focus, input:focus, select:focus, button:focus-visible { outline: 3px s
 .quick { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
 .pick { min-height: 34px; padding: 0 14px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--paper); color: var(--ink); font: 600 14px "Schibsted Grotesk", sans-serif; cursor: pointer; }
 .pick:disabled { opacity: 0.45; cursor: default; }
+.launch { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
