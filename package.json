@@ -1,0 +1,35 @@
+{
+  "name": "stepwise",
+  "version": "0.1.0",
+  "scripts": {
+    "test": "vitest run",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Vedant2100/stepwise.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Vedant2100/stepwise/issues"
+  },
+  "homepage": "https://github.com/Vedant2100/stepwise#readme",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@codemirror/lang-python": "^6.2.1",
+    "@uiw/react-codemirror": "^4.25.12",
+    "pyodide": "^314.0.8",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "react-markdown": "^10.1.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.5",
+    "@vitejs/plugin-react": "^6.3.0",
+    "tailwindcss": "^4.3.5",
+    "vite": "^8.3.8",
+    "vitest": "^5.1.1"
+  }
+}
