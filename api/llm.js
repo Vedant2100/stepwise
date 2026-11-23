@@ -26,7 +26,7 @@ export async function callLLM(body, accessCode, env = process.env) {
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
-      model: env.STEPWISE_MODEL || 'claude-sonnet-5-5',
+      model: env.STEPWISE_MODEL || 'claude-haiku-5-5',
       max_tokens: 4096,
       system,
       messages: [{ role: 'user', content: prompt }],
