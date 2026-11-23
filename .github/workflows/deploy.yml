@@ -12,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_SCOPE: vedants-projects-e4341d10
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -30,8 +31,8 @@ jobs:
       - run: npm install --global vercel@latest
       - name: Create (first run only) and link the Vercel project
         run: |
-          vercel project create stepwise --token "$VERCEL_TOKEN" || echo "Project already exists."
-          vercel link --yes --project stepwise --token "$VERCEL_TOKEN"
+          vercel project create stepwise --token "$VERCEL_TOKEN" --scope "$VERCEL_SCOPE" || echo "Project already exists."
+          vercel link --yes --project stepwise --token "$VERCEL_TOKEN" --scope "$VERCEL_SCOPE"
 
       - name: Copy secrets into the Vercel project
         env:
@@ -40,15 +41,15 @@ jobs:
         run: |
           for name in ANTHROPIC_API_KEY STEPWISE_ACCESS_CODE; do
             if [ -n "${!name}" ]; then
-              printf '%s' "${!name}" | vercel env add "$name" production --force --sensitive --yes --token "$VERCEL_TOKEN"
+              printf '%s' "${!name}" | vercel env add "$name" production --force --sensitive --yes --token "$VERCEL_TOKEN" --scope "$VERCEL_SCOPE"
             else
-              vercel env rm "$name" --environment production --confirm-name "$name" --token "$VERCEL_TOKEN" || true
+              vercel env rm "$name" --environment production --confirm-name "$name" --token "$VERCEL_TOKEN" --scope "$VERCEL_SCOPE" || true
             fi
           done
 
-      - run: vercel pull --yes --environment=production --token "$VERCEL_TOKEN"
-      - run: vercel build --prod --token "$VERCEL_TOKEN"
+      - run: vercel pull --yes --environment=production --token "$VERCEL_TOKEN" --scope "$VERCEL_SCOPE"
+      - run: vercel build --prod --token "$VERCEL_TOKEN" --scope "$VERCEL_SCOPE"
       - name: Deploy
         run: |
-          url=$(vercel deploy --prebuilt --prod --token "$VERCEL_TOKEN")
+          url=$(vercel deploy --prebuilt --prod --token "$VERCEL_TOKEN" --scope "$VERCEL_SCOPE")
           echo "Deployed: $url" >> "$GITHUB_STEP_SUMMARY"
