@@ -1,12 +1,13 @@
 import { isMastered } from './learner.js'
 
-export const TASK_TYPES = ['concept', 'procedure', 'skill', 'recall']
+export const TASK_TYPES = ['concept', 'procedure', 'skill', 'recall', 'intuition']
 
 export const ENVIRONMENTS = {
   explain: { label: 'Explain it back', for: 'concept' },
   steps: { label: 'Step workspace', for: 'procedure' },
   code: { label: 'Code sandbox', for: 'skill' },
   drill: { label: 'Retrieval drill', for: 'recall' },
+  sim: { label: 'Simulation', for: 'intuition' },
 }
 
 export const envFor = (type) => Object.keys(ENVIRONMENTS).find((k) => ENVIRONMENTS[k].for === type)

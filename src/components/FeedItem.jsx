@@ -1,16 +1,10 @@
-import { Suspense, lazy, useState } from 'react'
+import { useState } from 'react'
 import Md from './Md.jsx'
 import Progress from './Progress.jsx'
 import Settings from './Settings.jsx'
 import { ACCESS_KEY } from '../lib/llm.js'
 import { ENVIRONMENTS, envFor } from '../lib/planner.js'
-import ExplainBack from '../envs/ExplainBack.jsx'
-import RetrievalDrill from '../envs/RetrievalDrill.jsx'
-import StepWorkspace from '../envs/StepWorkspace.jsx'
-
-const CodeSandbox = lazy(() => import('../envs/CodeSandbox.jsx'))
-const ENV_COMPONENTS = { explain: ExplainBack, steps: StepWorkspace, code: CodeSandbox, drill: RetrievalDrill }
-const TYPE_LABEL = { concept: 'Concept', procedure: 'Procedure', skill: 'Skill', recall: 'Recall' }
+const TYPE_LABEL = { concept: 'Concept', procedure: 'Procedure', skill: 'Skill', recall: 'Recall', intuition: 'Intuition' }
 
 export default function FeedItem({ it, data, setData, actions, busy }) {
   const track = data.tracks.find((t) => t.id === it.trackId)
@@ -50,31 +44,14 @@ export default function FeedItem({ it, data, setData, actions, busy }) {
     case 'exercise': {
       if (!track) return null
       const concept = track.concepts.find((c) => c.id === it.conceptId)
-      const Env = ENV_COMPONENTS[it.env]
-      const recommended = envFor(concept.type)
       return (
-        <section className={`card${it.done ? ' done' : ''}`}>
-          <div className="meta">
-            <span className={`chip${it.mode === 'review' ? ' rev' : ''}`}>{it.mode === 'review' ? 'Review' : ENVIRONMENTS[it.env].label}</span>
-            <b style={{ color: 'var(--ink)' }}>{concept.name}</b>
-            <span>· {track.title}</span>
-            {it.done === 'skipped' && <span>· skipped</span>}
-            {it.done === 'switched' && <span>· switched</span>}
-            {!it.done && (
-              <select value={it.env} onChange={(e) => actions.switchEnv(e.target.value)} disabled={busy} aria-label="Environment">
-                {Object.entries(ENVIRONMENTS).map(([k, v]) => (
-                  <option key={k} value={k}>{v.label}{k === recommended ? ' (recommended)' : ''}</option>
-                ))}
-              </select>
-            )}
-          </div>
-          {concept.summary && <p className="primer">{concept.summary}</p>}
-          {it.done && it.done !== 'finished' ? null : (
-            <Suspense fallback={<p className="why">Loading editor…</p>}>
-              <Env exercise={it.exercise} track={track} onDone={(score) => actions.finish(it, score)} />
-            </Suspense>
-          )}
-        </section>
+        <div className="msg t launch">
+          <span className={`chip${it.mode === 'review' ? ' rev' : ''}`}>{ENVIRONMENTS[it.env].label}</span>
+          <b>{concept.name}</b>
+          {it.done === 'finished' && <span className="why">· {it.score}/100</span>}
+          {(it.done === 'skipped' || it.done === 'switched') && <span className="why">· {it.done}</span>}
+          {!it.done && <button className="btn sm" onClick={() => actions.openWorkspace(it.id)}>Open workspace</button>}
+        </div>
       )
     }
 

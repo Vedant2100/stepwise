@@ -33,7 +33,7 @@ describe('learner model', () => {
 
 describe('planner', () => {
   it('maps each task type to one environment', () => {
-    expect([envFor('concept'), envFor('procedure'), envFor('skill'), envFor('recall')]).toEqual(['explain', 'steps', 'code', 'drill'])
+    expect(['concept', 'procedure', 'skill', 'recall', 'intuition'].map(envFor)).toEqual(['explain', 'steps', 'code', 'drill', 'sim'])
   })
 
   it('only offers concepts whose prerequisites are mastered', () => {
@@ -104,5 +104,26 @@ describe('router', async () => {
       .toMatchObject({ action: 'chat', env: null, trackId: null })
     expect(normalizeRoute(null, tracks).action).toBe('chat')
     expect(normalizeRoute({ action: 'toString' }, tracks).action).toBe('chat')
+  })
+})
+
+describe('local step check', async () => {
+  const { sameStep } = await import('./stepcheck.js')
+  it('matches up to spacing, case and math delimiters', () => {
+    expect(sameStep('$x^2 + 1$', 'x^2+1')).toBe(true)
+    expect(sameStep('Quisiera.', 'quisiera')).toBe(true)
+    expect(sameStep('x^2', 'x^3')).toBe(false)
+    expect(sameStep('  ', '')).toBe(false)
+  })
+})
+
+describe('simulation sandbox page', async () => {
+  const { simPage } = await import('./simframe.js')
+  const sim = { params: [{ name: 't', label: 'T', min: 0, max: 1, step: 0.1, value: 0.5 }], compute: 'return {values:[p.t], labels:["</script><b>x"]}' }
+
+  it('blocks network access and cannot be broken out of by the model code', () => {
+    const page = simPage(sim, false)
+    expect(page).toContain("default-src 'none'")
+    expect(page.match(/<\/script>/g)).toHaveLength(1)
   })
 })

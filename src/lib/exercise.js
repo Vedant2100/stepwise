@@ -10,6 +10,9 @@ export const VALID = {
   steps: (x) => typeof x.problem === 'string' && nonEmpty(x.steps) && x.steps.every((s) => typeof s.expected === 'string'),
   code: (x) => typeof x.reference === 'string' && nonEmpty(x.tests) && x.tests.every((t) => typeof t.code === 'string'),
   drill: (x) => nonEmpty(x.cards) && x.cards.every((c) => typeof c.front === 'string' && typeof c.back === 'string'),
+  sim: (x) =>
+    typeof x.compute === 'string' && nonEmpty(x.questions) && nonEmpty(x.params) &&
+    x.params.every((q) => /^[A-Za-z_]\w*$/.test(q.name) && [q.min, q.max, q.step, q.value].every(Number.isFinite) && q.min < q.max),
 }
 
 export async function makeExercise(env, concept, track, mode) {

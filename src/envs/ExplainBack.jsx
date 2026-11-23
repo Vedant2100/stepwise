@@ -3,19 +3,28 @@ import Md from '../components/Md.jsx'
 import { ask } from '../lib/llm.js'
 import { gradeExplainPrompt, system } from '../lib/prompts.js'
 
-export default function ExplainBack({ exercise, track, onDone }) {
+// The passage around the concept's quote, so the learner can check the source after answering.
+function passage(source, quote) {
+  const at = quote ? source.toLowerCase().indexOf(quote.toLowerCase()) : -1
+  if (at < 0) return ''
+  return source.slice(Math.max(0, at - 300), at + quote.length + 300).trim()
+}
+
+// Question (and, after grading, the source passage) on the left; writing pad and rubric checklist on the right.
+export default function ExplainWorkspace({ exercise, track, concept, onDone }) {
   const [answer, setAnswer] = useState('')
   const [result, setResult] = useState(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const [sent, setSent] = useState(false)
+  const words = answer.trim() ? answer.trim().split(/\s+/).length : 0
+  const text = passage(track.source, concept.quote)
 
   async function submit() {
     setBusy(true)
     setError('')
     try {
       const r = await ask(system(track), gradeExplainPrompt(exercise, answer))
-      setResult({ ...r, score: Math.max(0, Math.min(100, Math.round(Number(r.score) || 0))) })
+      setResult({ ...r, score: Math.max(0, Math.min(100, Math.round(Number(r.score) || 0))), points: Array.isArray(r.points) ? r.points : [] })
     } catch (e) {
       setError(e.message)
     }
@@ -23,25 +32,61 @@ export default function ExplainBack({ exercise, track, onDone }) {
   }
 
   return (
-    <>
-      <Md>{exercise.question}</Md>
-      <textarea rows={6} placeholder="Explain it in your own words…" value={answer} onChange={(e) => setAnswer(e.target.value)} disabled={Boolean(result)} aria-label="Your explanation" />
-      {!result && (
-        <div className="row">
-          <button className="btn" onClick={submit} disabled={busy || answer.trim().length < 10}>{busy ? 'Grading…' : 'Submit'}</button>
-        </div>
-      )}
-      {error && <p className="bad">{error}</p>}
-      {result && (
-        <div className="res">
-          <div className="score">{result.score}<small> /100</small></div>
-          <p><b>{result.verdict}</b></p>
-          {result.covered?.length > 0 && (<><h3>Solid</h3><ul>{result.covered.map((m) => <li key={m}>{m}</li>)}</ul></>)}
-          {result.missing?.length > 0 && (<><h3>Gaps</h3><ul>{result.missing.map((m) => <li key={m}>{m}</li>)}</ul></>)}
-          <details><summary>Model answer</summary><Md>{exercise.reference}</Md></details>
-          {!sent && <button className="btn" onClick={() => { setSent(true); onDone(result.score) }}>Record it</button>}
-        </div>
-      )}
-    </>
+    <div className="panes two">
+      <section className="pane">
+        <p className="label">Question</p>
+        <Md>{exercise.question}</Md>
+        <p className="label">A full answer covers {exercise.rubric.length} points</p>
+        <ul className="steps">
+          {exercise.rubric.map((point, k) => {
+            const p = result?.points[k]
+            return (
+              <li key={k}>
+                <b className={p ? (p.met ? 'good' : 'bad') : ''}>{p ? (p.met ? '✓' : '✗') : k + 1}</b>
+                <div className="grow">
+                  {result ? point : <span className="why">Revealed after you answer</span>}
+                  {p?.note && <div className="why">{p.note}</div>}
+                </div>
+              </li>
+            )
+          })}
+        </ul>
+        {result && text && (
+          <>
+            <p className="label">From your source</p>
+            <blockquote className="primer" style={{ margin: 0 }}>{text}</blockquote>
+          </>
+        )}
+      </section>
+
+      <section className="pane">
+        <p className="label">Your explanation · {words} words</p>
+        <textarea
+          className="grow"
+          style={{ minHeight: 220 }}
+          placeholder="Explain it in your own words, as if teaching a classmate…"
+          value={answer}
+          onChange={(e) => setAnswer(e.target.value)}
+          onKeyDown={(e) => (e.metaKey || e.ctrlKey) && e.key === 'Enter' && !result && words >= 3 && !busy && submit()}
+          disabled={Boolean(result)}
+          aria-label="Your explanation"
+        />
+        {!result && (
+          <div className="row" style={{ margin: 0 }}>
+            <button className="btn" onClick={submit} disabled={busy || words < 3}>{busy ? 'Grading…' : 'Submit'}</button>
+            <span className="kbd">⌘/Ctrl + Enter</span>
+          </div>
+        )}
+        {error && <p className="bad">{error}</p>}
+        {result && (
+          <div className="res" style={{ marginTop: 0 }}>
+            <div className="score">{result.score}<small> /100</small></div>
+            <p><b>{result.verdict}</b></p>
+            <details><summary>Model answer</summary><Md>{exercise.reference}</Md></details>
+            <button className="btn" onClick={() => onDone(result.score)}>Record it</button>
+          </div>
+        )}
+      </section>
+    </div>
   )
 }

@@ -22,14 +22,16 @@ Label each with ONE task type:
 - "procedure": carrying out steps (a derivation, a calculation, an algorithm by hand)
 - "skill": doing it in code
 - "recall": remembering facts, terms, vocabulary
+- "intuition": getting a feel for how something behaves as its inputs change (best explored with sliders); use only when a small numeric model captures it
 ${source ? 'For each concept, copy a short exact quote (5–25 words) from the SOURCE that supports it.' : ''}
-Return: {"title":"short title","concepts":[{"id":"kebab-id","name":"","type":"concept|procedure|skill|recall","summary":"one sentence","prereqs":["ids of earlier concepts"]${source ? ',"quote":"exact words from the source"' : ''}}]}`
+Return: {"title":"short title","concepts":[{"id":"kebab-id","name":"","type":"concept|procedure|skill|recall|intuition","summary":"one sentence","prereqs":["ids of earlier concepts"]${source ? ',"quote":"exact words from the source"' : ''}}]}`
 
 const SHAPES = {
   explain: `an explain-it-back question. Return: {"question":"","rubric":["3–5 key points a full answer must contain"],"reference":"model answer, markdown"}`,
   steps: `a worked problem the learner solves one step at a time. Return: {"problem":"markdown","steps":[{"expected":"what this step should produce","hint":"a nudge, not the answer"}]} with 3–7 steps`,
   code: `a Python coding exercise using only the standard library. Return: {"brief":"task, markdown, with the function signature","starter":"starter code with the signature and a pass body","reference":"full correct solution","hints":["2–3 nudges, mildest first"],"tests":[{"name":"short name","code":"assert statements calling the function"}]} with 4–8 tests including edge cases`,
   drill: `a retrieval drill. Return: {"cards":[{"front":"prompt","back":"short exact answer"}]} with 4–8 cards`,
+  sim: `an interactive simulation the learner explores with sliders, then predict-and-check questions. "compute" is the BODY of a plain JavaScript function of one argument p (an object of the parameter values) that returns {"labels":[strings],"values":[finite numbers]} (at most 24 bars). Use only Math and plain JS: no DOM, network, or globals. Return: {"intro":"one or two sentences, markdown","params":[{"name":"jsIdentifier","label":"","min":0,"max":1,"step":0.1,"value":0.5}],"compute":"...","chart":"what the bars show","questions":[{"ask":"a prediction to make by moving a slider","answer":"what actually happens and why"}]} with 1–4 params and 2–4 questions`,
 }
 
 export function exercisePrompt(env, concept, track, mode) {
@@ -45,7 +47,7 @@ Write ${SHAPES[env]}`
 export const gradeExplainPrompt = (exercise, answer) => `Question: ${exercise.question}
 Rubric: ${JSON.stringify(exercise.rubric)}
 Learner's answer: """${answer}"""
-Grade strictly against the rubric. Return: {"score":0-100,"verdict":"one line","covered":["rubric points they got"],"missing":["rubric points they missed or got wrong"]}`
+Grade strictly against the rubric, point by point, in the rubric's order. Return: {"score":0-100,"verdict":"one line","points":[{"met":true|false,"note":"short reason"}]}`
 
 export const checkStepPrompt = (exercise, index, done, answer) => `Problem: ${exercise.problem}
 Steps completed so far: ${JSON.stringify(done)}

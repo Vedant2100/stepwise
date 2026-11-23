@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Composer from './components/Composer.jsx'
 import FeedItem from './components/FeedItem.jsx'
+import Workspace from './components/Workspace.jsx'
 import { makeExercise } from './lib/exercise.js'
 import { isMastered, recordAttempt } from './lib/learner.js'
 import { ask, stopAll } from './lib/llm.js'
@@ -30,6 +31,7 @@ export default function App() {
   const [busy, setBusy] = useState('')
   const [source, setSource] = useState(null)
   const [activeId, setActiveId] = useState(data.tracks[0]?.id ?? null)
+  const [openWs, setOpenWs] = useState(null)
   const [theme, setTheme] = useState(() => localStorage.getItem('stepwise.theme') ?? '')
   const dataRef = useRef(data)
   const end = useRef(null)
@@ -98,7 +100,9 @@ export default function App() {
   async function start(track, step, env = envFor(step.concept.type)) {
     setBusy(`Building ${ENVIRONMENTS[env].label.toLowerCase()} for “${step.concept.name}”`)
     const exercise = await makeExercise(env, step.concept, track, step.mode)
-    push(item('exercise', { trackId: track.id, conceptId: step.concept.id, mode: step.mode, env, exercise, started: Date.now() }))
+    const it = item('exercise', { trackId: track.id, conceptId: step.concept.id, mode: step.mode, env, exercise, started: Date.now() })
+    push(it)
+    setOpenWs(it.id)
   }
 
   async function next(focusId = activeId) {
@@ -136,6 +140,7 @@ export default function App() {
     setTracks((ts) => ts.map((t) => (t.id === track.id ? updated : t)))
     dataRef.current = { tracks: dataRef.current.tracks.map((t) => (t.id === track.id ? updated : t)) }
     patch(it.id, { done: 'finished', score })
+    setOpenWs(null)
     const unlocked = updated.concepts.filter((c) => !isMastered(c) && c.prereqs.includes(after.id) && c.prereqs.every((p) => isMastered(updated.concepts.find((x) => x.id === p))))
     say(
       `**${score}/100** on ${before.name}. Mastery ${Math.round(before.pL * 100)}% → ${Math.round(after.pL * 100)}%.` +
@@ -180,7 +185,7 @@ export default function App() {
     if (r.action === 'delete' && r.trackId) return push(item('confirmDelete', { trackId: r.trackId }))
   }
 
-  const actions = { next, switchEnv, finish, remove, setTracks, push, say }
+  const actions = { next, switchEnv, finish, remove, setTracks, push, say, openWorkspace: setOpenWs }
   const mastered = data.tracks.flatMap((t) => t.concepts).filter(isMastered).length
   const total = data.tracks.flatMap((t) => t.concepts).length
 
@@ -211,6 +216,18 @@ export default function App() {
           <div ref={end} />
         </main>
       </div>
+      {feed.filter((x) => x.kind === 'exercise' && !x.done).map((x) => (
+        <Workspace
+          key={x.id}
+          it={x}
+          track={data.tracks.find((t) => t.id === x.trackId)}
+          open={openWs === x.id}
+          busy={Boolean(busy)}
+          onClose={() => setOpenWs(null)}
+          onSwitch={switchEnv}
+          onDone={(score) => finish(x, score)}
+        />
+      ))}
       <Composer
         busy={Boolean(busy)}
         source={source}
