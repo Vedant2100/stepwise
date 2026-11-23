@@ -1,18 +1,14 @@
-name: Test and deploy
+name: Checks
 
+# Vercel's Git integration deploys every push to main; this workflow gates code quality.
 on:
   push:
     branches: [main]
-  workflow_dispatch:
-
-concurrency: deploy
+  pull_request:
 
 jobs:
-  deploy:
+  test:
     runs-on: ubuntu-latest
-    env:
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      VERCEL_SCOPE: vedants-projects-e4341d10
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -22,34 +18,4 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm audit --audit-level=high
-
-      - name: Check secrets
-        run: |
-          test -n "$VERCEL_TOKEN" || { echo "::error::Add the VERCEL_TOKEN repository secret."; exit 1; }
-          test -n "${{ secrets.ANTHROPIC_API_KEY }}" || { echo "::error::Add the ANTHROPIC_API_KEY repository secret."; exit 1; }
-
-      - run: npm install --global vercel@latest
-      - name: Create (first run only) and link the Vercel project
-        run: |
-          vercel project create stepwise --token "$VERCEL_TOKEN" --scope "$VERCEL_SCOPE" || echo "Project already exists."
-          vercel link --yes --project stepwise --token "$VERCEL_TOKEN" --scope "$VERCEL_SCOPE"
-
-      - name: Copy secrets into the Vercel project
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          STEPWISE_ACCESS_CODE: ${{ secrets.STEPWISE_ACCESS_CODE }}
-        run: |
-          for name in ANTHROPIC_API_KEY STEPWISE_ACCESS_CODE; do
-            if [ -n "${!name}" ]; then
-              printf '%s' "${!name}" | vercel env add "$name" production --force --sensitive --yes --token "$VERCEL_TOKEN" --scope "$VERCEL_SCOPE"
-            else
-              vercel env rm "$name" --environment production --confirm-name "$name" --token "$VERCEL_TOKEN" --scope "$VERCEL_SCOPE" || true
-            fi
-          done
-
-      - run: vercel pull --yes --environment=production --token "$VERCEL_TOKEN" --scope "$VERCEL_SCOPE"
-      - run: vercel build --prod --token "$VERCEL_TOKEN" --scope "$VERCEL_SCOPE"
-      - name: Deploy
-        run: |
-          url=$(vercel deploy --prebuilt --prod --token "$VERCEL_TOKEN" --scope "$VERCEL_SCOPE")
-          echo "Deployed: $url" >> "$GITHUB_STEP_SUMMARY"
+      - run: npm run build
