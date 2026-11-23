@@ -38,11 +38,17 @@ npm run build
 
 The API key is read only by `api/llm.js` on the server, in local development and on Vercel alike. It is never sent to the browser.
 
-## Deploy (Vercel)
+## Deploy (Vercel, via GitHub Actions)
 
-1. Import the repo in Vercel (framework: Vite).
-2. Set `ANTHROPIC_API_KEY` in Project Settings → Environment Variables. Optionally set `STEPWISE_ACCESS_CODE` so strangers can't spend your key; users then enter the code under Settings.
-3. Deploy. `api/llm.js` becomes a serverless function at `/api/llm`.
+Every push to `main` runs `.github/workflows/deploy.yml`: install, unit tests and `npm audit`, then it creates and links the Vercel project `stepwise` (first run only), copies the keys from GitHub secrets into Vercel as sensitive variables, builds and deploys to production. The URL appears in the run summary.
+
+One-time setup, in GitHub → Settings → Secrets and variables → Actions:
+
+| Secret | Required | Where to get it |
+|---|---|---|
+| `VERCEL_TOKEN` | yes | vercel.com/account/tokens |
+| `ANTHROPIC_API_KEY` | yes | console.anthropic.com |
+| `STEPWISE_ACCESS_CODE` | no | Any passphrase. If set, users must enter it under Settings before the app calls the model, so strangers can't spend your key. |
 
 ## How it fits together
 

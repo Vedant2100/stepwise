@@ -1,0 +1,54 @@
+name: Test and deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency: deploy
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm audit --audit-level=high
+
+      - name: Check secrets
+        run: |
+          test -n "$VERCEL_TOKEN" || { echo "::error::Add the VERCEL_TOKEN repository secret."; exit 1; }
+          test -n "${{ secrets.ANTHROPIC_API_KEY }}" || { echo "::error::Add the ANTHROPIC_API_KEY repository secret."; exit 1; }
+
+      - run: npm install --global vercel@latest
+      - name: Create (first run only) and link the Vercel project
+        run: |
+          vercel project create stepwise --token "$VERCEL_TOKEN" || echo "Project already exists."
+          vercel link --yes --project stepwise --token "$VERCEL_TOKEN"
+
+      - name: Copy secrets into the Vercel project
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          STEPWISE_ACCESS_CODE: ${{ secrets.STEPWISE_ACCESS_CODE }}
+        run: |
+          for name in ANTHROPIC_API_KEY STEPWISE_ACCESS_CODE; do
+            if [ -n "${!name}" ]; then
+              printf '%s' "${!name}" | vercel env add "$name" production --force --sensitive --yes --token "$VERCEL_TOKEN"
+            else
+              vercel env rm "$name" --environment production --confirm-name "$name" --token "$VERCEL_TOKEN" || true
+            fi
+          done
+
+      - run: vercel pull --yes --environment=production --token "$VERCEL_TOKEN"
+      - run: vercel build --prod --token "$VERCEL_TOKEN"
+      - name: Deploy
+        run: |
+          url=$(vercel deploy --prebuilt --prod --token "$VERCEL_TOKEN")
+          echo "Deployed: $url" >> "$GITHUB_STEP_SUMMARY"
