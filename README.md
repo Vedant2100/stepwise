@@ -8,6 +8,7 @@ Give it an objective, like "understand and implement attention" or "learn Spanis
 | Procedure | **Step workspace** | Work a problem one step at a time; each step is checked |
 | Skill | **Code sandbox** | Write Python in the browser against tests that were checked against a reference solution |
 | Recall | **Retrieval drill** | Answer cards from memory |
+| Intuition | **Simulation** | Move sliders on a live model, then predict-and-check |
 
 A learner model tracks how well you know each concept and picks what comes next. Concepts open up once their prerequisites are mastered, and mastered concepts come back for spaced reviews.
 
@@ -15,13 +16,20 @@ CS205 (UCR, Fall 2026) final project. It builds on [Straight Shot](https://githu
 
 ## Features
 
-- **Chat-first teacher** (ported from Straight Shot): one conversation is the whole interface. Type an objective, paste notes (long pastes become source material) or attach a `.txt`/`.md` file; say “next”, “skip”, “switch to code”, “how am I doing?” or ask about the exercise. A model-based router picks the action, and its choice is validated before anything runs. Exercises open as cards in the feed.
+- **Chat-first teacher** (ported from Straight Shot): one conversation is the whole interface. Type an objective, paste notes (long pastes become source material) or attach a `.txt`/`.md` file; say “next”, “skip”, “switch to code”, “how am I doing?” or ask about the exercise. A model-based router picks the action, and its choice is validated before anything runs. Starting an exercise opens a full-screen workspace for its task type; “← Chat” minimises it without losing your work.
 - **Objective → concept plan:** the model proposes 3–12 concepts in prerequisite order, each with a task type. The plan is validated before use: unknown types are dropped, and prerequisites may only point to earlier concepts, so the graph can't loop.
+- **Stop and timeouts:** every model call has a 90-second limit, and a Stop button cancels one in progress.
 - **Grounding check:** with source material, every concept must quote the source, and the quote is checked against it word for word. Concepts whose quote isn't found are flagged.
 - **Environment chosen per concept,** with a recommended default and a manual override. Each attempt logs which environment was recommended and which was used.
 - **Learner model:** Bayesian Knowledge Tracing per concept (mastery at 95%), then SM-2 spaced reviews.
 - **Planner:** due reviews first, then the weakest concept whose prerequisites are all mastered. You can also pick any concept yourself.
-- **Code sandbox:** CodeMirror editor; Python runs in a Web Worker via Pyodide; infinite loops are stopped and the runner restarts. Generated tests that the hidden reference solution fails are removed before you see them.
+- **Workspaces, each with its own backend:**
+  - *Code IDE:* task and hints, editor, tests and console side by side; tests rerun as you type; ⌘/Ctrl+Enter runs.
+  - *Derivation pad:* math renders as you type (KaTeX); steps that match the expected step are accepted locally without a model call; scratchpad.
+  - *Explain:* writing pad with word count; the rubric ticks off point by point after grading, with the matching source passage.
+  - *Deck:* progress strip, streaks, keyboard (Enter flips, 1 missed, 2 had it).
+  - *Simulation:* the model writes only a small compute function. It runs in an iframe sandboxed with `allow-scripts` only (no access to Stepwise's storage or cookies) and a CSP that blocks all network requests; Stepwise's own code draws the sliders and chart.
+- **Code sandbox runner:** CodeMirror editor; Python runs in a Web Worker via Pyodide; infinite loops are stopped and the runner restarts. Generated tests that the hidden reference solution fails are removed before you see them.
 - **Guardrails against over-relying on help:** hints come one at a time; a step can only be revealed after a wrong try; the code solution unlocks only after a run, and revealing it caps the score at 50.
 - **Progress:** mastery bars, prerequisite locks, review dates and recent practice per objective.
 - **Data:** saved in your browser; export to and import from JSON, with the file's structure checked on import.
@@ -62,13 +70,15 @@ src/
 │   ├── prompts.js     all model prompts
 │   ├── exercise.js    generates and validates an exercise for an environment
 │   ├── runner.js      Pyodide worker runner + test verification
+│   ├── stepcheck.js   local step matching
+│   ├── simframe.js    sandboxed simulation page
 │   ├── harness.py     runs learner code and tests (from Straight Shot)
 │   ├── router.js      chat actions, router prompt and validation
 │   ├── llm.js         client for /api/llm
 │   └── storage.js     localStorage, import/export validation
 ├── App.jsx            the teacher: feed state and actions
 ├── envs/              the four environments
-└── components/        FeedItem, Composer, Progress, Settings, Md
+└── components/        Workspace, FeedItem, Composer, Progress, Settings, Md
 api/llm.js             server-side proxy to the Anthropic API
 ```
 
