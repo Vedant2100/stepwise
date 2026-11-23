@@ -7,6 +7,7 @@ import { validatePlan } from '../src/lib/plan.js'
 import { envFor } from '../src/lib/planner.js'
 import { VALID } from '../src/lib/exercise.js'
 import { checkStepPrompt, exercisePrompt, gradeExplainPrompt, planPrompt, system } from '../src/lib/prompts.js'
+import { normalizeRoute, routePrompt } from '../src/lib/router.js'
 
 const { URL, CODE = '' } = process.env
 const HARNESS = readFileSync(new globalThis.URL('../src/lib/harness.py', import.meta.url), 'utf8')
@@ -38,6 +39,7 @@ function runTests(code, tests) {
 const SOURCE = `Scaled dot-product attention takes queries, keys and values. The attention weights are computed by taking the dot product of each query with every key, dividing by the square root of the key dimension d_k, and applying a softmax so the weights for each query sum to one. The output is the weighted sum of the value vectors. Dividing by sqrt(d_k) keeps the dot products from growing large, which would push the softmax into regions with tiny gradients. Multi-head attention runs several attention functions in parallel on different learned projections and concatenates the results.`
 
 const OBJECTIVES = [
+  { objective: 'Build intuition for how softmax temperature changes attention weights', source: '' },
   { objective: 'Understand and implement scaled dot-product attention', source: SOURCE },
   { objective: 'Learn binary search well enough to code it in an interview', source: '' },
   { objective: 'Learn 10 essential Spanish phrases for ordering food', source: '' },
@@ -96,8 +98,10 @@ for (const { objective, source } of OBJECTIVES) {
       const weak = await step('grade a weak answer', () => ask(system(track), gradeExplainPrompt(ex, 'It is a thing that models use to pay attention to stuff.')))
       const strong = await step('grade the model answer', () => ask(system(track), gradeExplainPrompt(ex, ex.reference)))
       if (weak && strong) {
-        console.log(`    weak=${weak.score}, model answer=${strong.score}`)
+        const met = (r) => (r.points ?? []).filter((p) => p.met).length
+        console.log(`    weak=${weak.score} (${met(weak)}/${ex.rubric.length} points), model answer=${strong.score} (${met(strong)}/${ex.rubric.length} points)`)
         if (!(strong.score >= 70 && weak.score < 50)) issues.push(`explain grading not discriminating: weak=${weak.score}, strong=${strong.score}`)
+        if ((strong.points ?? []).length !== ex.rubric.length) issues.push(`grader returned ${(strong.points ?? []).length} point verdicts for ${ex.rubric.length} rubric points`)
       }
     }
     if (env === 'steps') {
@@ -109,8 +113,32 @@ for (const { objective, source } of OBJECTIVES) {
         if (right.ok !== true || wrong.ok !== false) issues.push('step checking gave the wrong verdict')
       }
     }
+    if (env === 'sim') {
+      await step('simulation code runs and returns numbers across the slider ranges', () => {
+        const f = new Function('p', '"use strict";' + ex.compute)
+        for (const at of ['min', 'value', 'max']) {
+          const r = f(Object.fromEntries(ex.params.map((q) => [q.name, q[at]])))
+          if (!Array.isArray(r?.values) || !r.values.length || !r.values.every(Number.isFinite)) throw new Error(`bad output at ${at}: ${JSON.stringify(r).slice(0, 120)}`)
+        }
+        console.log(`    ${ex.params.map((q) => q.label || q.name).join(', ')} -> ${ex.chart}; ${ex.questions.length} questions`)
+      })
+    }
     if (env === 'drill') console.log(`    ${ex.cards.length} cards, e.g. "${ex.cards[0].front}" -> "${ex.cards[0].back}"`)
   }
+}
+
+console.log('\n## Chat router')
+const tracks = [{ id: 't1', title: 'Attention', objective: 'Understand attention' }]
+const current = { concept: { name: 'Softmax by hand' }, env: 'steps', exercise: { problem: 'softmax([0,0])' } }
+for (const [text, want] of [
+  ['next one please', 'next'], ['teach me how DPO works', 'learn'], ['can I do this one in code instead?', 'switch'],
+  ['how am I doing so far?', 'progress'], ['why do we exponentiate first?', 'help'], ['skip this', 'skip'],
+]) {
+  await step(`"${text}" -> ${want}`, async () => {
+    const r = normalizeRoute(await ask(system(), routePrompt(text, tracks, current)), tracks)
+    console.log(`    got ${r.action}${r.env ? ` (${r.env})` : ''}${r.topic ? ` topic="${r.topic}"` : ''}`)
+    if (r.action !== want) throw new Error(`routed to ${r.action}`)
+  })
 }
 
 console.log(`\n${calls} model calls. ${issues.length ? `${issues.length} issue(s):\n- ${issues.join('\n- ')}` : 'No issues.'}`)
