@@ -43,7 +43,9 @@ export default function App() {
     else delete document.documentElement.dataset.theme
     localStorage.setItem('stepwise.theme', theme)
   }, [theme])
-  useEffect(() => end.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }), [feed.length, busy])
+  useEffect(() => {
+    end.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
+  }, [feed.length, busy])
 
   const push = (...items) => setFeed((f) => [...f, ...items])
   const say = (text, extra) => push(item('t', { text, ...extra }))

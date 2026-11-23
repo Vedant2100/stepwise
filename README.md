@@ -15,6 +15,7 @@ CS205 (UCR, Fall 2026) final project. It builds on [Straight Shot](https://githu
 
 ## Features
 
+- **Chat-first teacher** (ported from Straight Shot): one conversation is the whole interface. Type an objective, paste notes (long pastes become source material) or attach a `.txt`/`.md` file; say “next”, “skip”, “switch to code”, “how am I doing?” or ask about the exercise. A model-based router picks the action, and its choice is validated before anything runs. Exercises open as cards in the feed.
 - **Objective → concept plan:** the model proposes 3–12 concepts in prerequisite order, each with a task type. The plan is validated before use: unknown types are dropped, and prerequisites may only point to earlier concepts, so the graph can't loop.
 - **Grounding check:** with source material, every concept must quote the source, and the quote is checked against it word for word. Concepts whose quote isn't found are flagged.
 - **Environment chosen per concept,** with a recommended default and a manual override. Each attempt logs which environment was recommended and which was used.
@@ -62,15 +63,17 @@ src/
 │   ├── exercise.js    generates and validates an exercise for an environment
 │   ├── runner.js      Pyodide worker runner + test verification
 │   ├── harness.py     runs learner code and tests (from Straight Shot)
+│   ├── router.js      chat actions, router prompt and validation
 │   ├── llm.js         client for /api/llm
 │   └── storage.js     localStorage, import/export validation
+├── App.jsx            the teacher: feed state and actions
 ├── envs/              the four environments
-└── components/        Home, TrackView, Settings, Md
+└── components/        FeedItem, Composer, Progress, Settings, Md
 api/llm.js             server-side proxy to the Anthropic API
 ```
 
 ## Lineage
 
-Stepwise builds on Straight Shot (Study Loop), which already picked a teaching method per kind of material. From it, Stepwise reuses the test harness, the verify-tests-against-a-reference idea, the code-runner design (worker, timeout and restart), SM-2 scheduling and the guardrails. What changes: Straight Shot has the model generate a whole custom workspace per subject, while Stepwise keeps four fixed environments and generates only their content. It also replaces the free-text learner note with a per-concept mastery model and a prerequisite graph, and replaces the single 100 KB HTML file with a tested React app.
+Stepwise builds on Straight Shot (Study Loop), which already picked a teaching method per kind of material. From it, Stepwise reuses its chat-first interface and look, the test harness, the verify-tests-against-a-reference idea, the code-runner design (worker, timeout and restart), SM-2 scheduling and the guardrails. What changes: Straight Shot has the model generate a whole custom workspace per subject, while Stepwise keeps four fixed environments and generates only their content. It also replaces the free-text learner note with a per-concept mastery model and a prerequisite graph, and replaces the single 100 KB HTML file with a tested React app.
 
 See [THESIS.md](THESIS.md) for the reasoning and [AI_USAGE.md](AI_USAGE.md) for how AI tools were used.
