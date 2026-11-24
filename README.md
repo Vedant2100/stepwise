@@ -26,8 +26,8 @@ CS205 (UCR, Fall 2026) final project. It builds on [Straight Shot](https://githu
 - **Stop and timeouts:** every model call has a 90-second limit, and a Stop button cancels one in progress.
 - **Grounding check:** with source material, every concept must quote the source, and the quote is checked against it word for word. Concepts whose quote isn't found are flagged.
 - **Environment chosen per concept,** with a recommended default and a manual override. Each attempt logs which environment was recommended and which was used.
-- **Learner model:** Bayesian Knowledge Tracing per concept (mastery at 95%), then SM-2 spaced reviews.
-- **Planner:** due reviews first, then the weakest concept whose prerequisites are all mastered. You can also pick any concept yourself.
+- **Learner model:** Bayesian Knowledge Tracing per concept (mastery at 95%); the learning bonus applies only to correct answers, so a failed attempt never raises mastery. Then SM-2 spaced reviews.
+- **Planner:** due reviews first. Then, among concepts whose prerequisites are mastered: a concept you just missed comes straight back (with a different exercise), then new concepts in climb order, then ones you've passed but not mastered. After three misses in a row a concept waits until last. You can also pick any concept yourself.
 - **Workspaces, each with its own backend:**
   - *Code IDE:* task and hints, editor, tests and console side by side; tests rerun as you type; ⌘/Ctrl+Enter runs.
   - *Derivation pad:* math renders as you type (KaTeX); steps that match the expected step are accepted locally without a model call; scratchpad.

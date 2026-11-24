@@ -52,6 +52,12 @@ describe('planner', () => {
     expect(nextStep(cs, 0).concept.id).toBe('a')
   })
 
+  it('after a pass moves on to new concepts, then returns to passed-but-unmastered ones', () => {
+    const a = recordAttempt(concept('a'), 85, 0)
+    expect(nextStep([a, concept('b')], 0).concept.id).toBe('b')
+    expect(nextStep([a, concept('b', { pL: 0.99 })], 0).concept.id).toBe('a')
+  })
+
   it('moves on after three misses in a row, and comes back when nothing else is left', () => {
     let a = concept('a')
     for (let i = 0; i < 3; i++) a = recordAttempt(a, 10, 0)

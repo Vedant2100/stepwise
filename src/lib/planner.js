@@ -16,9 +16,15 @@ export const ENVIRONMENTS = {
 
 export const envFor = (type) => Object.keys(ENVIRONMENTS).find((k) => ENVIRONMENTS[k].for === type)
 
-// Due reviews first (oldest first). Otherwise follow the climb in order: the first unmastered concept whose
-// prerequisites are mastered, so a missed concept comes straight back. After STUCK misses in a row it
-// steps aside for the next ready concept and returns once nothing else is left.
+// Due reviews first (oldest first). Otherwise, among concepts whose prerequisites are mastered:
+// 1. one you just missed comes straight back, 2. then new concepts in climb order,
+// 3. then ones you've passed but not yet mastered, 4. after STUCK misses in a row a concept waits until last.
+const priority = (c) => {
+  const misses = c.misses ?? 0
+  if (misses >= STUCK) return 3
+  if (misses > 0) return 0
+  return c.attempts === 0 ? 1 : 2
+}
 export function nextStep(concepts, now) {
   const byId = Object.fromEntries(concepts.map((c) => [c.id, c]))
   const due = concepts.filter((c) => c.review && c.review.due <= now).sort((a, b) => a.review.due - b.review.due)
@@ -27,7 +33,7 @@ export function nextStep(concepts, now) {
   const ready = concepts
     .map((c, i) => ({ c, i }))
     .filter(({ c }) => !isMastered(c) && c.prereqs.every((id) => isMastered(byId[id])))
-    .sort((a, b) => ((a.c.misses ?? 0) >= STUCK) - ((b.c.misses ?? 0) >= STUCK) || a.i - b.i)
+    .sort((a, b) => priority(a.c) - priority(b.c) || a.i - b.i)
   if (ready.length) return { concept: ready[0].c, mode: 'learn' }
   return null
 }
