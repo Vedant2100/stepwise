@@ -4,7 +4,7 @@ import CodeView from './CodeView.jsx'
 
 // Accepts Python-ish literals: single quotes, True/False/None, tuples written with ().
 function parse(text) {
-  const t = text.trim().replace(/'/g, '"').replace(/\bTrue\b/g, 'true').replace(/\bFalse\b/g, 'false').replace(/\bNone\b/g, 'null').replace(/\(/g, '[').replace(/\)/g, ']')
+  const t = text.trim().replace(/'/g, '"').replace(/\bTrue\b/g, 'true').replace(/\bFalse\b/g, 'false').replace(/\bNone\b/g, 'null').replace(/(^|[^"\w])(-?inf|nan)(?![\w"])/gi, (_, pre, w) => `${pre}"${w.toLowerCase()}"`).replace(/\(/g, '[').replace(/\)/g, ']')
   try {
     return JSON.parse(t)
   } catch {

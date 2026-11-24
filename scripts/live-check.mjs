@@ -8,6 +8,7 @@ import { envFor } from '../src/lib/planner.js'
 import { VALID } from '../src/lib/exercise.js'
 import { checkStepPrompt, exercisePrompt, gradeExplainPrompt, planPrompt, system } from '../src/lib/prompts.js'
 import { normalizeRoute, routePrompt } from '../src/lib/router.js'
+import { sameStep } from '../src/lib/stepcheck.js'
 import { verifyNotebook, verifyReadCode, verifyTrace } from '../src/lib/verify.js'
 
 const { URL, CODE = '' } = process.env
@@ -123,7 +124,9 @@ for (const { objective, source } of OBJECTIVES) {
     }
     if (env === 'steps') {
       console.log(`    ${ex.steps.length} steps; first expects: ${ex.steps[0].expected}`)
-      const right = await step('check a correct first step', () => ask(system(track), checkStepPrompt(ex, 0, [], ex.steps[0].expected)))
+      // A correct step in other words (the exact text is accepted locally, as in the app).
+      const reworded = `${ex.steps[0].expected}`.replace(/\s+/g, ' ').trim()
+      const right = await step('check a correct first step', async () => (sameStep(reworded, ex.steps[0].expected) ? { ok: true, local: true } : ask(system(track), checkStepPrompt(ex, 0, [], reworded))))
       const wrong = await step('check a wrong first step', () => ask(system(track), checkStepPrompt(ex, 0, [], 'I am not sure, maybe 42?')))
       if (right && wrong) {
         console.log(`    correct -> ok=${right.ok}; wrong -> ok=${wrong.ok} ("${wrong.feedback}")`)

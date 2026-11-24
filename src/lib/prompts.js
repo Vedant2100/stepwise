@@ -61,4 +61,4 @@ export const checkStepPrompt = (exercise, index, done, answer) => `Problem: ${ex
 Steps completed so far: ${JSON.stringify(done)}
 Step ${index + 1} should produce: ${exercise.steps[index].expected}
 Learner's step: """${answer}"""
-Is the learner's step correct and equivalent to the expected step (notation may differ)? Return: {"ok":true|false,"feedback":"one sentence; if wrong, say what is off without giving the answer"}`
+Is the learner's step correct and equivalent in substance to the expected step? Accept different notation, wording, rounding, or a shorter answer that gives the key result; reject only if it is wrong or answers a different step. Return: {"ok":true|false,"feedback":"one sentence; if wrong, say what is off without giving the answer"}`

@@ -4,10 +4,20 @@ import sys, io, ast, json, copy, traceback
 
 _snaps = []
 
+def _plain(v):
+    # JSON has no Infinity/NaN; show them the way Python prints them.
+    if isinstance(v, float) and (v != v or v in (float("inf"), float("-inf"))):
+        return "nan" if v != v else ("inf" if v > 0 else "-inf")
+    if isinstance(v, dict):
+        return {str(k): _plain(x) for k, x in v.items()}
+    if isinstance(v, (list, tuple, set)):
+        return [_plain(x) for x in (sorted(v, key=str) if isinstance(v, set) else v)]
+    return v
+
 def trace(**state):
     if len(_snaps) >= 200:
         raise RuntimeError("trace() was called more than 200 times")
-    _snaps.append(json.loads(json.dumps(copy.deepcopy(state), default=str)))
+    _snaps.append(json.loads(json.dumps(_plain(copy.deepcopy(state)), default=str)))
 
 _buf = io.StringIO()
 _old = sys.stdout
