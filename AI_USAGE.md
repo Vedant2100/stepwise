@@ -12,6 +12,7 @@
 - **Implementation:** scaffolded the React/Vite/Tailwind app with current package versions, wrote the learner model, planner, plan validation, the four environments and the serverless proxy.
 - **Interface:** after the first version used a generic dashboard, ported Straight Shot's chat-first interface and visual style onto the new engine, and dropped Tailwind for the ported stylesheet.
 - **Workspaces:** designed a full-screen workspace per task type (IDE, derivation pad, explain, deck, sandboxed simulation) and the backend each needs.
+- **Visual redesign:** after feedback that the interface was too minimal, planned a design system (palette, type, layout) around the idea of a climb, checked it against generic AI-design defaults, built it, then reviewed screenshots in light, dark and mobile and fixed what didn't work (the first staircase read as a list, so it became a drawn staircase).
 - **Testing:** unit tests for the core logic, and a headless-Chrome run through all four environments with the model mocked and real Python running via Pyodide.
 
 ## Limitations and issues

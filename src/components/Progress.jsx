@@ -10,7 +10,7 @@ export default function Progress({ tracks, actions, busy }) {
     return (
       <details key={t.id} className="tr" style={{ display: 'block' }}>
         <summary>
-          {t.title} <span className="why">· {done}/{t.concepts.length} mastered · {t.log.length} sessions</span>
+          {t.title} <span className="why">({done} of {t.concepts.length} mastered, {t.log.length} sessions)</span>
           <div className="bar"><i className={done === t.concepts.length ? 'ok' : ''} style={{ width: `${(done / t.concepts.length) * 100}%` }} /></div>
         </summary>
         <ul className="plan" style={{ listStyle: 'none', paddingLeft: 0 }}>
@@ -20,9 +20,9 @@ export default function Progress({ tracks, actions, busy }) {
               <li key={c.id}>
                 {c.name}{' '}
                 <span className="why">
-                  {ENVIRONMENTS[envFor(c.type)].label} · {Math.round(c.pL * 100)}%
-                  {locked && ' · needs prerequisites'}
-                  {c.review && ` · review ${fmtDate(c.review.due)}`}
+                  {ENVIRONMENTS[envFor(c.type)].label}, {Math.round(c.pL * 100)}%
+                  {locked && ', needs prerequisites'}
+                  {c.review && `, review ${fmtDate(c.review.due)}`}
                 </span>
                 <div className="bar"><i className={isMastered(c) ? 'ok' : ''} style={{ width: `${c.pL * 100}%` }} /></div>
               </li>

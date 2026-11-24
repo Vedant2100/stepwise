@@ -42,7 +42,7 @@ export default function DrillWorkspace({ exercise, onDone, active }) {
         <div className="dots-row" aria-label={`${marks.length} of ${cards.length} cards done`}>
           {cards.map((_, n) => <i key={n} className={n < marks.length ? (marks[n] ? 'ok' : 'no') : n === k ? 'now' : ''} />)}
         </div>
-        <p className="why">{finished ? 'Deck done' : `Card ${k + 1} of ${cards.length}`}{streak > 1 ? ` · streak ${streak} 🔥` : ''}</p>
+        <p className="why">{finished ? 'Deck done' : `Card ${k + 1} of ${cards.length}`}{streak > 1 ? `, ${streak} in a row` : ''}</p>
         {finished ? (
           <div className="res" style={{ marginTop: 0 }}>
             <div className="score">{right}/{cards.length}</div>

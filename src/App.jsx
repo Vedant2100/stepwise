@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Composer from './components/Composer.jsx'
-import FeedItem from './components/FeedItem.jsx'
+import FeedItem, { Avatar } from './components/FeedItem.jsx'
+import Sidebar from './components/Sidebar.jsx'
 import Workspace from './components/Workspace.jsx'
 import { makeExercise } from './lib/exercise.js'
 import { isMastered, recordAttempt } from './lib/learner.js'
@@ -19,10 +20,10 @@ const fmtDate = (t) => new Date(t).toLocaleDateString(undefined, { month: 'short
 
 function greeting(tracks, now) {
   if (!tracks.length) {
-    return 'Tell me what you want to be able to do: “understand and implement attention”, “binary search for interviews”, “Spanish for ordering food”. Paste or attach notes and I’ll teach only from them.'
+    return 'What do you want to be able to do?'
   }
   const due = tracks.flatMap((t) => t.concepts).filter((c) => c.review && c.review.due <= now).length
-  return `Welcome back. ${tracks.length} objective${tracks.length > 1 ? 's' : ''}${due ? `, ${due} review${due > 1 ? 's' : ''} due` : ''}. Say “next” to keep going, or give me something new.`
+  return `Welcome back. ${tracks.length} objective${tracks.length > 1 ? 's' : ''}${due ? `, ${due} review${due > 1 ? 's' : ''} due` : ''}. Press Next to keep climbing, or tell me something new to learn.`
 }
 
 export default function App() {
@@ -32,7 +33,10 @@ export default function App() {
   const [source, setSource] = useState(null)
   const [activeId, setActiveId] = useState(data.tracks[0]?.id ?? null)
   const [openWs, setOpenWs] = useState(null)
+  const [sideOpen, setSideOpen] = useState(false)
+  const [systemDark, setSystemDark] = useState(() => matchMedia('(prefers-color-scheme: dark)').matches)
   const [theme, setTheme] = useState(() => localStorage.getItem('stepwise.theme') ?? '')
+  const dark = theme ? theme === 'dark' : systemDark
   const dataRef = useRef(data)
   const end = useRef(null)
 
@@ -40,6 +44,12 @@ export default function App() {
     dataRef.current = data
     save(data)
   }, [data])
+  useEffect(() => {
+    const mq = matchMedia('(prefers-color-scheme: dark)')
+    const onChange = (e) => setSystemDark(e.matches)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
   useEffect(() => {
     if (theme) document.documentElement.dataset.theme = theme
     else delete document.documentElement.dataset.theme
@@ -143,7 +153,7 @@ export default function App() {
     setOpenWs(null)
     const unlocked = updated.concepts.filter((c) => !isMastered(c) && c.prereqs.includes(after.id) && c.prereqs.every((p) => isMastered(updated.concepts.find((x) => x.id === p))))
     say(
-      `**${score}/100** on ${before.name}. Mastery ${Math.round(before.pL * 100)}% → ${Math.round(after.pL * 100)}%.` +
+      `**${score}/100** on ${before.name}. Mastery went from ${Math.round(before.pL * 100)}% to ${Math.round(after.pL * 100)}%.` +
         (isMastered(after) && !isMastered(before) ? ` Mastered; first review ${fmtDate(after.review.due)}.` : '') +
         (unlocked.length ? ` Unlocked: ${unlocked.map((c) => c.name).join(', ')}.` : ''),
       { next: true },
@@ -185,36 +195,92 @@ export default function App() {
     if (r.action === 'delete' && r.trackId) return push(item('confirmDelete', { trackId: r.trackId }))
   }
 
+  async function practice(track, concept) {
+    setSideOpen(false)
+    setActiveId(track.id)
+    const open = openExercise()
+    if (open) patch(open.id, { done: 'skipped' })
+    await run('Thinking', () => start(track, { concept, mode: isMastered(concept) ? 'review' : 'learn' }))
+  }
+
+  function newObjective() {
+    setSideOpen(false)
+    setActiveId(null)
+    if (feed.length > 1) say('What do you want to be able to do next? Paste or attach notes if you want me to teach only from them.')
+  }
+
   const actions = { next, switchEnv, finish, remove, setTracks, push, say, openWorkspace: setOpenWs }
-  const mastered = data.tracks.flatMap((t) => t.concepts).filter(isMastered).length
-  const total = data.tracks.flatMap((t) => t.concepts).length
+  const active = data.tracks.find((t) => t.id === activeId)
+  const hero = feed.length === 1 && !busy && !data.tracks.length
+
+  const composer = (
+    <Composer
+      busy={Boolean(busy)}
+      source={source}
+      setSource={setSource}
+      onSend={send}
+      hasOpen={Boolean(openExercise())}
+      hasTracks={data.tracks.length > 0}
+      onNext={() => next()}
+      onProgress={() => push(item('progress'))}
+      sourceMax={SOURCE_MAX}
+      centered={hero}
+    />
+  )
 
   return (
-    <>
-      <div className="wrap">
-        <header className="top">
-          <h1>Step<mark>wise</mark></h1>
-          {total > 0 && <span className="stat">{mastered}/{total} concepts mastered</span>}
-          <div className="tools">
-            <button className="btn ghost sm" onClick={() => push(item('progress'))}>Progress</button>
-            <button className="btn ghost sm" onClick={() => push(item('settings'))}>Settings</button>
-            <button className="btn ghost sm" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} aria-label="Toggle dark mode">
-              {theme === 'dark' ? 'Light' : 'Dark'}
-            </button>
-          </div>
-        </header>
-        <main className="feed" aria-live="polite">
-          {feed.map((it) => (
-            <FeedItem key={it.id} it={it} data={data} setData={setData} actions={actions} busy={Boolean(busy)} />
-          ))}
-          {busy && (
-            <div className="msg t launch">
-              <span className="dots">{busy}</span>
-              <button className="btn ghost sm" onClick={stopAll}>Stop</button>
+    <div className="app">
+      <Sidebar
+        tracks={data.tracks}
+        activeId={activeId}
+        setActiveId={(id) => { setActiveId(id); setSideOpen(false) }}
+        open={sideOpen}
+        onClose={() => setSideOpen(false)}
+        onNew={newObjective}
+        onPick={practice}
+        onSettings={() => { setSideOpen(false); push(item('settings')) }}
+        dark={dark}
+        toggleTheme={() => setTheme(dark ? 'light' : 'dark')}
+      />
+      <div className="main">
+        {hero ? (
+          <>
+            <div className="hero">
+              <button className="btn ghost sm menu" onClick={() => setSideOpen(true)}>Menu</button>
+              <h1>What do you want to be able to do?</h1>
+              <p>Name a goal. Stepwise breaks it into concepts, picks the right kind of practice for each one, and keeps track of what you’ve mastered. Paste or attach notes and it teaches only from them.</p>
             </div>
-          )}
-          <div ref={end} />
-        </main>
+            {composer}
+          </>
+        ) : (
+          <>
+            <header className="main-head">
+              <button className="btn ghost sm menu" onClick={() => setSideOpen(true)}>Menu</button>
+              <div>
+                <h1>{active ? active.title : 'Stepwise'}</h1>
+                {active && <p>{active.objective}</p>}
+              </div>
+            </header>
+            <div className="wrap">
+              <main className="feed" aria-live="polite">
+                {feed.map((it) => (
+                  <FeedItem key={it.id} it={it} data={data} setData={setData} actions={actions} busy={Boolean(busy)} openWs={openWs} />
+                ))}
+                {busy && (
+                  <div className="msg t">
+                    <Avatar />
+                    <div className="body row" style={{ margin: 0 }}>
+                      <span className="dots">{busy}</span>
+                      <button className="btn ghost sm" onClick={stopAll}>Stop</button>
+                    </div>
+                  </div>
+                )}
+                <div ref={end} />
+              </main>
+            </div>
+            {composer}
+          </>
+        )}
       </div>
       {feed.filter((x) => x.kind === 'exercise' && !x.done).map((x) => (
         <Workspace
@@ -228,17 +294,6 @@ export default function App() {
           onDone={(score) => finish(x, score)}
         />
       ))}
-      <Composer
-        busy={Boolean(busy)}
-        source={source}
-        setSource={setSource}
-        onSend={send}
-        hasOpen={Boolean(openExercise())}
-        hasTracks={data.tracks.length > 0}
-        onNext={() => next()}
-        onProgress={() => push(item('progress'))}
-        sourceMax={SOURCE_MAX}
-      />
-    </>
+    </div>
   )
 }

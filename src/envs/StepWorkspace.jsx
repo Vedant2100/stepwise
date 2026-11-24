@@ -49,7 +49,7 @@ export default function StepWorkspace({ exercise, track, onDone }) {
       <section className="pane">
         <p className="label">Problem</p>
         <Md>{exercise.problem}</Md>
-        <p className="label">Your derivation · {i}/{exercise.steps.length} steps</p>
+        <p className="label">Your derivation, {i} of {exercise.steps.length} steps</p>
         <ol className="steps">
           {done.map((d, k) => (
             <li key={k}>

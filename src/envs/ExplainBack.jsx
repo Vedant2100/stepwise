@@ -60,7 +60,7 @@ export default function ExplainWorkspace({ exercise, track, concept, onDone }) {
       </section>
 
       <section className="pane">
-        <p className="label">Your explanation · {words} words</p>
+        <p className="label">Your explanation ({words} words)</p>
         <textarea
           className="grow"
           style={{ minHeight: 220 }}

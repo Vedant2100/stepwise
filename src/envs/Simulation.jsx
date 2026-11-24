@@ -34,7 +34,7 @@ export default function SimWorkspace({ exercise, onDone }) {
         <iframe className="grow sim" title="Simulation" sandbox="allow-scripts" srcDoc={page} />
       </section>
       <section className="pane">
-        <p className="label">Predict, then check · {Math.min(k + 1, qs.length)}/{qs.length}</p>
+        <p className="label">Predict, then check ({Math.min(k + 1, qs.length)} of {qs.length})</p>
         {finished ? (
           <div className="res" style={{ marginTop: 0 }}>
             <div className="score">{right}/{qs.length}</div>

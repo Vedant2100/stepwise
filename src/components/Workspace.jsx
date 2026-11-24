@@ -16,10 +16,9 @@ export default function Workspace({ it, track, open, busy, onClose, onSwitch, on
   return (
     <div className="ws" hidden={!open} role="dialog" aria-label={`${ENVIRONMENTS[it.env].label}: ${concept.name}`}>
       <header className="ws-head">
-        <button className="btn ghost sm" onClick={onClose}>← Chat</button>
-        <span className={`chip${it.mode === 'review' ? ' rev' : ''}`}>{it.mode === 'review' ? `Review · ${ENVIRONMENTS[it.env].label}` : ENVIRONMENTS[it.env].label}</span>
-        <b>{concept.name}</b>
-        <span className="why">{track.title}</span>
+        <button className="btn ghost sm" onClick={onClose}>Back to chat</button>
+        <span className="chip">{it.mode === 'review' ? `Review in ${ENVIRONMENTS[it.env].label.toLowerCase()}` : ENVIRONMENTS[it.env].label}</span>
+        <span className="title"><b>{concept.name}</b><small>{track.title}</small></span>
         <select value={it.env} onChange={(e) => onSwitch(e.target.value)} disabled={busy} aria-label="Environment">
           {Object.entries(ENVIRONMENTS).map(([k, v]) => (
             <option key={k} value={k}>{v.label}{k === recommended ? ' (recommended)' : ''}</option>

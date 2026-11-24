@@ -33,7 +33,7 @@ CS205 (UCR, Fall 2026) final project. It builds on [Straight Shot](https://githu
 - **Guardrails against over-relying on help:** hints come one at a time; a step can only be revealed after a wrong try; the code solution unlocks only after a run, and revealing it caps the score at 50.
 - **Progress:** mastery bars, prerequisite locks, review dates and recent practice per objective.
 - **Data:** saved in your browser; export to and import from JSON, with the file's structure checked on import.
-- **Dark mode.**
+- **Design:** an ascent. A pine sidebar lists your objectives and draws each climb as a staircase: every concept is a step, marigold fills it with mastery, and a flag marks what's next. Bricolage Grotesque for headings, Atkinson Hyperlegible Next for reading, JetBrains Mono for code, all self-hosted. Light and dark themes; responsive down to phones.
 
 ## Setup
 
@@ -78,7 +78,7 @@ src/
 │   └── storage.js     localStorage, import/export validation
 ├── App.jsx            the teacher: feed state and actions
 ├── envs/              the four environments
-└── components/        Workspace, FeedItem, Composer, Progress, Settings, Md
+└── components/        Sidebar (staircase), Workspace, FeedItem, Composer, Progress, Settings, Icons, Md
 api/llm.js             server-side proxy to the Anthropic API
 ```
 

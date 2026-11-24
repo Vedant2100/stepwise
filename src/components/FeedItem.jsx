@@ -2,11 +2,24 @@ import { useState } from 'react'
 import Md from './Md.jsx'
 import Progress from './Progress.jsx'
 import Settings from './Settings.jsx'
+import { EnvIcon, Mark } from './Icons.jsx'
 import { ACCESS_KEY } from '../lib/llm.js'
 import { ENVIRONMENTS, envFor } from '../lib/planner.js'
 const TYPE_LABEL = { concept: 'Concept', procedure: 'Procedure', skill: 'Skill', recall: 'Recall', intuition: 'Intuition' }
 
-export default function FeedItem({ it, data, setData, actions, busy }) {
+// The teacher speaks without a bubble, next to the Stepwise mark.
+export const Avatar = () => <span className="avatar"><Mark size={30} /></span>
+
+function Teacher({ err, wide, children }) {
+  return (
+    <div className={`msg t${err ? ' err' : ''}${wide ? ' wide' : ''}`}>
+      <Avatar />
+      <div className="body">{children}</div>
+    </div>
+  )
+}
+
+export default function FeedItem({ it, data, setData, actions, busy, openWs }) {
   const track = data.tracks.find((t) => t.id === it.trackId)
 
   switch (it.kind) {
@@ -15,57 +28,70 @@ export default function FeedItem({ it, data, setData, actions, busy }) {
 
     case 't':
       return (
-        <div className={`msg t${it.err ? ' err' : ''}`}>
+        <Teacher err={it.err}>
           <Md>{it.text}</Md>
           {it.next && (
             <div className="row">
-              <button className="btn sm" onClick={() => actions.next()} disabled={busy}>Next →</button>
+              <button className="btn sm" onClick={() => actions.next()} disabled={busy}>Next exercise</button>
             </div>
           )}
-        </div>
+        </Teacher>
       )
 
     case 'plan':
       if (!track) return null
       return (
-        <div className="msg t wide">
-          <p><b>{track.title}</b> · {track.concepts.length} concepts, in order:</p>
-          <ol className="plan">
-            {track.concepts.map((c) => (
-              <li key={c.id}>
-                {c.name} <span className="why">{TYPE_LABEL[c.type]} → {ENVIRONMENTS[envFor(c.type)].label}</span>
-                {c.grounded === false && <span className="chip warn" style={{ marginLeft: 8 }}>quote not found in source</span>}
+        <Teacher wide>
+          <p>Here’s the climb for <b>{track.title}</b>: {track.concepts.length} concepts, each with the practice that suits it. We start at the bottom.</p>
+          <ol className="plan-stairs">
+            {track.concepts.map((c, i) => (
+              <li key={c.id} style={{ '--i': i }}>
+                <span>{c.name}</span>
+                <small>{TYPE_LABEL[c.type]}, practiced in {ENVIRONMENTS[envFor(c.type)].label.toLowerCase()}</small>
+                {c.grounded === false && <span className="warn">Quote not found in your source</span>}
               </li>
             ))}
           </ol>
-        </div>
+        </Teacher>
       )
 
     case 'exercise': {
       if (!track) return null
       const concept = track.concepts.find((c) => c.id === it.conceptId)
+      const Icon = EnvIcon[it.env]
+      const status = {
+        finished: 'Recorded',
+        skipped: 'Skipped',
+        switched: 'Switched to another workspace',
+      }[it.done] ?? (it.mode === 'review' ? 'Spaced review, ready' : 'Ready when you are')
       return (
-        <div className="msg t launch">
-          <span className={`chip${it.mode === 'review' ? ' rev' : ''}`}>{ENVIRONMENTS[it.env].label}</span>
-          <b>{concept.name}</b>
-          {it.done === 'finished' && <span className="why">· {it.score}/100</span>}
-          {(it.done === 'skipped' || it.done === 'switched') && <span className="why">· {it.done}</span>}
-          {!it.done && <button className="btn sm" onClick={() => actions.openWorkspace(it.id)}>Open workspace</button>}
+        <div className={`launch${openWs === it.id ? ' open' : ''}`}>
+          <span className="glyph"><Icon /></span>
+          <div>
+            <small>{ENVIRONMENTS[it.env].label}</small>
+            <b>{concept.name}</b>
+            <small>{status}</small>
+          </div>
+          {it.done === 'finished' ? (
+            <span className="done-score">{it.score}<small>/100</small></span>
+          ) : !it.done ? (
+            <button className="btn sm" onClick={() => actions.openWorkspace(it.id)}>Open workspace</button>
+          ) : <span />}
         </div>
       )
     }
 
     case 'progress':
-      return <div className="msg t wide"><Progress tracks={data.tracks} actions={actions} busy={busy} /></div>
+      return <Teacher wide><Progress tracks={data.tracks} actions={actions} busy={busy} /></Teacher>
 
     case 'settings':
-      return <div className="msg t wide"><Settings data={data} setData={setData} /></div>
+      return <Teacher wide><Settings data={data} setData={setData} /></Teacher>
 
     case 'access':
-      return <AccessPrompt />
+      return <Teacher><AccessPrompt /></Teacher>
 
     case 'confirmDelete':
-      return <ConfirmDelete track={track} onYes={() => actions.remove(it.trackId)} />
+      return <Teacher><ConfirmDelete track={track} onYes={() => actions.remove(it.trackId)} /></Teacher>
 
     default:
       return null
@@ -76,7 +102,7 @@ function AccessPrompt() {
   const [code, setCode] = useState('')
   const [saved, setSaved] = useState(false)
   return (
-    <div className="msg t">
+    <div>
       <p>This deployment needs an access code before I can call the model.</p>
       {saved ? (
         <p className="good">Saved. Send your message again.</p>
@@ -94,7 +120,7 @@ function ConfirmDelete({ track, onYes }) {
   const [done, setDone] = useState(false)
   if (!track) return null
   return (
-    <div className="msg t">
+    <div>
       <p>Delete <b>{track.title}</b> and its progress?</p>
       {!done && (
         <div className="row">
