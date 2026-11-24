@@ -163,3 +163,19 @@ describe('exercise shape checks', async () => {
     expect(VALID.trace({ code: 'x', questions: [{ ask: 'q', choices: ['a', 'b'], answer: 2 }] })).toBe(false)
   })
 })
+
+describe('sync merge', async () => {
+  const { merge } = await import('./sync.js')
+  const t = (id, updatedAt, title = id) => ({ id, title, updatedAt, createdAt: updatedAt })
+
+  it('keeps the newer copy of each objective and everything only one side has', () => {
+    const m = merge({ tracks: [t('a', 5, 'old'), t('b', 1)], deleted: [] }, { tracks: [t('a', 9, 'new'), t('c', 2)], deleted: [] })
+    expect(m.tracks.map((x) => [x.id, x.title])).toEqual([['a', 'new'], ['c', 'c'], ['b', 'b']])
+  })
+
+  it('applies deletions unless the objective changed after it was deleted', () => {
+    const m = merge({ tracks: [t('a', 5), t('b', 20)], deleted: [] }, { tracks: [], deleted: [{ id: 'a', at: 10 }, { id: 'b', at: 10 }] })
+    expect(m.tracks.map((x) => x.id)).toEqual(['b'])
+    expect(m.deleted).toEqual(expect.arrayContaining([{ id: 'a', at: 10 }]))
+  })
+})

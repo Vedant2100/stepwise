@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { ACCESS_KEY } from '../lib/llm.js'
 import { download, parseData } from '../lib/storage.js'
 
-export default function Settings({ data, setData }) {
+export default function Settings({ data, changeTracks }) {
   const [code, setCode] = useState(localStorage.getItem(ACCESS_KEY) ?? '')
   const [message, setMessage] = useState('')
 
@@ -11,7 +11,7 @@ export default function Settings({ data, setData }) {
       const imported = parseData(await file.text())
       const ids = new Set(data.tracks.map((t) => t.id))
       const fresh = imported.tracks.filter((t) => !ids.has(t.id))
-      setData({ tracks: [...data.tracks, ...fresh] })
+      changeTracks((ts) => [...ts, ...fresh])
       setMessage(`Imported ${fresh.length} objective(s); ${imported.tracks.length - fresh.length} already here were skipped.`)
     } catch (e) {
       setMessage(e instanceof SyntaxError ? 'That file is not valid JSON.' : e.message)
@@ -40,7 +40,7 @@ export default function Settings({ data, setData }) {
         </label>
       </div>
       {message && <p>{message}</p>}
-      <p className="why">Your progress is stored only in this browser. Export it to move it to another device.</p>
+      <p className="why">Progress is kept in this browser, and in your account when you’re signed in. Export makes a file you can keep or import elsewhere.</p>
     </>
   )
 }

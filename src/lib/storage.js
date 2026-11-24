@@ -1,10 +1,18 @@
 const KEY = 'stepwise.v1'
 
+// Saved locally: { tracks, deleted, sync: { version, username } }. deleted and sync support account sync.
 export function load() {
+  const fresh = { tracks: [], deleted: [], sync: { version: 0, username: null } }
   try {
-    return parseData(localStorage.getItem(KEY) ?? '{"tracks":[]}')
+    const raw = JSON.parse(localStorage.getItem(KEY) ?? 'null')
+    if (!raw) return fresh
+    return {
+      tracks: parseData(JSON.stringify(raw)).tracks,
+      deleted: Array.isArray(raw.deleted) ? raw.deleted.filter((d) => typeof d?.id === 'string' && isNum(d.at)) : [],
+      sync: { version: Number.isInteger(raw.sync?.version) ? raw.sync.version : 0, username: typeof raw.sync?.username === 'string' ? raw.sync.username : null },
+    }
   } catch {
-    return { tracks: [] }
+    return fresh
   }
 }
 
@@ -16,18 +24,21 @@ const validConcept = (c) =>
   Array.isArray(c.prereqs) && isNum(c.pL) && c.pL >= 0 && c.pL <= 1 && isNum(c.attempts) &&
   (c.review === null || (isNum(c.review?.due) && isNum(c.review.interval) && isNum(c.review.ease) && isNum(c.review.reps)))
 
-// Used for localStorage and for imported files, so it checks the full shape.
+export const validTracks = (tracks) =>
+  Array.isArray(tracks) && tracks.every((t) =>
+    typeof t?.id === 'string' && typeof t.objective === 'string' && typeof t.title === 'string' &&
+    typeof t.source === 'string' && Array.isArray(t.log) && Array.isArray(t.concepts) && t.concepts.every(validConcept) &&
+    (t.updatedAt === undefined || isNum(t.updatedAt)))
+
+// Used for localStorage, imported files and the sync API, so it checks the full shape.
 export function parseData(text) {
   const data = JSON.parse(text)
-  const ok = Array.isArray(data?.tracks) && data.tracks.every((t) =>
-    typeof t.id === 'string' && typeof t.objective === 'string' && typeof t.title === 'string' &&
-    typeof t.source === 'string' && Array.isArray(t.log) && Array.isArray(t.concepts) && t.concepts.every(validConcept))
-  if (!ok) throw new Error('This file is not a Stepwise export.')
+  if (!validTracks(data?.tracks)) throw new Error('This file is not a Stepwise export.')
   return { tracks: data.tracks }
 }
 
 export function download(data) {
-  const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }))
+  const url = URL.createObjectURL(new Blob([JSON.stringify({ tracks: data.tracks }, null, 2)], { type: 'application/json' }))
   const a = Object.assign(document.createElement('a'), { href: url, download: `stepwise-${new Date().toISOString().slice(0, 10)}.json` })
   a.click()
   URL.revokeObjectURL(url)

@@ -11,6 +11,7 @@ import { ENVIRONMENTS, envFor, nextReviewAt, nextStep } from './lib/planner.js'
 import { planPrompt, system } from './lib/prompts.js'
 import { normalizeRoute, routePrompt } from './lib/router.js'
 import { load, save } from './lib/storage.js'
+import useAccount from './lib/useAccount.js'
 
 const SOURCE_MAX = 15_000
 const PASTE_AS_SOURCE = 800
@@ -39,6 +40,7 @@ export default function App() {
   const dark = theme ? theme === 'dark' : systemDark
   const dataRef = useRef(data)
   const end = useRef(null)
+  const account = useAccount(data, dataRef, setData)
 
   useEffect(() => {
     dataRef.current = data
@@ -62,7 +64,19 @@ export default function App() {
   const push = (...items) => setFeed((f) => [...f, ...items])
   const say = (text, extra) => push(item('t', { text, ...extra }))
   const patch = (id, changes) => setFeed((f) => f.map((x) => (x.id === id ? { ...x, ...changes } : x)))
-  const setTracks = (fn) => setData((d) => ({ tracks: fn(d.tracks) }))
+  // Every change to objectives goes through here: changed ones get a fresh updatedAt and removed ones a
+  // deletion record, so copies on different devices can be merged per objective.
+  function changeTracks(fn) {
+    const before = dataRef.current
+    const now = Date.now()
+    const prev = new Map(before.tracks.map((t) => [t.id, t]))
+    const after = fn(before.tracks).map((t) => (prev.get(t.id) === t ? t : { ...t, updatedAt: now }))
+    const kept = new Set(after.map((t) => t.id))
+    const removed = before.tracks.filter((t) => !kept.has(t.id)).map((t) => ({ id: t.id, at: now }))
+    const next = { ...before, tracks: after, deleted: [...before.deleted, ...removed].slice(-500) }
+    dataRef.current = next
+    setData(next)
+  }
   const openExercise = () => [...feed].reverse().find((x) => x.kind === 'exercise' && !x.done)
 
   async function run(label, fn) {
@@ -82,8 +96,7 @@ export default function App() {
       objective = objective.replace(/\s+/g, ' ').trim()
       const plan = validatePlan(await ask(system({ source: text }), planPrompt(objective, text), { variant: 0 }), text)
       const track = { id: crypto.randomUUID(), objective, source: text, ...plan, log: [], createdAt: Date.now() }
-      setTracks((ts) => [track, ...ts])
-      dataRef.current = { tracks: [track, ...dataRef.current.tracks] }
+      changeTracks((ts) => [track, ...ts])
       setActiveId(track.id)
       setSource(null)
       push(item('plan', { trackId: track.id }))
@@ -148,8 +161,7 @@ export default function App() {
       concepts: track.concepts.map((c) => (c.id === after.id ? after : c)),
       log: [...track.log, { conceptId: it.conceptId, env: it.env, defaultEnv: envFor(before.type), mode: it.mode, score, at: now, ms: now - it.started }],
     }
-    setTracks((ts) => ts.map((t) => (t.id === track.id ? updated : t)))
-    dataRef.current = { tracks: dataRef.current.tracks.map((t) => (t.id === track.id ? updated : t)) }
+    changeTracks((ts) => ts.map((t) => (t.id === track.id ? updated : t)))
     patch(it.id, { done: 'finished', score })
     setOpenWs(null)
     const unlocked = updated.concepts.filter((c) => !isMastered(c) && c.prereqs.includes(after.id) && c.prereqs.every((p) => isMastered(updated.concepts.find((x) => x.id === p))))
@@ -164,8 +176,7 @@ export default function App() {
   }
 
   function remove(trackId) {
-    setTracks((ts) => ts.filter((t) => t.id !== trackId))
-    dataRef.current = { tracks: dataRef.current.tracks.filter((t) => t.id !== trackId) }
+    changeTracks((ts) => ts.filter((t) => t.id !== trackId))
     setFeed((f) => f.map((x) => (x.trackId === trackId && x.kind === 'exercise' && !x.done ? { ...x, done: 'skipped' } : x)))
     say('Deleted.')
   }
@@ -212,7 +223,7 @@ export default function App() {
     if (feed.length > 1) say('What do you want to be able to do next? Paste or attach notes if you want me to teach only from them.')
   }
 
-  const actions = { next, switchEnv, finish, remove, setTracks, push, say, openWorkspace: setOpenWs }
+  const actions = { next, switchEnv, finish, remove, changeTracks, push, say, openWorkspace: setOpenWs, account }
   const active = data.tracks.find((t) => t.id === activeId)
   const hero = feed.length === 1 && !busy && !data.tracks.length
 
@@ -242,6 +253,8 @@ export default function App() {
         onNew={newObjective}
         onPick={practice}
         onSettings={() => { setSideOpen(false); push(item('settings')) }}
+        account={account}
+        onAccount={() => { setSideOpen(false); push(item('account')) }}
         dark={dark}
         toggleTheme={() => setTheme(dark ? 'light' : 'dark')}
       />

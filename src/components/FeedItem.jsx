@@ -2,9 +2,10 @@ import { useState } from 'react'
 import Md from './Md.jsx'
 import Progress from './Progress.jsx'
 import Settings from './Settings.jsx'
+import AccountForm from './AccountForm.jsx'
 import { EnvIcon, Mark } from './Icons.jsx'
 import { ACCESS_KEY } from '../lib/llm.js'
-import { ENVIRONMENTS, envFor } from '../lib/planner.js'
+import { ENVIRONMENTS, alternativesFor, envFor } from '../lib/planner.js'
 const TYPE_LABEL = { concept: 'Concept', procedure: 'Procedure', skill: 'Skill', recall: 'Recall', intuition: 'Intuition', reading: 'Code reading', ordering: 'Ordering', data: 'Data', algorithm: 'Algorithm' }
 
 // The teacher speaks without a bubble, next to the Stepwise mark.
@@ -72,6 +73,15 @@ export default function FeedItem({ it, data, setData, actions, busy, openWs }) {
             <b>{concept.name}</b>
             <small>{status}</small>
           </div>
+          {!it.done && (
+            <div className="try">
+              <span>Or try it as</span>
+              {alternativesFor(it.env, data.tracks).map((env) => {
+                const Alt = EnvIcon[env]
+                return <button key={env} className="btn ghost xs" disabled={!!busy} onClick={() => actions.switchEnv(env)}><Alt /> {ENVIRONMENTS[env].label}</button>
+              })}
+            </div>
+          )}
           {it.done === 'finished' ? (
             <span className="done-score">{it.score}<small>/100</small></span>
           ) : !it.done ? (
@@ -85,7 +95,10 @@ export default function FeedItem({ it, data, setData, actions, busy, openWs }) {
       return <Teacher wide><Progress tracks={data.tracks} actions={actions} busy={busy} /></Teacher>
 
     case 'settings':
-      return <Teacher wide><Settings data={data} setData={setData} /></Teacher>
+      return <Teacher wide><Settings data={data} changeTracks={actions.changeTracks} /></Teacher>
+
+    case 'account':
+      return <Teacher><AccountForm account={actions.account} /></Teacher>
 
     case 'access':
       return <Teacher><AccessPrompt /></Teacher>

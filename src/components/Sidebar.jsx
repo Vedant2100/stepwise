@@ -1,4 +1,4 @@
-import { isMastered } from '../lib/learner.js'
+import { BKT, MASTERED, isMastered } from '../lib/learner.js'
 import { ENVIRONMENTS, envFor, nextStep } from '../lib/planner.js'
 import { Mark } from './Icons.jsx'
 
@@ -13,7 +13,8 @@ function Staircase({ concepts, here, onPick }) {
       {concepts.map((c, i) => {
         const h = ((i + 1) / n) * H
         const x = i * (w + gap)
-        const fill = Math.max(0, Math.min(1, c.pL)) * h
+        // Fill from the starting guess (empty) to the mastery line (full), so untouched steps show no gold.
+        const fill = Math.max(0, Math.min(1, (c.pL - BKT.init) / (MASTERED - BKT.init))) * h
         return (
           <g key={c.id} className="step" onClick={() => onPick(c)}>
             <title>{`${c.name}: ${Math.round(c.pL * 100)}%`}</title>
@@ -39,6 +40,7 @@ function Climb({ track, onPick }) {
     <div>
       <h2>The climb</h2>
       <Staircase concepts={track.concepts} here={here} onPick={onPick} />
+      {here && <p className="next-up">Next up: <b>{track.concepts.find((c) => c.id === here).name}</b></p>}
       <div className="climb">
         {track.concepts.map((c) => {
           const locked = !c.prereqs.every(done)
@@ -58,7 +60,9 @@ function Climb({ track, onPick }) {
   )
 }
 
-export default function Sidebar({ tracks, activeId, setActiveId, open, onClose, onNew, onPick, onSettings, dark, toggleTheme }) {
+const SYNC_LABEL = { saving: 'Saving…', synced: 'Synced', offline: 'Offline, will retry', error: 'Couldn’t sync, retrying' }
+
+export default function Sidebar({ tracks, activeId, setActiveId, open, onClose, onNew, onPick, onSettings, dark, toggleTheme, account, onAccount }) {
   const active = tracks.find((t) => t.id === activeId)
   return (
     <>
@@ -75,7 +79,7 @@ export default function Sidebar({ tracks, activeId, setActiveId, open, onClose, 
                 <button key={t.id} className="goal" aria-current={t.id === activeId} onClick={() => setActiveId(t.id)}>
                   <span>{t.title}</span>
                   <div className="meter"><i style={{ width: `${(done / t.concepts.length) * 100}%` }} /></div>
-                  <small>{done} of {t.concepts.length} mastered</small>
+                  <small>{done} of {t.concepts.length} mastered{tracks.some((o) => o !== t && o.title === t.title) && t.createdAt ? `, started ${new Date(t.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}` : ''}</small>
                 </button>
               )
             })}
@@ -90,8 +94,19 @@ export default function Sidebar({ tracks, activeId, setActiveId, open, onClose, 
           <p>Your goals and the climb toward each one will show up here.</p>
         </div>
       )}
-      <div className="side-foot">
+      <div className="who">
+        {account.username ? (
+          <>
+            <span>Signed in as <b>{account.username}</b></span>
+            <small className={`sync ${account.status}`}>{SYNC_LABEL[account.status]}</small>
+          </>
+        ) : (
+          <button className="btn gold sm" onClick={onAccount}>Sign in to sync</button>
+        )}
+      </div>
+      <div className="side-foot" style={{ marginTop: 0 }}>
         <button className="btn ghost sm" onClick={onSettings}>Settings</button>
+        {account.username && <button className="btn ghost sm" onClick={onAccount}>Account</button>}
         <button className="btn ghost sm" onClick={toggleTheme}>{dark ? 'Light mode' : 'Dark mode'}</button>
       </div>
     </aside>

@@ -14,6 +14,18 @@ export const ENVIRONMENTS = {
   trace: { label: 'Algorithm tracer', for: 'algorithm' },
 }
 
+// Other workspaces that suit the same material, offered so the learner can try a different angle.
+const ALTERNATIVES = {
+  explain: ['drill', 'sim'], steps: ['explain', 'sort'], code: ['readcode', 'trace'], drill: ['explain', 'sort'],
+  sim: ['explain', 'drill'], readcode: ['code', 'trace'], sort: ['drill', 'explain'], notebook: ['code', 'sim'],
+  trace: ['code', 'readcode'],
+}
+// Workspaces the learner hasn't used yet come first.
+export function alternativesFor(env, tracks) {
+  const used = new Set(tracks.flatMap((t) => t.log.map((l) => l.env)))
+  return [...ALTERNATIVES[env]].sort((a, b) => used.has(a) - used.has(b))
+}
+
 export const envFor = (type) => Object.keys(ENVIRONMENTS).find((k) => ENVIRONMENTS[k].for === type)
 
 // Due reviews first (oldest first). Otherwise, among concepts whose prerequisites are mastered:
