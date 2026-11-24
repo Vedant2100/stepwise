@@ -8,6 +8,7 @@ import { envFor } from '../src/lib/planner.js'
 import { VALID } from '../src/lib/exercise.js'
 import { checkStepPrompt, exercisePrompt, gradeExplainPrompt, planPrompt, system } from '../src/lib/prompts.js'
 import { normalizeRoute, routePrompt } from '../src/lib/router.js'
+import { verifyNotebook, verifyReadCode, verifyTrace } from '../src/lib/verify.js'
 
 const { URL, CODE = '' } = process.env
 const HARNESS = readFileSync(new globalThis.URL('../src/lib/harness.py', import.meta.url), 'utf8')
@@ -28,6 +29,22 @@ async function ask(sys, prompt) {
   const out = parseJSON(data.text)
   console.log(`    (${Date.now() - t0} ms)`)
   return out
+}
+
+const RUN = readFileSync(new globalThis.URL('../src/lib/harness_run.py', import.meta.url), 'utf8')
+const CELL = readFileSync(new globalThis.URL('../src/lib/harness_cell.py', import.meta.url), 'utf8')
+async function pyRun(harness, vars, code) {
+  await py.loadPackagesFromImports(code)
+  for (const [k, v] of Object.entries(vars)) py.globals.set(k, v)
+  return JSON.parse(py.runPython(harness))
+}
+// Same interface as src/lib/runner.js, backed by Pyodide in Node.
+const node = {
+  runTests: async (code, tests) => runTests(code, tests),
+  runCode: (code) => pyRun(RUN, { CODE: code }, code),
+  runCell: (nb, code) => pyRun(CELL, { CODE: code, NB: nb, MODE: 'run' }, code),
+  checkCell: (nb, code) => pyRun(CELL, { CODE: code, NB: nb, MODE: 'check' }, code),
+  resetNotebook: (nb) => pyRun(CELL, { CODE: '', NB: nb, MODE: 'reset' }, ''),
 }
 
 function runTests(code, tests) {
@@ -125,6 +142,41 @@ for (const { objective, source } of OBJECTIVES) {
     }
     if (env === 'drill') console.log(`    ${ex.cards.length} cards, e.g. "${ex.cards[0].front}" -> "${ex.cards[0].back}"`)
   }
+}
+
+console.log('\n## New workspaces')
+const cs = { objective: 'Prepare for CS interviews and ML work', source: '' }
+const NEW = [
+  ['readcode', { name: 'Python list comprehensions and slicing', type: 'reading', summary: 'Predict output and fix bugs.', pL: 0.4 }],
+  ['sort', { name: 'Phases of training a neural network', type: 'ordering', summary: 'Order the training loop.', pL: 0.4 }],
+  ['notebook', { name: 'Exploring a dataset with pandas', type: 'data', summary: 'Group, aggregate and plot.', pL: 0.4 }],
+  ['trace', { name: "Dijkstra's shortest paths", type: 'algorithm', summary: 'How distances settle.', pL: 0.4 }],
+]
+for (const [env, concept] of NEW) {
+  const x = await step(`${env} exercise for "${concept.name}"`, async () => {
+    const r = await ask(system(cs), exercisePrompt(env, concept, cs, 'learn'))
+    if (!VALID[env](r)) throw new Error(`invalid shape: ${JSON.stringify(r).slice(0, 200)}`)
+    return r
+  })
+  if (!x) continue
+  await step(`${env} verified by running Python`, async () => {
+    if (env === 'readcode') {
+      const v = await verifyReadCode(x, node)
+      console.log(`    ${v.snippets.length}/${x.snippets.length} snippets kept; bug-fix part ${v.debug ? `kept (${v.debug.tests.length} tests fail on the buggy code)` : 'dropped'}`)
+      console.log(`    e.g. ${JSON.stringify(v.snippets[0].code.split('\n')[0])} prints ${JSON.stringify(v.snippets[0].output.trim().slice(0, 60))}`)
+    }
+    if (env === 'trace') {
+      const v = await verifyTrace(x, node)
+      console.log(`    ${v.steps.length} real steps; first: ${JSON.stringify(v.steps[0]).slice(0, 100)}`)
+    }
+    if (env === 'notebook') {
+      const v = await verifyNotebook(x, node)
+      console.log(`    ${v.tasks.length}/${x.tasks.length} tasks pass their own hidden checks`)
+      const plot = await node.runCell('plot-test', x.setup + '\nimport matplotlib.pyplot as plt\nplt.plot([1, 2, 3])')
+      console.log(`    matplotlib renders: ${plot.images.length} image(s)${plot.error ? `; error ${plot.error}` : ''}`)
+    }
+    if (env === 'sort') console.log(`    ${x.mode}: ${JSON.stringify(x.items ?? x.buckets.map((b) => b.name))}`)
+  })
 }
 
 console.log('\n## Chat router')

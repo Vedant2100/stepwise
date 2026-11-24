@@ -1,9 +1,10 @@
-import { checkCell, resetNotebook, runCell, runCode, runTests } from './runner.js'
+import * as browser from './runner.js'
 
 // Every exercise that involves code is run for real before the learner sees it, so the ground truth
 // (printed output, traced state, passing checks) comes from Python, not from the model.
+// Each takes the Python runtime as an argument so scripts/live-check.mjs can run the same checks in Node.
 
-export async function verifyReadCode(x) {
+export async function verifyReadCode(x, { runCode, runTests } = browser) {
   const snippets = []
   for (const s of x.snippets) {
     const r = await runCode(s.code)
@@ -21,14 +22,14 @@ export async function verifyReadCode(x) {
   return { snippets, debug }
 }
 
-export async function verifyTrace(x) {
+export async function verifyTrace(x, { runCode } = browser) {
   const r = await runCode(x.code)
   if (r.error) throw new Error('The generated algorithm did not run. Try again.')
   if (r.trace.length < 2) throw new Error('The generated algorithm recorded too few steps. Try again.')
   return { ...x, steps: r.trace.slice(0, 30), output: r.stdout }
 }
 
-export async function verifyNotebook(x) {
+export async function verifyNotebook(x, { runCell, checkCell, resetNotebook } = browser) {
   const nb = `verify-${crypto.randomUUID()}`
   try {
     const setup = await runCell(nb, x.setup)

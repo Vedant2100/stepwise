@@ -60,7 +60,7 @@ export default function ReadCodeWorkspace({ exercise, onDone, active }) {
         {predicting ? (
           <>
             <p className="label">Your prediction of the exact output</p>
-            <textarea className="mono grow" style={{ minHeight: 160 }} value={guess} onChange={(e) => setGuess(e.target.value)} disabled={result?.credit !== undefined} aria-label="Predicted output" />
+            <textarea className="mono" rows={7} value={guess} onChange={(e) => setGuess(e.target.value)} disabled={result?.credit !== undefined} aria-label="Predicted output" />
             {!result || result.credit === undefined ? (
               <div className="row" style={{ margin: 0 }}>
                 <button className="btn" onClick={check} disabled={!guess.trim()}>Check</button>
