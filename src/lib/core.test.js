@@ -8,9 +8,11 @@ const DAY = 86_400_000
 const concept = (id, extra = {}) => ({ id, name: id, type: 'concept', prereqs: [], pL: BKT.init, attempts: 0, review: null, ...extra })
 
 describe('learner model', () => {
-  it('raises mastery on correct answers and lowers it on wrong ones', () => {
-    expect(updateMastery(0.5, true)).toBeGreaterThan(0.5)
-    expect(updateMastery(0.5, false)).toBeLessThan(0.5)
+  it('raises mastery on correct answers and lowers it on wrong ones, from any starting point', () => {
+    for (const p of [0.1, 0.5, 0.9]) {
+      expect(updateMastery(p, true)).toBeGreaterThan(p)
+      expect(updateMastery(p, false)).toBeLessThan(p)
+    }
   })
 
   it('reaches mastery after a few correct answers and then schedules a review', () => {
@@ -41,6 +43,21 @@ describe('planner', () => {
     expect(nextStep(cs, 0).concept.id).toBe('a')
     cs[0].pL = 0.99
     expect(nextStep(cs, 0).concept.id).toBe('b')
+  })
+
+  it('follows the climb in order and retries a missed concept instead of jumping to a fresh one', () => {
+    let a = recordAttempt(concept('a'), 12, 0)
+    const cs = [a, concept('b')]
+    expect(a.pL).toBeLessThan(BKT.init)
+    expect(nextStep(cs, 0).concept.id).toBe('a')
+  })
+
+  it('moves on after three misses in a row, and comes back when nothing else is left', () => {
+    let a = concept('a')
+    for (let i = 0; i < 3; i++) a = recordAttempt(a, 10, 0)
+    expect(nextStep([a, concept('b')], 0).concept.id).toBe('b')
+    expect(nextStep([a, concept('b', { pL: 0.99 })], 0).concept.id).toBe('a')
+    expect(recordAttempt(a, 90, 0).misses).toBe(0)
   })
 
   it('puts due reviews first', () => {

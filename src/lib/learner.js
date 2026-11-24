@@ -7,13 +7,16 @@ const DAY = 86_400_000
 
 export const isMastered = (c) => c.pL >= MASTERED
 
+// The learning bonus applies only to correct answers, so a failed attempt never raises mastery.
 export function updateMastery(pL, correct) {
   const { learn, slip, guess } = BKT
-  const posterior = correct
-    ? (pL * (1 - slip)) / (pL * (1 - slip) + (1 - pL) * guess)
-    : (pL * slip) / (pL * slip + (1 - pL) * (1 - guess))
+  if (!correct) return (pL * slip) / (pL * slip + (1 - pL) * (1 - guess))
+  const posterior = (pL * (1 - slip)) / (pL * (1 - slip) + (1 - pL) * guess)
   return posterior + (1 - posterior) * learn
 }
+
+// After this many misses in a row the planner moves on and comes back to the concept later.
+export const STUCK = 3
 
 // SM-2 with quality = score / 20 (0–5).
 export function schedule(review, score, now) {
@@ -29,5 +32,6 @@ export function schedule(review, score, now) {
 export function recordAttempt(concept, score, now) {
   const pL = updateMastery(concept.pL, score >= PASS)
   const review = pL >= MASTERED ? schedule(concept.review, score, now) : null
-  return { ...concept, pL, review, attempts: concept.attempts + 1 }
+  const misses = score >= PASS ? 0 : (concept.misses ?? 0) + 1
+  return { ...concept, pL, review, attempts: concept.attempts + 1, misses }
 }

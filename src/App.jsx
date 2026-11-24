@@ -4,7 +4,7 @@ import FeedItem, { Avatar } from './components/FeedItem.jsx'
 import Sidebar from './components/Sidebar.jsx'
 import Workspace from './components/Workspace.jsx'
 import { makeExercise } from './lib/exercise.js'
-import { isMastered, recordAttempt } from './lib/learner.js'
+import { PASS, STUCK, isMastered, recordAttempt } from './lib/learner.js'
 import { ask, stopAll } from './lib/llm.js'
 import { validatePlan } from './lib/plan.js'
 import { ENVIRONMENTS, envFor, nextReviewAt, nextStep } from './lib/planner.js'
@@ -156,7 +156,9 @@ export default function App() {
     say(
       `**${score}/100** on ${before.name}. Mastery went from ${Math.round(before.pL * 100)}% to ${Math.round(after.pL * 100)}%.` +
         (isMastered(after) && !isMastered(before) ? ` Mastered; first review ${fmtDate(after.review.due)}.` : '') +
-        (unlocked.length ? ` Unlocked: ${unlocked.map((c) => c.name).join(', ')}.` : ''),
+        (unlocked.length ? ` Unlocked: ${unlocked.map((c) => c.name).join(', ')}.` : '') +
+        (score < PASS && after.misses < STUCK ? ' Next, another go at it with a different exercise.' : '') +
+        (after.misses >= STUCK ? ' Three misses in a row, so we’ll move on and come back to this one later.' : ''),
       { next: true },
     )
   }
