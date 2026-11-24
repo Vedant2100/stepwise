@@ -13,6 +13,7 @@
 - **Interface:** after the first version used a generic dashboard, ported Straight Shot's chat-first interface and visual style onto the new engine, and dropped Tailwind for the ported stylesheet.
 - **Workspaces:** designed a full-screen workspace per task type (IDE, derivation pad, explain, deck, sandboxed simulation) and the backend each needs.
 - **Visual redesign:** after feedback that the interface was too minimal, planned a design system (palette, type, layout) around the idea of a climb, checked it against generic AI-design defaults, built it, then reviewed screenshots in light, dark and mobile and fixed what didn't work (the first staircase read as a list, so it became a drawn staircase).
+- **More workspaces:** read & debug, sort & sequence, data notebook and algorithm tracer, each with ground truth from running Python rather than trusting the model.
 - **Testing:** unit tests for the core logic, and a headless-Chrome run through all four environments with the model mocked and real Python running via Pyodide.
 
 ## Limitations and issues
@@ -21,5 +22,6 @@
 - **CDN blocked in the build sandbox:** the Pyodide CDN was unreachable, so the end-to-end test served Pyodide's files from `node_modules`.
 - **A browser change caught by testing:** recent Chrome returns a Promise from `scrollIntoView`, which React rejects when an effect returns it; found in the headless run and fixed.
 - **Bugs found by end-to-end tests:** pressing Enter to flip a card also clicked the newly focused “I had it” button, inflating scores; the simulation sandbox's content policy also blocked running the model's compute function, so nothing drew. Both fixed.
+- **Found by checking against the real model:** Haiku sometimes defined its own `trace()` (now stripped before running), used `float('inf')`, which isn't valid JSON (now converted), and once rejected its own expected step (the step checker now accepts equivalent answers). Exercise generation also retries once when verification fails.
 - **Test selectors:** the first end-to-end runs failed on ambiguous selectors, not app bugs; they were fixed in the test script.
 - **Review against the course's list of agent shortcomings:** no helpers used only once, error handling only at boundaries (model output, imported files, the API route), small commits, `npm audit` clean, and no secrets in the repo (`.env` is gitignored).

@@ -9,6 +9,10 @@ Give it an objective, like "understand and implement attention" or "learn Spanis
 | Skill | **Code sandbox** | Write Python in the browser against tests that were checked against a reference solution |
 | Recall | **Retrieval drill** | Answer cards from memory |
 | Intuition | **Simulation** | Move sliders on a live model, then predict-and-check |
+| Code reading | **Read & debug** | Predict what snippets print, then fix a bug until the tests pass |
+| Ordering | **Sort & sequence** | Drag steps into order, or sort items into categories |
+| Data | **Data notebook** | Python cells with numpy, pandas and matplotlib; hidden checks on your variables |
+| Algorithm | **Algorithm tracer** | Predict the state after each step of a real run, then complexity questions |
 
 A learner model tracks how well you know each concept and picks what comes next. Concepts open up once their prerequisites are mastered, and mastered concepts come back for spaced reviews.
 
@@ -28,6 +32,10 @@ CS205 (UCR, Fall 2026) final project. It builds on [Straight Shot](https://githu
   - *Derivation pad:* math renders as you type (KaTeX); steps that match the expected step are accepted locally without a model call; scratchpad.
   - *Explain:* writing pad with word count; the rubric ticks off point by point after grading, with the matching source passage.
   - *Deck:* progress strip, streaks, keyboard (Enter flips, 1 missed, 2 had it).
+  - *Read & debug:* the expected output of each snippet comes from actually running it; snippets that error are dropped; the bug-fix part is kept only if its tests pass on the fixed code and fail on the buggy one.
+  - *Sort & sequence:* drag and drop, with arrow buttons and click-to-place for keyboard users.
+  - *Data notebook:* cells share one Python namespace; numpy/pandas/matplotlib load on demand; plots render as images; hidden checks run against a copy of your variables; tasks whose checks fail on their own solution are removed.
+  - *Algorithm tracer:* the generated implementation runs once with a `trace()` hook that records the state at each step; you predict each state (Python literal syntax accepted) and are checked against the real run.
   - *Simulation:* the model writes only a small compute function. It runs in an iframe sandboxed with `allow-scripts` only (no access to Stepwise's storage or cookies) and a CSP that blocks all network requests; Stepwise's own code draws the sliders and chart.
 - **Code sandbox runner:** CodeMirror editor; Python runs in a Web Worker via Pyodide; infinite loops are stopped and the runner restarts. Generated tests that the hidden reference solution fails are removed before you see them.
 - **Guardrails against over-relying on help:** hints come one at a time; a step can only be revealed after a wrong try; the code solution unlocks only after a run, and revealing it caps the score at 50.
@@ -72,6 +80,9 @@ src/
 │   ├── runner.js      Pyodide worker runner + test verification
 │   ├── stepcheck.js   local step matching
 │   ├── simframe.js    sandboxed simulation page
+│   ├── verify.js      runs generated exercises before you see them
+│   ├── harness_run.py run once with trace()
+│   ├── harness_cell.py notebook cells
 │   ├── harness.py     runs learner code and tests (from Straight Shot)
 │   ├── router.js      chat actions, router prompt and validation
 │   ├── llm.js         client for /api/llm
