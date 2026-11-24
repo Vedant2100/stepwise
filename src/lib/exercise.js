@@ -24,9 +24,19 @@ export const VALID = {
     x.params.every((q) => /^[A-Za-z_]\w*$/.test(q.name) && [q.min, q.max, q.step, q.value].every(Number.isFinite) && q.min < q.max),
 }
 
-export async function makeExercise(env, concept, track, mode) {
+async function attempt(env, concept, track, mode) {
   const exercise = await ask(system(track), exercisePrompt(env, concept, track, mode))
   if (!VALID[env](exercise)) throw new Error('The generated exercise was incomplete. Try again.')
   const verify = { code: verifyCode, readcode: verifyReadCode, trace: verifyTrace, notebook: verifyNotebook }[env]
   return verify ? verify(exercise) : exercise
+}
+
+// One automatic retry when the model's exercise fails validation or doesn't survive being run.
+export async function makeExercise(env, concept, track, mode) {
+  try {
+    return await attempt(env, concept, track, mode)
+  } catch (e) {
+    if (e.status || e.stopped) throw e
+    return attempt(env, concept, track, mode)
+  }
 }

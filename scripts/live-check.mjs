@@ -166,7 +166,7 @@ for (const [env, concept] of NEW) {
       console.log(`    e.g. ${JSON.stringify(v.snippets[0].code.split('\n')[0])} prints ${JSON.stringify(v.snippets[0].output.trim().slice(0, 60))}`)
     }
     if (env === 'trace') {
-      const v = await verifyTrace(x, node)
+      const v = await verifyTrace(x, node).catch((e) => { console.log(x.code); throw e })
       console.log(`    ${v.steps.length} real steps; first: ${JSON.stringify(v.steps[0]).slice(0, 100)}`)
     }
     if (env === 'notebook') {
