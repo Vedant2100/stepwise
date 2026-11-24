@@ -20,6 +20,13 @@ jobs:
           curl -s -X POST "$URL/api/llm" -H 'content-type: application/json' -H "x-access-code: $CODE" \
             -d '{"system":"Reply with a single JSON object only.","prompt":"Return {\"ok\": true}"}' | tee reply.json
           grep -q '"text"' reply.json
+      - name: Shared cache serves a repeated plan or exercise request
+        run: |
+          body='{"system":"Reply with a single JSON object only.","prompt":"Return {\"ok\": true}","cache":{"variant":0}}'
+          for i in 1 2; do
+            curl -s -X POST "$URL/api/llm" -H 'content-type: application/json' -H "x-access-code: $CODE" -d "$body" | tee reply$i.json; echo
+          done
+          grep -q '"cached":true' reply2.json
       - name: Wrong access code is refused
         if: env.CODE != ''
         run: |

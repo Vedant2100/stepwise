@@ -14,6 +14,7 @@
 - **Workspaces:** designed a full-screen workspace per task type (IDE, derivation pad, explain, deck, sandboxed simulation) and the backend each needs.
 - **Visual redesign:** after feedback that the interface was too minimal, planned a design system (palette, type, layout) around the idea of a climb, checked it against generic AI-design defaults, built it, then reviewed screenshots in light, dark and mobile and fixed what didn't work (the first staircase read as a list, so it became a drawn staircase).
 - **More workspaces:** read & debug, sort & sequence, data notebook and algorithm tracer, each with ground truth from running Python rather than trusting the model.
+- **Cost:** designed the shared cache for plans and exercises on Vercel's Runtime Cache (no database), with variants for repeat practice and a fresh-retry path so a bad cached exercise gets replaced.
 - **Testing:** unit tests for the core logic, and a headless-Chrome run through all four environments with the model mocked and real Python running via Pyodide.
 
 ## Limitations and issues

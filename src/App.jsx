@@ -79,7 +79,8 @@ export default function App() {
   async function learn(objective, src) {
     const text = (src?.text ?? '').slice(0, SOURCE_MAX)
     await run('Planning', async () => {
-      const plan = validatePlan(await ask(system({ source: text }), planPrompt(objective, text)), text)
+      objective = objective.replace(/\s+/g, ' ').trim()
+      const plan = validatePlan(await ask(system({ source: text }), planPrompt(objective, text), { variant: 0 }), text)
       const track = { id: crypto.randomUUID(), objective, source: text, ...plan, log: [], createdAt: Date.now() }
       setTracks((ts) => [track, ...ts])
       dataRef.current = { tracks: [track, ...dataRef.current.tracks] }

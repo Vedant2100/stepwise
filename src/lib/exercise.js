@@ -24,19 +24,23 @@ export const VALID = {
     x.params.every((q) => /^[A-Za-z_]\w*$/.test(q.name) && [q.min, q.max, q.step, q.value].every(Number.isFinite) && q.min < q.max),
 }
 
-async function attempt(env, concept, track, mode) {
-  const exercise = await ask(system(track), exercisePrompt(env, concept, track, mode))
+// Repeat practice on a concept cycles through a few shared variants instead of always generating anew.
+export const VARIANTS = 3
+
+async function attempt(env, concept, track, mode, fresh) {
+  const exercise = await ask(system(track), exercisePrompt(env, concept, track, mode), { variant: concept.attempts % VARIANTS, fresh })
   if (!VALID[env](exercise)) throw new Error('The generated exercise was incomplete. Try again.')
   const verify = { code: verifyCode, readcode: verifyReadCode, trace: verifyTrace, notebook: verifyNotebook }[env]
   return verify ? verify(exercise) : exercise
 }
 
-// One automatic retry when the model's exercise fails validation or doesn't survive being run.
+// One automatic retry when the exercise fails validation or doesn't survive being run. The retry
+// skips the shared cache and replaces the bad entry, so a broken exercise isn't served again.
 export async function makeExercise(env, concept, track, mode) {
   try {
-    return await attempt(env, concept, track, mode)
+    return await attempt(env, concept, track, mode, false)
   } catch (e) {
     if (e.status || e.stopped) throw e
-    return attempt(env, concept, track, mode)
+    return attempt(env, concept, track, mode, true)
   }
 }

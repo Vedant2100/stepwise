@@ -1,13 +1,21 @@
 // Serverless proxy to the Anthropic API. The key stays on the server.
 // Vercel runs the default export; vite.config.js mounts callLLM for `npm run dev`.
+//
+// Shared cache: plans and exercises don't depend on who asks, so when the client marks a request
+// cacheable, the reply is stored under a hash of (model, system, prompt, variant) and reused for every
+// user. Gradings and chat replies depend on the learner's own words and are never marked cacheable.
+import { createHash } from 'node:crypto'
+import { getCache } from '@vercel/functions'
 
 const MAX_CHARS = 60_000
+const TTL = 60 * 60 * 24 * 30
+const cache = getCache({ namespace: 'stepwise-llm-v1' })
 
 export async function callLLM(body, accessCode, env = process.env) {
   if (env.STEPWISE_ACCESS_CODE && accessCode !== env.STEPWISE_ACCESS_CODE) {
     return { status: 401, data: { error: 'Wrong or missing access code.' } }
   }
-  const { system, prompt } = body ?? {}
+  const { system, prompt, cache: share } = body ?? {}
   if (typeof system !== 'string' || typeof prompt !== 'string' || !prompt.trim()) {
     return { status: 400, data: { error: 'system and prompt must be strings.' } }
   }
@@ -18,6 +26,14 @@ export async function callLLM(body, accessCode, env = process.env) {
     return { status: 500, data: { error: 'ANTHROPIC_API_KEY is not set on the server.' } }
   }
 
+  const model = env.STEPWISE_MODEL || 'claude-haiku-5-5'
+  const variant = Number.isInteger(share?.variant) ? Math.min(Math.max(share.variant, 0), 9) : 0
+  const key = share ? createHash('sha256').update(JSON.stringify([model, system, prompt, variant])).digest('hex') : null
+  if (key && !share.fresh) {
+    const hit = await cache.get(key).catch(() => null)
+    if (typeof hit === 'string') return { status: 200, data: { text: hit, cached: true } }
+  }
+
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -25,16 +41,13 @@ export async function callLLM(body, accessCode, env = process.env) {
       'x-api-key': env.ANTHROPIC_API_KEY,
       'anthropic-version': '2023-06-01',
     },
-    body: JSON.stringify({
-      model: env.STEPWISE_MODEL || 'claude-haiku-5-5',
-      max_tokens: 4096,
-      system,
-      messages: [{ role: 'user', content: prompt }],
-    }),
+    body: JSON.stringify({ model, max_tokens: 4096, system, messages: [{ role: 'user', content: prompt }] }),
   })
   const data = await res.json()
   if (!res.ok) return { status: 502, data: { error: data.error?.message || 'Model request failed.' } }
-  return { status: 200, data: { text: data.content.map((c) => c.text ?? '').join('') } }
+  const text = data.content.map((c) => c.text ?? '').join('')
+  if (key) await cache.set(key, text, { ttl: TTL, name: 'stepwise plan or exercise' }).catch(() => {})
+  return { status: 200, data: { text, cached: false } }
 }
 
 export default async function handler(req, res) {
