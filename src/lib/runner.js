@@ -4,17 +4,17 @@ let worker = null
 let warm = false
 let seq = 0
 
-export function runTests(code, tests) {
+function call(message, limit) {
   worker ??= new Worker(new URL('./runner.worker.js', import.meta.url), { type: 'module' })
   const w = worker
   const id = ++seq
-  const limit = warm ? 15_000 : 90_000
+  limit ??= warm ? 15_000 : 90_000
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => {
       w.terminate()
       if (worker === w) worker = null
       warm = false
-      reject(new Error(`Stopped after ${limit / 1000}s. Infinite loop or very slow code? The runner restarted.`))
+      reject(new Error(`Stopped after ${Math.round(limit / 1000)}s. Infinite loop or very slow code? The runner restarted.`))
     }, limit)
     const onMessage = ({ data }) => {
       if (data.id !== id) return
@@ -25,9 +25,20 @@ export function runTests(code, tests) {
       resolve(data.result)
     }
     w.addEventListener('message', onMessage)
-    w.postMessage({ id, code, tests: tests.map(({ name, code }) => ({ name, code })) })
+    w.postMessage({ id, ...message })
   })
 }
+
+export const runTests = (code, tests) => call({ op: 'tests', code, tests: tests.map(({ name, code }) => ({ name, code })) })
+
+// Runs code once; returns { stdout, error, trace } where trace holds each trace(**state) snapshot.
+export const runCode = (code) => call({ op: 'run', code })
+
+// Notebook cells share a namespace per notebook id. Loading numpy/pandas/matplotlib the first time can take a while.
+const NOTEBOOK_LIMIT = 180_000
+export const runCell = (nb, code) => call({ op: 'cell', nb, code, mode: 'run' }, NOTEBOOK_LIMIT)
+export const checkCell = (nb, code) => call({ op: 'cell', nb, code, mode: 'check' }, NOTEBOOK_LIMIT)
+export const resetNotebook = (nb) => call({ op: 'cell', nb, code: '', mode: 'reset' })
 
 // Runs the tests against the hidden reference solution and keeps only the ones it passes.
 export async function verifyCode(exercise) {

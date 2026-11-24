@@ -5,7 +5,7 @@ import Settings from './Settings.jsx'
 import { EnvIcon, Mark } from './Icons.jsx'
 import { ACCESS_KEY } from '../lib/llm.js'
 import { ENVIRONMENTS, envFor } from '../lib/planner.js'
-const TYPE_LABEL = { concept: 'Concept', procedure: 'Procedure', skill: 'Skill', recall: 'Recall', intuition: 'Intuition' }
+const TYPE_LABEL = { concept: 'Concept', procedure: 'Procedure', skill: 'Skill', recall: 'Recall', intuition: 'Intuition', reading: 'Code reading', ordering: 'Ordering', data: 'Data', algorithm: 'Algorithm' }
 
 // The teacher speaks without a bubble, next to the Stepwise mark.
 export const Avatar = () => <span className="avatar"><Mark size={30} /></span>

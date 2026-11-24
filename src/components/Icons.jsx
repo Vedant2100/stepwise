@@ -11,6 +11,10 @@ export const EnvIcon = {
   code: () => svg(<><path d="m8 7-5 5 5 5M16 7l5 5-5 5" /><path d="m13.5 5-3 14" /></>),
   drill: () => svg(<><rect x="3" y="7" width="13" height="13" rx="2" /><path d="M8 4h11a2 2 0 0 1 2 2v11" /></>),
   sim: () => svg(<><path d="M3 17c3-9 5-9 7-3s4 6 7-3" /><path d="M3 21h18" /><circle cx="17" cy="11" r="1.5" /></>),
+  readcode: () => svg(<><path d="m7 8-4 4 4 4" /><circle cx="15" cy="12" r="4" /><path d="m18 15 3 3" /></>),
+  sort: () => svg(<><path d="M4 6h10M4 12h7M4 18h4" /><path d="M18 4v16M15 17l3 3 3-3" /></>),
+  notebook: () => svg(<><rect x="4" y="3" width="16" height="7" rx="2" /><rect x="4" y="14" width="16" height="7" rx="2" /><path d="M8 6.5h5M8 17.5l2-2 2 1.5 3-3" /></>),
+  trace: () => svg(<><circle cx="5" cy="6" r="2" /><circle cx="12" cy="18" r="2" /><circle cx="19" cy="6" r="2" /><path d="M6.5 7.5 10.5 16M13.5 16l4-8.5" /></>),
 }
 
 export function Mark({ size = 30 }) {

@@ -6,7 +6,14 @@ import StepWorkspace from '../envs/StepWorkspace.jsx'
 import SimWorkspace from '../envs/Simulation.jsx'
 
 const CodeWorkspace = lazy(() => import('../envs/CodeSandbox.jsx'))
-const ENV_COMPONENTS = { explain: ExplainWorkspace, steps: StepWorkspace, code: CodeWorkspace, drill: DrillWorkspace, sim: SimWorkspace }
+const ReadCodeWorkspace = lazy(() => import('../envs/ReadCode.jsx'))
+const NotebookWorkspace = lazy(() => import('../envs/Notebook.jsx'))
+const TracerWorkspace = lazy(() => import('../envs/Tracer.jsx'))
+const SortWorkspace = lazy(() => import('../envs/SortWorkspace.jsx'))
+const ENV_COMPONENTS = {
+  explain: ExplainWorkspace, steps: StepWorkspace, code: CodeWorkspace, drill: DrillWorkspace, sim: SimWorkspace,
+  readcode: ReadCodeWorkspace, sort: SortWorkspace, notebook: NotebookWorkspace, trace: TracerWorkspace,
+}
 
 // A full-screen workspace for one exercise. It stays mounted (just hidden) while the learner is back in the chat.
 export default function Workspace({ it, track, open, busy, onClose, onSwitch, onDone }) {

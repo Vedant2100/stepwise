@@ -1,6 +1,6 @@
 import { isMastered } from './learner.js'
 
-export const TASK_TYPES = ['concept', 'procedure', 'skill', 'recall', 'intuition']
+export const TASK_TYPES = ['concept', 'procedure', 'skill', 'recall', 'intuition', 'reading', 'ordering', 'data', 'algorithm']
 
 export const ENVIRONMENTS = {
   explain: { label: 'Explain it back', for: 'concept' },
@@ -8,6 +8,10 @@ export const ENVIRONMENTS = {
   code: { label: 'Code sandbox', for: 'skill' },
   drill: { label: 'Retrieval drill', for: 'recall' },
   sim: { label: 'Simulation', for: 'intuition' },
+  readcode: { label: 'Read & debug', for: 'reading' },
+  sort: { label: 'Sort & sequence', for: 'ordering' },
+  notebook: { label: 'Data notebook', for: 'data' },
+  trace: { label: 'Algorithm tracer', for: 'algorithm' },
 }
 
 export const envFor = (type) => Object.keys(ENVIRONMENTS).find((k) => ENVIRONMENTS[k].for === type)

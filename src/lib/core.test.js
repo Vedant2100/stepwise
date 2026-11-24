@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { BKT, MASTERED, recordAttempt, schedule, updateMastery } from './learner.js'
-import { envFor, nextStep } from './planner.js'
+import { TASK_TYPES, envFor, nextStep } from './planner.js'
 import { validatePlan } from './plan.js'
 import { parseJSON } from './llm.js'
 
@@ -33,7 +33,7 @@ describe('learner model', () => {
 
 describe('planner', () => {
   it('maps each task type to one environment', () => {
-    expect(['concept', 'procedure', 'skill', 'recall', 'intuition'].map(envFor)).toEqual(['explain', 'steps', 'code', 'drill', 'sim'])
+    expect(TASK_TYPES.map(envFor)).toEqual(['explain', 'steps', 'code', 'drill', 'sim', 'readcode', 'sort', 'notebook', 'trace'])
   })
 
   it('only offers concepts whose prerequisites are mastered', () => {
@@ -125,5 +125,18 @@ describe('simulation sandbox page', async () => {
     const page = simPage(sim, false)
     expect(page).toContain("default-src 'none'")
     expect(page.match(/<\/script>/g)).toHaveLength(1)
+  })
+})
+
+describe('exercise shape checks', async () => {
+  const { VALID } = await import('./exercise.js')
+  it('accepts well-formed sort exercises and rejects duplicates or missing buckets', () => {
+    expect(VALID.sort({ mode: 'order', prompt: 'p', items: ['a', 'b', 'c'] })).toBe(true)
+    expect(VALID.sort({ mode: 'order', prompt: 'p', items: ['a', 'a', 'c'] })).toBe(false)
+    expect(VALID.sort({ mode: 'buckets', prompt: 'p', buckets: [{ name: 'x', items: ['a'] }] })).toBe(false)
+  })
+  it('rejects trace questions whose answer index is out of range', () => {
+    expect(VALID.trace({ code: 'x', questions: [{ ask: 'q', choices: ['a', 'b'], answer: 1 }] })).toBe(true)
+    expect(VALID.trace({ code: 'x', questions: [{ ask: 'q', choices: ['a', 'b'], answer: 2 }] })).toBe(false)
   })
 })
