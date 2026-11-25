@@ -63,3 +63,22 @@ describe('access code and the shared cache', () => {
     expect(fetch).toHaveBeenCalledTimes(1)
   })
 })
+
+describe('conversation history', () => {
+  it('sends recent turns as alternating messages with a cacheable system block', async () => {
+    const fetch = stubModel()
+    const history = [{ role: 'assistant', content: 'Welcome back.' }, { role: 'user', content: 'hi' }, { role: 'user', content: 'still there?' }, { role: 'assistant', content: 'Yes.' }]
+    await callLLM({ system: 'sys', prompt: 'why?', history }, '', env)
+    const sent = JSON.parse(fetch.mock.calls[0][1].body)
+    expect(sent.system).toEqual([{ type: 'text', text: 'sys', cache_control: { type: 'ephemeral' } }])
+    expect(sent.messages.map((m) => m.role)).toEqual(['user', 'assistant', 'user'])
+    expect(sent.messages[0].content).toBe('hi\n\nstill there?')
+  })
+
+  it('rejects bad history and never shares a reply that depends on a conversation', async () => {
+    stubModel()
+    expect((await callLLM({ system: 's', prompt: 'p', history: [{ role: 'system', content: 'x' }] }, '', env)).status).toBe(400)
+    expect((await callLLM({ system: 's', prompt: 'p', history: Array(13).fill({ role: 'user', content: 'x' }) }, '', env)).status).toBe(400)
+    expect((await callLLM({ system: 's', prompt: 'p', cache: { variant: 0 }, history: [{ role: 'user', content: 'x' }] }, '', env)).status).toBe(400)
+  })
+})

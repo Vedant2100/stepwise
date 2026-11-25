@@ -118,8 +118,8 @@ describe('router', async () => {
   const tracks = [{ id: 't1' }]
 
   it('keeps valid choices', () => {
-    expect(normalizeRoute({ action: 'switch', env: 'code', trackId: 't1', say: 'ok' }, tracks))
-      .toEqual({ action: 'switch', env: 'code', trackId: 't1', say: 'ok', topic: '' })
+    expect(normalizeRoute({ action: 'switch', env: 'code', trackId: 't1', say: 'ok', suggest: ['progress', 'hack'] }, tracks))
+      .toEqual({ action: 'switch', env: 'code', trackId: 't1', say: 'ok', topic: '', suggest: ['progress'] })
   })
 
   it('turns unknown actions into chat and drops ids and environments that do not exist', () => {

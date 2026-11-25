@@ -18,17 +18,20 @@ EX = {
      "tests": [{"name": "sums to one", "code": "assert abs(sum(softmax([1,2,3])) - 1) < 1e-9"}, {"name": "uniform", "code": "assert softmax([0,0]) == [0.5,0.5]"}, {"name": "bad", "code": "assert softmax([0,0]) == [1,0]"}]},
   "retrieval drill": {"cards": [{"front": "Scaling factor?", "back": "1/sqrt(d_k)"}, {"front": "Normaliser?", "back": "softmax"}]},
 }
-ROUTES = {"how am i doing": {"action": "progress", "say": "Here's where you are."},
+ROUTES = {"hi there": {"action": "chat", "say": "Hi! You're 2 steps up Attention. Ready for the next one?", "suggest": ["next", "progress"]},
+          "how am i doing": {"action": "progress", "say": "Here's where you are."},
           "switch to steps": {"action": "switch", "env": "steps", "say": ""},
           "what is a softmax": {"action": "help", "say": "Think about turning scores into probabilities."},
           "next": {"action": "next", "say": ""}}
 calls = []
+histories = []
 
 def llm(route):
     p = json.loads(route.request.post_data)["prompt"]
     calls.append(p[:30])
     if "Decide what it is" in p: reply = {"kind": "notes", "objective": "", "missing": []}
-    elif "Pick ONE action" in p:
+    elif "LEARNER SAYS" in p:
+        histories.append(json.loads(route.request.post_data).get("history") or [])
         said = re.search(r'LEARNER SAYS: """(.*?)"""', p, re.S).group(1).lower()
         reply = next((v for k, v in ROUTES.items() if k in said), {"action": "chat", "say": "ok"})
     elif "Break the objective" in p: reply = PLAN
@@ -121,6 +124,17 @@ with sync_playwright() as pw:
     page.locator('details.tr summary').last.click()
     page.screenshot(path=f'{OUT}/chat-progress-dark.png')
     print('6. progress card + dark mode')
+
+    send('hi there')
+    expect(page.get_by_text("Hi! You're 2 steps up Attention")).to_be_visible()
+    reply = page.locator('.msg.t').last
+    expect(reply.get_by_role('button', name='Next exercise')).to_be_visible()
+    expect(reply.get_by_role('button', name='How am I doing?')).to_be_visible()
+    last = histories[-1]
+    assert last and last[-1]['role'] == 'assistant' and any('how am i doing' in m['content'] for m in last), last
+    reply.get_by_role('button', name='How am I doing?').click()
+    expect(page.locator('details.tr')).to_have_count(2)
+    print('6b. greeting answered with suggestion buttons; recent conversation sent as history')
 
     page.reload()
     expect(page.get_by_text('Welcome back. 1 objective')).to_be_visible()

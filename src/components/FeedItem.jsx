@@ -2,6 +2,7 @@ import { useState } from 'react'
 import Md from './Md.jsx'
 import Progress from './Progress.jsx'
 import { EnvIcon, Mark } from './Icons.jsx'
+import { SUGGESTIONS } from '../lib/router.js'
 import { ACCESS_KEY } from '../lib/llm.js'
 import { ENVIRONMENTS, alternativesFor, envFor } from '../lib/planner.js'
 const TYPE_LABEL = { concept: 'Concept', procedure: 'Procedure', skill: 'Skill', recall: 'Recall', intuition: 'Intuition', reading: 'Code reading', ordering: 'Ordering', data: 'Data', algorithm: 'Algorithm' }
@@ -37,6 +38,13 @@ export default function FeedItem({ it, data, setData, actions, busy, openWs }) {
           {it.badges?.length > 0 && (
             <div className="badges">
               {it.badges.map((b) => <span key={b.text} className={`badge ${b.kind}`}>{b.kind === 'mastered' ? '★' : '↑'} {b.text}</span>)}
+            </div>
+          )}
+          {it.suggest?.length > 0 && (
+            <div className="row suggest">
+              {it.suggest.map((k) => (
+                <button key={k} className="btn ghost sm" disabled={busy} onClick={() => ({ next: actions.next, review: actions.next, progress: actions.progress, new: actions.newObjective })[k]()}>{SUGGESTIONS[k]}</button>
+              ))}
             </div>
           )}
           {it.next && (

@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 
 import { STARTERS } from '../lib/starters.js'
 
-export default function Composer({ busy, source, setSource, onSend, hasOpen, hasTracks, onNext, onProgress, sourceMax, centered }) {
+export default function Composer({ busy, source, setSource, onSend, onStarter, hasOpen, hasTracks, onNext, onProgress, sourceMax, centered }) {
   const [text, setText] = useState('')
   const [error, setError] = useState('')
   const file = useRef(null)
@@ -60,7 +60,7 @@ export default function Composer({ busy, source, setSource, onSend, hasOpen, has
         <>
           <p className="examples-label">Ready-made climbs, free and instant:</p>
           <div className="examples">
-            {STARTERS.map((e) => <button key={e} type="button" className="pick" onClick={() => onSend(e)} disabled={busy}>{e}</button>)}
+            {STARTERS.map((e) => <button key={e} type="button" className="pick" onClick={() => onStarter(e)} disabled={busy}>{e}</button>)}
           </div>
         </>
       )}

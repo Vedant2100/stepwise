@@ -3,7 +3,7 @@
 #   BASE    the running app (default: the Vite dev server on 5179; run `npm run dev -- --port 5179`)
 #   CHROME  optional path to a Chrome binary; otherwise Playwright's bundled Chromium is used
 #   OUT     where screenshots go (default: e2e/out)
-import os
+import os, re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -20,3 +20,9 @@ def check_errors(errors, allow=()):
     print('page errors:', real or 'none')
     if real:
         raise SystemExit(1)
+
+
+def route_reply(prompt):
+    """Mocked router reply for a typed message: treat it as a new goal. None if this isn't a routing call."""
+    m = re.search(r'LEARNER SAYS: """(.*?)"""', prompt, re.S)
+    return {"action": "learn", "topic": m.group(1), "say": "", "suggest": []} if m else None

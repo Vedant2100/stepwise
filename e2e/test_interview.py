@@ -1,6 +1,6 @@
 import json
 from playwright.sync_api import sync_playwright, expect
-from _env import BASE, LAUNCH, OUT, PYO, check_errors
+from _env import BASE, LAUNCH, OUT, PYO, check_errors, route_reply
 PASTE = ("You are my interview coach. I have attached my resume and the two job descriptions. Read all three files first. "
          "I am Shashwat, MS Robotics at UCR, interviewing for a robotics field engineer role at Nimble. ") * 6
 PLAN = {"title": "Nimble field engineer interview", "concepts": [{"id": "why-nimble", "name": "Why Nimble", "type": "interview", "summary": "Explain why this role.", "prereqs": []}]}
@@ -10,6 +10,7 @@ IV = {"role": "Hiring manager", "questions": [
 seen = []
 def llm(route):
     p = json.loads(route.request.post_data)["prompt"]; seen.append(p)
+    if route_reply(p): return route.fulfill(json={"text": json.dumps(route_reply(p))})
     if 'Decide what it is' in p: out = {"kind": "request", "objective": "Prepare for my Nimble robotics field engineer interview", "missing": ["your resume", "the two job descriptions"]}
     elif 'Break the objective' in p: out = PLAN
     elif 'Mock interview question' in p:

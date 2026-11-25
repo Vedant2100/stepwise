@@ -1,7 +1,7 @@
 import json, re
 from pathlib import Path
 from playwright.sync_api import sync_playwright, expect
-from _env import BASE, LAUNCH, OUT, PYO, check_errors
+from _env import BASE, LAUNCH, OUT, PYO, check_errors, route_reply
 
 SOURCE = ("Attention computes a weighted sum of values. Weights come from a softmax over scaled dot products. "
           "The scaling factor is one over the square root of the key dimension. Temperature sharpens or flattens the softmax. ") * 5
@@ -27,6 +27,7 @@ EX = {
 calls = []
 def llm(route):
     p = json.loads(route.request.post_data)["prompt"]; calls.append(p[:25])
+    if route_reply(p): return route.fulfill(json={"text": json.dumps(route_reply(p))})
     if "Decide what it is" in p: reply = {"kind": "notes", "objective": "", "missing": []}
     elif "Break the objective" in p: reply = PLAN
     elif "Grade strictly" in p: reply = {"score": 85, "verdict": "Half there.", "points": [{"met": True, "note": "good"}, {"met": False, "note": "never said they sum to one"}]}

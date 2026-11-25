@@ -1,12 +1,13 @@
 import json, secrets, re
 from playwright.sync_api import sync_playwright, expect
-from _env import BASE, LAUNCH, OUT, PYO, check_errors
+from _env import BASE, LAUNCH, OUT, PYO, check_errors, route_reply
 C = lambda i, n, t: {"id": i, "name": n, "type": t, "summary": f"About {n}.", "prereqs": []}
 PLANS = {"Laptop goal": {"title": "Laptop goal", "concepts": [C("x", "Term one", "recall")]},
          "Phone goal": {"title": "Phone goal", "concepts": [C("y", "Term two", "recall")]}}
 DRILL = {"cards": [{"front": "Q?", "back": "a"}]}
 def llm(route):
     p = json.loads(route.request.post_data)["prompt"]
+    if route_reply(p): return route.fulfill(json={"text": json.dumps(route_reply(p))})
     reply = next((v for k, v in PLANS.items() if k in p), DRILL) if "Break the objective" in p else DRILL
     route.fulfill(json={"text": json.dumps(reply)})
 errors = []

@@ -11,14 +11,14 @@ export function parseJSON(text) {
 
 export const stopAll = () => inflight.forEach((c) => c.abort())
 
-export async function ask(system, prompt, share) {
+export async function ask(system, prompt, share, history) {
   const stop = new AbortController()
   inflight.add(stop)
   try {
     const res = await fetch('/api/llm', {
       method: 'POST',
       headers: { 'content-type': 'application/json', 'x-access-code': localStorage.getItem(ACCESS_KEY) ?? '' },
-      body: JSON.stringify({ system, prompt, cache: share }),
+      body: JSON.stringify({ system, prompt, cache: share, history }),
       signal: AbortSignal.any([stop.signal, AbortSignal.timeout(TIMEOUT_MS)]),
     })
     const data = await res.json()

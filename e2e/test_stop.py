@@ -8,7 +8,7 @@ with sync_playwright() as pw:
     p.route('**/api/llm', lambda r: None)   # never answers
     p.goto(BASE + '/')
     p.get_by_label('Message').fill('Learn vectors'); p.get_by_label('Message').press('Enter')
-    expect(p.get_by_text('Planning')).to_be_visible()
+    expect(p.get_by_role('button', name='Stop')).to_be_visible()
     p.get_by_role('button', name='Stop').click()
     expect(p.get_by_text('Stopped.')).to_be_visible()
     expect(p.get_by_role('button', name='Stop')).to_have_count(0)

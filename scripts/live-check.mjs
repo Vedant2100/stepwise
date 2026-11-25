@@ -6,7 +6,7 @@ import { validatePlan } from '../src/lib/plan.js'
 import { envFor } from '../src/lib/planner.js'
 import { VALID } from '../src/lib/exercise.js'
 import { checkStepPrompt, exercisePrompt, gradeExplainPrompt, planPrompt, system } from '../src/lib/prompts.js'
-import { normalizeRoute, routePrompt } from '../src/lib/router.js'
+import { normalizeRoute, routePrompt, routeSystem } from '../src/lib/router.js'
 import { sameStep } from '../src/lib/stepcheck.js'
 import { verifyNotebook, verifyReadCode, verifyTrace } from '../src/lib/verify.js'
 
@@ -183,11 +183,11 @@ console.log('\n## Chat router')
 const tracks = [{ id: 't1', title: 'Attention', objective: 'Understand attention' }]
 const current = { concept: { name: 'Softmax by hand' }, env: 'steps', exercise: { problem: 'softmax([0,0])' } }
 for (const [text, want] of [
-  ['next one please', 'next'], ['teach me how DPO works', 'learn'], ['can I do this one in code instead?', 'switch'],
+  ['hi!', 'chat'], ['next one please', 'next'], ['teach me how DPO works', 'learn'], ['can I do this one in code instead?', 'switch'],
   ['how am I doing so far?', 'progress'], ['why do we exponentiate first?', 'help'], ['skip this', 'skip'],
 ]) {
   await step(`"${text}" -> ${want}`, async () => {
-    const r = normalizeRoute(await ask(system(), routePrompt(text, tracks, current)), tracks)
+    const r = normalizeRoute(await ask(routeSystem(tracks, current), routePrompt(text)), tracks)
     console.log(`    got ${r.action}${r.env ? ` (${r.env})` : ''}${r.topic ? ` topic="${r.topic}"` : ''}`)
     if (r.action !== want) throw new Error(`routed to ${r.action}`)
   })

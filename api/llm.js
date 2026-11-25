@@ -8,12 +8,27 @@ const MAX_CHARS = 60_000
 const TTL = 60 * 60 * 24 * 30
 const cache = getCache({ namespace: 'stepwise-llm-v1' })
 
+// The API needs alternating turns starting with the user, so merge runs and drop a leading reply.
+function conversation(history, prompt) {
+  const out = []
+  for (const m of [...history, { role: 'user', content: prompt }]) {
+    if (!out.length && m.role === 'assistant') continue
+    if (out.at(-1)?.role === m.role) out.at(-1).content += `\n\n${m.content}`
+    else out.push({ role: m.role, content: m.content })
+  }
+  return out
+}
+
 export async function callLLM(body, accessCode, env = process.env, store = cache) {
-  const { system, prompt, cache: share } = body ?? {}
+  const { system, prompt, cache: share, history = [] } = body ?? {}
   if (typeof system !== 'string' || typeof prompt !== 'string' || !prompt.trim()) {
     return { status: 400, data: { error: 'system and prompt must be strings.' } }
   }
-  if (system.length + prompt.length > MAX_CHARS) {
+  if (!Array.isArray(history) || history.length > 12 || !history.every((m) => ['user', 'assistant'].includes(m?.role) && typeof m.content === 'string' && m.content.trim())) {
+    return { status: 400, data: { error: 'history must be up to 12 {role, content} messages.' } }
+  }
+  if (share && history.length) return { status: 400, data: { error: 'Shared replies cannot depend on a conversation.' } }
+  if (system.length + prompt.length + history.reduce((n, m) => n + m.content.length, 0) > MAX_CHARS) {
     return { status: 413, data: { error: `Request too long (max ${MAX_CHARS} characters).` } }
   }
   const model = env.STEPWISE_MODEL || 'claude-haiku-5-5'
@@ -37,7 +52,12 @@ export async function callLLM(body, accessCode, env = process.env, store = cache
       'x-api-key': env.ANTHROPIC_API_KEY,
       'anthropic-version': '2023-06-01',
     },
-    body: JSON.stringify({ model, max_tokens: 4096, system, messages: [{ role: 'user', content: prompt }] }),
+    body: JSON.stringify({
+      model,
+      max_tokens: 4096,
+      system: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }],
+      messages: conversation(history, prompt),
+    }),
   })
   const data = await res.json()
   if (!res.ok) return { status: 502, data: { error: data.error?.message || 'Model request failed.' } }

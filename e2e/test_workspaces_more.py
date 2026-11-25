@@ -1,7 +1,7 @@
 import json, re
 from pathlib import Path
 from playwright.sync_api import sync_playwright, expect
-from _env import BASE, LAUNCH, OUT, PYO, check_errors
+from _env import BASE, LAUNCH, OUT, PYO, check_errors, route_reply
 C = lambda i, n, t: {"id": i, "name": n, "type": t, "summary": f"About {n}.", "prereqs": []}
 PLAN = {"title": "CS fundamentals", "concepts": [C("read", "Reading loops", "reading"), C("order", "Steps of merge sort", "ordering"),
         C("data", "Summary statistics", "data"), C("algo", "Bubble sort", "algorithm")]}
@@ -23,6 +23,7 @@ EX = {
 }
 def llm(route):
     p = json.loads(route.request.post_data)["prompt"]
+    if route_reply(p): return route.fulfill(json={"text": json.dumps(route_reply(p))})
     reply = PLAN if "Break the objective" in p else next(v for k, v in EX.items() if k in p)
     route.fulfill(json={"text": json.dumps(reply)})
 def cdn(route):

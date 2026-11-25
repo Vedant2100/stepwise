@@ -14,7 +14,7 @@ import { ask, stopAll } from './lib/llm.js'
 import { validatePlan } from './lib/plan.js'
 import { ENVIRONMENTS, envFor, nextReviewAt, nextStep } from './lib/planner.js'
 import { planPrompt, readPastePrompt, system } from './lib/prompts.js'
-import { normalizeRoute, routePrompt } from './lib/router.js'
+import { normalizeRoute, routePrompt, routeSystem } from './lib/router.js'
 import { load, save } from './lib/storage.js'
 import useAccount from './lib/useAccount.js'
 
@@ -267,20 +267,24 @@ export default function App() {
       }
       return learn(read.objective, null, text)
     }
-    if (source || !dataRef.current.tracks.length) return learn(text, source)
+    if (source) return learn(text, source)
 
     let r
     setBusy('Thinking')
     try {
       const open = openExercise()
       const current = open && { ...open, concept: dataRef.current.tracks.find((t) => t.id === open.trackId).concepts.find((c) => c.id === open.conceptId) }
-      r = normalizeRoute(await ask(system(), routePrompt(text, dataRef.current.tracks, current)), dataRef.current.tracks)
+      const history = feed
+        .filter((x) => (x.kind === 'me' || x.kind === 't') && x.text && !x.err)
+        .slice(-8)
+        .map((x) => ({ role: x.kind === 'me' ? 'user' : 'assistant', content: x.text.slice(0, 600) }))
+      r = normalizeRoute(await ask(routeSystem(dataRef.current.tracks, current), routePrompt(text), undefined, history), dataRef.current.tracks)
     } catch (e) {
       setBusy('')
       return e.status === 401 ? push(item('access')) : say(e.message, { err: !e.stopped })
     }
     setBusy('')
-    if (r.say) say(r.say)
+    if (r.say || r.suggest.length) say(r.say, { suggest: r.suggest })
     if (r.action === 'learn') return learn(r.topic || text, null)
     if (r.action === 'next' || r.action === 'skip') return next()
     if (r.action === 'focus') return next(r.trackId ?? activeId)
@@ -297,13 +301,19 @@ export default function App() {
     await run('Thinking', () => start(track, { concept, mode: isMastered(concept) ? 'review' : 'learn' }))
   }
 
+  // Ready-made climbs skip the router: their plan is already stored, so no model call is needed.
+  function startStarter(s) {
+    push(item('me', { text: s }))
+    learn(s)
+  }
+
   function newObjective() {
     setSideOpen(false)
     setActiveId(null)
     if (feed.length > 1) say('What do you want to be able to do next? Paste or attach notes if you want me to teach only from them.')
   }
 
-  const actions = { next, switchEnv, finish, remove, changeTracks, push, say, openWorkspace: setOpenWs, account, signIn: () => setAuthOpen(true), openSettings: (focus) => setSettingsOpen(focus) }
+  const actions = { newObjective, progress: () => push(item('progress')), next, switchEnv, finish, remove, changeTracks, push, say, openWorkspace: setOpenWs, account, signIn: () => setAuthOpen(true), openSettings: (focus) => setSettingsOpen(focus) }
   const active = data.tracks.find((t) => t.id === activeId)
   const hero = feed.length === 1 && !busy && !data.tracks.length
 
@@ -313,6 +323,7 @@ export default function App() {
       source={source}
       setSource={setSource}
       onSend={send}
+      onStarter={startStarter}
       hasOpen={Boolean(openExercise())}
       hasTracks={data.tracks.length > 0}
       onNext={() => next()}
@@ -355,7 +366,7 @@ export default function App() {
         onShare={(t) => { setSideOpen(false); setSharing(t) }}
         dark={dark}
         busy={Boolean(busy)}
-        onStarter={(s) => { setSideOpen(false); push(item('me', { text: s })); learn(s) }}
+        onStarter={(s) => { setSideOpen(false); startStarter(s) }}
       />
       <div className="main">
         {hero ? (
