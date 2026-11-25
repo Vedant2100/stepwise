@@ -221,6 +221,8 @@ await step('"recruiter screen only" removes technical practice from an interview
 const tracks = [{ id: 't1', title: 'Attention', objective: 'Understand attention', concepts: [{ pL: 0.97 }, { pL: 0.3 }] }]
 const current = { concept: { name: 'Softmax by hand' }, env: 'steps', exercise: { problem: 'softmax([0,0])' } }
 for (const [text, want] of [
+  ['make it recruiter side only, not technical', 'adjust'], ['this is way too technical for a recruiter screen', 'adjust'],
+  ['can we focus more on behavioral questions instead', 'adjust'], ['i dont want to practice code', 'adjust'],
   ['hi!', 'chat'], ['next one please', 'next'], ['teach me how DPO works', 'learn'], ['can I do this one in code instead?', 'switch'],
   ['how am I doing so far?', 'progress'], ['why do we exponentiate first?', 'help'], ['skip this', 'skip'],
 ]) {

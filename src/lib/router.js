@@ -2,15 +2,15 @@ import { ENVIRONMENTS } from './planner.js'
 
 export const ACTIONS = {
   learn: 'they want to learn something new ("topic" = their objective, with every detail they gave)',
-  adjust: 'they want to change the current climb: skip a kind of practice, refocus, drop or add concepts ("topic" = the change, in their words)',
+  adjust: 'they say how their practice should be different: a different focus or kind of interview, too technical or not technical enough, no code, more or less of something, drop or add topics (e.g. "make it recruiter side", "this is too technical", "focus on behavioral"). This changes the whole climb, even while an exercise is open ("topic" = the change, in their words)',
   next: 'move on / give me something to practice',
   skip: 'skip the current exercise',
   switch: 'redo the current exercise in another environment ("env")',
   progress: 'they ask what they are learning, how they are doing, or what is due',
   focus: 'they want to practice a specific objective now ("trackId")',
   delete: 'they explicitly ask to remove an objective ("trackId")',
-  help: 'they ask about or answer the current exercise; help Socratically in "say", never give the full solution',
-  chat: 'greetings, thanks, small talk, questions about Stepwise or anything else',
+  help: 'they ask about the content of the current exercise or try to answer it; help Socratically in "say", never give the full solution. Not for requests to change what they practice (that is adjust)',
+  chat: 'greetings, thanks, small talk, questions about Stepwise or anything else. Never reply that you will change the plan: if they want it changed, that is adjust',
 }
 
 export const SUGGESTIONS = { next: 'Next exercise', progress: 'How am I doing?', new: 'Start something new', review: 'Review now' }
