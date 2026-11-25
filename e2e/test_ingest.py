@@ -55,19 +55,19 @@ with sync_playwright() as pw:
     p.locator('.pkg').get_by_role('button', name='Remove').click()
 
     p.locator('input[type=file]').set_input_files({'name': 'notes.pdf', 'mimeType': 'application/pdf', 'buffer': PDF})
-    expect(p.locator('.pkg')).to_contain_text('notes.pdf')
+    expect(p.locator('.pkg', has_text='attached')).to_contain_text('notes.pdf')
     print('2. a PDF is read in the browser (no model call):', 'image' not in str(ingested[-1:]))
     p.locator('.pkg').get_by_role('button', name='Remove').click()
 
     p.locator('input[type=file]').set_input_files({'name': 'lecture.docx', 'mimeType': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'buffer': tiny_docx('A unique sentence in Word.')})
-    expect(p.locator('.pkg')).to_contain_text('lecture.docx')
+    expect(p.locator('.pkg', has_text='attached')).to_contain_text('lecture.docx')
     expect(p.locator('.pkg')).to_contain_text('26 characters')
     print('2b. a Word file is read in the browser')
     p.locator('.pkg').get_by_role('button', name='Remove').click()
 
     png = tiny_png()
     p.locator('input[type=file]').set_input_files({'name': 'board.png', 'mimeType': 'image/png', 'buffer': png})
-    expect(p.locator('.pkg')).to_contain_text('board.png')
+    expect(p.locator('.pkg', has_text='attached')).to_contain_text('board.png')
     assert ingested[-1]['image']['mediaType'] == 'image/jpeg'
     print('3. an image is shrunk to JPEG and turned into notes by the model')
 
