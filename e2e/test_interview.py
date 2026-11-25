@@ -65,7 +65,7 @@ with sync_playwright() as pw:
     plans = [x for x in seen if 'Break the objective' in x]
     assert 'technical interview preparation' in plans[-1], 'an interview with no round named defaults to technical'
     p.get_by_label('Message').fill('make it recruiter side only, not technical'); p.get_by_label('Message').press('Enter')
-    expect(p.get_by_text('Updated the climb for Recruiter screen')).to_be_visible()
+    expect(p.get_by_text('Updated climb: Recruiter screen')).to_be_visible()
     assert len([x for x in seen if 'Break the objective' in x]) == len(plans), 'the recruiter round is seeded, not generated'
     t = json.loads(p.evaluate("localStorage.getItem('stepwise.v1')"))['tracks'][0]
     names = [c['name'] for c in t['concepts']]

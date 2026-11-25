@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { BKT, MASTERED, isMastered } from '../lib/learner.js'
 import { ENVIRONMENTS, envFor, nextStep } from '../lib/planner.js'
-import { GearIcon, Mark, PanelIcon } from './Icons.jsx'
-import { STARTERS } from '../lib/starters.js'
+import { GearIcon, MapIcon, Mark, PanelIcon, ShareIcon } from './Icons.jsx'
+import { STARTERS, STARTER_LABELS } from '../lib/starters.js'
 import { today } from '../lib/daily.js'
 
 export function Staircase({ concepts, here, onPick, now = Date.now() }) {
@@ -41,16 +41,12 @@ function Climb({ track, onPick, onShare, onMap }) {
   return (
     <div>
       <div className="climb-head">
-        <h2>The climb</h2>
-        <span className="row" style={{ margin: 0, gap: 6 }}>
-          {track.map && <button className="btn ghost xs" onClick={onMap}>Reading map</button>}
-          <button className="btn ghost xs" onClick={onShare}>Share</button>
-        </span>
+        {track.map && <button className="icon-btn" onClick={onMap} aria-label="Reading map" title="Reading map"><MapIcon /></button>}
+        <button className="icon-btn" onClick={onShare} aria-label="Share" title="Share this climb"><ShareIcon /></button>
       </div>
       <Staircase concepts={track.concepts} here={here} onPick={onPick} />
-      {here && <p className="next-up">Next up: <b>{track.concepts.find((c) => c.id === here).name}</b></p>}
       <details className="fold">
-        <summary>All {track.concepts.length} concepts</summary>
+        <summary>{here ? <>Next: <b>{track.concepts.find((c) => c.id === here).name}</b></> : `All ${track.concepts.length} concepts`}</summary>
         <div className="climb">
         {track.concepts.map((c) => {
           const locked = !c.prereqs.every(done)
@@ -60,7 +56,7 @@ function Climb({ track, onPick, onShare, onMap }) {
               <span className="dot" aria-hidden="true" />
               <span className="name">
                 {c.name}
-                <small>{state === 'here' ? 'You are here' : state === 'done' ? 'Mastered' : `${ENVIRONMENTS[envFor(c.type)].label}, ${Math.round(c.pL * 100)}%${locked ? ', locked' : ''}`}</small>
+                <small>{state === 'done' ? 'Mastered' : `${ENVIRONMENTS[envFor(c.type)].label} · ${Math.round(c.pL * 100)}%`}</small>
               </span>
             </button>
           )
@@ -96,15 +92,13 @@ export default function Sidebar({ tracks, activeId, setActiveId, open, onClose, 
             <circle cx="22" cy="22" r="18" className="fill" style={{ strokeDasharray: `${Math.min(1, day.done / day.goal) * 113} 113` }} />
           </svg>
           <span>
-            <b>{day.done >= day.goal ? 'Today’s climb done' : 'Today’s climb'}</b>
-            <small>{day.done >= day.goal ? `${day.done} steps today` : `${day.done} of ${day.goal} · about ${day.minutes} min`}</small>
+            <b>Today {Math.min(day.done, day.goal)}/{day.goal}</b>
             {day.streak > 0 && <small>{day.streak}-day streak</small>}
           </span>
         </button>
       )}
       {tracks.length > 0 && (
         <div>
-          <h2>Objectives</h2>
           <div className="goals">
             {shown.map((t) => {
               const done = t.concepts.filter(isMastered).length
@@ -121,22 +115,23 @@ export default function Sidebar({ tracks, activeId, setActiveId, open, onClose, 
           {tracks.length > SHOWN && (
             <button className="link side-link" onClick={() => setAllGoals(!allGoals)}>{allGoals ? 'Show fewer' : `Show all ${tracks.length}`}</button>
           )}
-          <button className="btn ghost sm new" onClick={onNew}>New objective</button>
+          <button className="link side-link" onClick={onNew}>+ New goal</button>
         </div>
       )}
       {active && <Climb track={active} onPick={(c) => onPick(active, c)} onShare={() => onShare(active)} onMap={() => onMap(active)} />}
       {tracks.length > 0 && starters.length > 0 && (
         <details className="fold">
-          <summary>Ready-made climbs, free</summary>
+          <summary>Ready-made climbs</summary>
           <div className="starters">
-            {starters.map((s) => <button key={s} onClick={() => onStarter(s)} disabled={busy}>{s}</button>)}
+            {starters.map((s) => <button key={s} onClick={() => onStarter(s)} disabled={busy} title={s}>{STARTER_LABELS[s]}</button>)}
           </div>
         </details>
       )}
       {!tracks.length && (
         <div className="empty-climb">
           <Staircase concepts={[0.15, 0.3, 0.45, 0.6, 0.75].map((v, i) => ({ id: String(i), name: '', pL: 0 }))} onPick={() => {}} />
-          <p>Your goals and the climb toward each one will show up here.</p>
+          <p>Your goals appear here.</p>
+
         </div>
       )}
       <div className="side-foot">

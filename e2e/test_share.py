@@ -16,13 +16,13 @@ def page(b, seed=None, size={'width': 1280, 'height': 860}):
 with sync_playwright() as pw:
     b = pw.chromium.launch(**LAUNCH)
     me = page(b, data); me.goto(BASE + '/')
-    expect(me.get_by_text('1 thing you mastered is starting to fade')).to_be_visible()
+    expect(me.get_by_text('Welcome back. 1 review due, about 2 min.')).to_be_visible()
     expect(me.get_by_role('button', name='Review now')).to_be_visible()
     me.wait_for_timeout(1000); me.screenshot(path=f'{OUT}/m1-welcome.png')
     print('1. fading-review nudge with Review now')
 
     # Finish an exercise on "Ordering" (0.9): pass -> mastered + unlock Paying
-    me.get_by_text('All 4 concepts').click(); me.locator('.stair', has_text='Ordering').click(); 
+    me.locator('.side details.fold summary').first.click(); me.locator('.stair', has_text='Ordering').click(); 
     expect(me.locator('.ws.open')).to_have_count(1)
     me.get_by_label('Your answer').fill('a'); me.get_by_label('Your answer').press('Enter')
     me.get_by_role('button', name='Record it').click()
@@ -30,7 +30,7 @@ with sync_playwright() as pw:
     expect(me.locator('.badge.unlocked')).to_have_text('↑ Unlocked Paying')
     expect(me.locator('.gain')).to_be_visible()
     me.wait_for_timeout(1200); me.screenshot(path=f'{OUT}/m2-badges.png')
-    expect(me.locator('.today')).to_contain_text('1 of 3')
+    expect(me.locator('.today')).to_contain_text('Today 1/3')
     expect(me.locator('.today')).to_contain_text('1-day streak')
     print('2. progress bar + Mastered and Unlocked badges; today ring 1 of 3, streak started')
 

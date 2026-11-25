@@ -77,7 +77,7 @@ with sync_playwright() as pw:
     expect(ws().get_by_text('Step 2', exact=True)).to_be_visible()
     assert len(calls) == n0, 'exact step should not call the model'
     ws().get_by_role('button', name='Back to chat').click(); expect(ws()).to_have_count(0)
-    page.get_by_role('button', name='Open workspace').last.click(); expect(ws()).to_have_count(1)
+    page.get_by_role('button', name='Open', exact=True).last.click(); expect(ws()).to_have_count(1)
     ws().get_by_label('Current step').fill('each is one half'); ws().get_by_role('button', name='Check step').click()
     shot('steps'); record().click()
     print('steps: math preview, local check without model call, minimise and reopen keeps state')

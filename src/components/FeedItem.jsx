@@ -5,7 +5,7 @@ import { EnvIcon, Mark } from './Icons.jsx'
 import { SUGGESTIONS } from '../lib/router.js'
 import ReadingMap from './ReadingMap.jsx'
 import { ACCESS_KEY } from '../lib/llm.js'
-import { ENVIRONMENTS, alternativesFor, envFor } from '../lib/planner.js'
+import { ENVIRONMENTS, envFor } from '../lib/planner.js'
 const TYPE_LABEL = { concept: 'Concept', procedure: 'Procedure', skill: 'Skill', recall: 'Recall', intuition: 'Intuition', reading: 'Code reading', ordering: 'Ordering', data: 'Data', algorithm: 'Algorithm' }
 
 export const Avatar = () => <span className="avatar"><Mark size={30} /></span>
@@ -59,7 +59,7 @@ export default function FeedItem({ it, data, actions, busy, openWs }) {
     case 'map':
       return (
         <Teacher wide>
-          <p>Here’s the reading list as a map: a good order, the main ideas in each post, and how they connect.</p>
+          <p>Reading map</p>
           <ReadingMap map={it.map} />
         </Teacher>
       )
@@ -68,7 +68,7 @@ export default function FeedItem({ it, data, actions, busy, openWs }) {
       if (!track) return null
       return (
         <Teacher wide>
-          <p>{it.revised ? 'Updated the climb' : 'Here’s the climb'} for <b>{track.title}</b>: {track.concepts.length} concepts, each with the practice that suits it. We start at step 1.</p>
+          <p>{it.revised ? 'Updated climb' : 'Your climb'}: <b>{track.title}</b></p>
           <div className="plan-card">
             <div className="plan-envs">
               {[...new Set(track.concepts.map((c) => envFor(c.type)))].map((env) => {
@@ -101,28 +101,19 @@ export default function FeedItem({ it, data, actions, busy, openWs }) {
         finished: 'Recorded',
         skipped: 'Skipped',
         switched: 'Switched to another workspace',
-      }[it.done] ?? (it.mode === 'review' ? 'Spaced review, ready' : 'Ready when you are')
+      }[it.done] ?? (it.mode === 'review' ? 'Review' : '')
       return (
         <div className={`launch${openWs === it.id ? ' open' : ''}`}>
           <span className="glyph"><Icon /></span>
           <div>
             <small>{ENVIRONMENTS[it.env].label}</small>
             <b>{concept.name}</b>
-            <small>{status}</small>
+            {status && <small>{status}</small>}
           </div>
-          {!it.done && (
-            <div className="try">
-              <span>Or try it as</span>
-              {alternativesFor(it.env, data.tracks).map((env) => {
-                const Alt = EnvIcon[env]
-                return <button key={env} className="btn ghost xs" disabled={!!busy} onClick={() => actions.switchEnv(env)}><Alt /> {ENVIRONMENTS[env].label}</button>
-              })}
-            </div>
-          )}
           {it.done === 'finished' ? (
             <span className="done-score">{it.score}<small>/100</small></span>
           ) : !it.done ? (
-            <button className="btn sm" onClick={() => actions.openWorkspace(it.id)}>Open workspace</button>
+            <button className="btn sm" onClick={() => actions.openWorkspace(it.id)}>Open</button>
           ) : <span />}
         </div>
       )
@@ -134,7 +125,7 @@ export default function FeedItem({ it, data, actions, busy, openWs }) {
     case 'access':
       return (
         <Teacher>
-          <p>This needs an access code: starting your own goals and grading answers call the model. Ready-made climbs work without one.</p>
+          <p>This needs an access code.</p>
           <div className="row"><button className="btn sm" onClick={() => actions.openSettings('access')}>Enter access code</button></div>
         </Teacher>
       )

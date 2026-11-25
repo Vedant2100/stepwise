@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import Composer from './components/Composer.jsx'
 import FeedItem, { Avatar } from './components/FeedItem.jsx'
 import Sidebar from './components/Sidebar.jsx'
-import { PanelIcon } from './components/Icons.jsx'
+import { Mark, PanelIcon } from './components/Icons.jsx'
 import Workspace from './components/Workspace.jsx'
 import AccountScreen from './components/AccountScreen.jsx'
 import SettingsScreen from './components/Settings.jsx'
@@ -30,16 +30,16 @@ const listJoin = (xs) => (xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(
 const fmtDate = (t) => new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 
 function greeting(tracks, now) {
-  if (!tracks.length) return { text: 'What do you want to be able to do?' }
+  if (!tracks.length) return { text: 'What do you want to learn?' }
   const due = tracks.flatMap((t) => t.concepts).filter((c) => c.review && c.review.due <= now).length
   if (due) {
     return {
-      text: `Welcome back. ${due === 1 ? '1 thing you mastered is' : `${due} things you mastered are`} starting to fade. About ${due * 2} minutes of review keeps ${due === 1 ? 'it' : 'them'}.`,
+      text: `Welcome back. ${due === 1 ? '1 review' : `${due} reviews`} due, about ${due * 2} min.`,
       next: true,
       nextLabel: 'Review now',
     }
   }
-  return { text: `Welcome back. ${tracks.length} objective${tracks.length > 1 ? 's' : ''}. Press Next to keep climbing, or tell me something new to learn.` }
+  return { text: 'Welcome back.' }
 }
 
 export default function App() {
@@ -256,9 +256,9 @@ export default function App() {
     const mastered = isMastered(after) && !isMastered(before)
     say(
       `**${score}/100** on ${before.name}.` +
-        (mastered ? ` First review ${fmtDate(after.review.due)}, so it sticks.` : '') +
-        (score < PASS && after.misses < STUCK ? ' Next, another go at it with a different exercise.' : '') +
-        (after.misses >= STUCK ? ' Three misses in a row, so we’ll move on and come back to this one later.' : ''),
+        (mastered ? ` Review on ${fmtDate(after.review.due)}.` : '') +
+        (score < PASS && after.misses < STUCK ? ' Another try next, from a new angle.' : '') +
+        (after.misses >= STUCK ? ' Moving on for now; it comes back later.' : ''),
       {
         next: true,
         gain: { from: Math.round(before.pL * 100), to: Math.round(after.pL * 100) },
@@ -468,23 +468,25 @@ export default function App() {
         onMap={(t) => { setSideOpen(false); push(item('map', { map: t.map })) }}
       />
       <div className="main">
+        <div className="topbar">
+          <button className="icon-btn" onClick={showSide} aria-label="Show sidebar" title="Show sidebar"><PanelIcon /></button>
+          <span className="topbar-brand"><Mark size={24} /> Stepwise</span>
+        </div>
         {hero ? (
           <>
             <div className="hero">
-              <button className="icon-btn menu" onClick={showSide} aria-label="Show sidebar" title="Show sidebar"><PanelIcon /></button>
-              <h1>What do you want to be able to do?</h1>
-              <p>Name a goal. Stepwise breaks it into concepts, picks the right kind of practice for each one, and keeps track of what you’ve mastered. Paste notes or a link, or attach a PDF, Word file or photo, and it teaches only from that.</p>
+              <h1>What do you want to learn?</h1>
+              <p>Name a goal, paste notes, or drop in links.</p>
             </div>
             {composer}
           </>
         ) : (
           <>
             <header className="main-head">
-              <button className="icon-btn menu" onClick={showSide} aria-label="Show sidebar" title="Show sidebar"><PanelIcon /></button>
               {active && (
                 <div>
                   <h1>{active.title}</h1>
-                  <p>{active.objective}</p>
+                  {active.objective.trim().toLowerCase() !== active.title.trim().toLowerCase() && <p>{active.objective}</p>}
                 </div>
               )}
             </header>

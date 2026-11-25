@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 
-import { STARTERS } from '../lib/starters.js'
+import { STARTERS, STARTER_LABELS } from '../lib/starters.js'
 import { readFile } from '../lib/ingest.js'
 
 export default function Composer({ busy, source, setSource, onSend, onStarter, hasOpen, hasTracks, onNext, onProgress, sourceMax, centered }) {
@@ -75,7 +75,7 @@ export default function Composer({ busy, source, setSource, onSend, onStarter, h
       </div>
       {!hasTracks && centered && (
         <div className="examples">
-          {STARTERS.map((e) => <button key={e} type="button" className="pick" onClick={() => onStarter(e)} disabled={busy}>{e}</button>)}
+          {STARTERS.map((e) => <button key={e} type="button" className="pick" onClick={() => onStarter(e)} disabled={busy} title={e}>{STARTER_LABELS[e]}</button>)}
         </div>
       )}
     </form>

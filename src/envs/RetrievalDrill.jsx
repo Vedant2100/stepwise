@@ -61,7 +61,7 @@ export default function DrillWorkspace({ exercise, onDone, active }) {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && reveal()}
-                  placeholder="Type your answer, or leave blank and press Enter to flip"
+                  placeholder="Your answer, or Enter to flip"
                   autoFocus={active}
                   aria-label="Your answer"
                 />

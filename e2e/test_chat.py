@@ -60,13 +60,13 @@ with sync_playwright() as pw:
     msg = page.get_by_label('Message')
     send = lambda t: (msg.fill(t), msg.press('Enter'))
     ws = lambda: page.locator('.ws.open')
-    expect(page.get_by_role('heading', name='What do you want to be able to do?')).to_be_visible()
+    expect(page.get_by_role('heading', name='What do you want to learn?')).to_be_visible()
 
     send(SOURCE)
     expect(page.get_by_text("I’ll treat that as source material")).to_be_visible()
     expect(page.locator('.pkg')).to_contain_text('Pasted text')
     send('Understand and implement attention')
-    expect(page.get_by_text('4 concepts, each with the practice')).to_be_visible()
+    expect(page.get_by_text('Your climb: Attention')).to_be_visible()
     expect(page.locator('.warn')).to_have_count(1)
     print('1. paste read as notes -> source; objective -> plan (1 ungrounded quote flagged)')
 
@@ -116,7 +116,7 @@ with sync_playwright() as pw:
     ws().get_by_role('button', name='Back to chat').click()
     send('what is a softmax?')
     expect(page.get_by_text('Think about turning scores')).to_be_visible()
-    page.get_by_role('button', name='Open workspace').last.click()
+    page.get_by_role('button', name='Open', exact=True).last.click()
     for k, a in enumerate(['exp gives 1,1', '0.5 each']):
         ws().get_by_label('Current step').fill(a); ws().get_by_role('button', name='Check step').click()
         expect(ws().get_by_text(f'{k + 1} of 2 steps')).to_be_visible()
@@ -146,13 +146,13 @@ with sync_playwright() as pw:
     print('6b. greeting answered with suggestion buttons; recent conversation sent as history')
 
     send('btw I dont wanna practice code, recruiter screen')
-    expect(page.get_by_text('Updated the climb for Attention, recruiter screen')).to_be_visible()
+    expect(page.get_by_text('Updated climb: Attention, recruiter screen')).to_be_visible()
     t = json.loads(page.evaluate("localStorage.getItem('stepwise.v1')"))['tracks'][0]
     assert [c['id'] for c in t['concepts']] == ['weighted-sum', 'pitch'], t['concepts']
     assert t['concepts'][0]['attempts'] == 1 and t['concepts'][0]['pL'] > 0.1, t['concepts'][0]
     print('6c. asking to change the climb rewrites it; kept concepts keep their progress')
     page.reload()
-    expect(page.get_by_text('Welcome back. 1 objective')).to_be_visible()
+    expect(page.get_by_text('Welcome back.', exact=True)).to_be_visible()
     t = json.loads(page.evaluate("localStorage.getItem('stepwise.v1')"))['tracks'][0]
     log = [(l['conceptId'], l['env'], l['defaultEnv'], l['score']) for l in t['log']]
     assert [x[0] for x in log][:4] == ['weighted-sum', 'impl', 'terms', 'terms'] and log[-1][1] == 'steps' and log[-1][2] == 'drill', log

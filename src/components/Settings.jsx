@@ -84,11 +84,11 @@ export default function SettingsScreen({ data, changeTracks, account, theme, set
             <>
               <p>Signed in as <b>{account.username}</b>. <span className="why">{SYNC_LABEL[account.status] ?? ''}</span></p>
               <button className="btn ghost sm" disabled={busy} onClick={signOut}>{busy ? 'Signing out…' : 'Sign out'}</button>
-              <p className="why small">Signing out removes your progress from this browser. It stays in your account.</p>
+              <p className="why small">Signing out clears this browser; your account keeps everything.</p>
             </>
           ) : (
             <>
-              <p className="why">Sign in to keep your progress in your account and pick it up on any device.</p>
+              <p className="why">Sync your progress across devices.</p>
               <div className="row">
                 <button className="btn sm" onClick={() => onSignIn('login')}>Sign in</button>
                 <button className="btn ghost sm" onClick={() => onSignIn('register')}>Create account</button>
@@ -106,7 +106,7 @@ export default function SettingsScreen({ data, changeTracks, account, theme, set
         {canRemind && (
           <section>
             <h2>Daily reminder</h2>
-            <p className="why">A nudge when today’s climb is ready. Miss a day and the next set is just a little bigger.</p>
+            <p className="why">A daily nudge when today’s climb is ready.</p>
             <div className="setting">
               <label className="check"><input type="checkbox" checked={Boolean(remind)} onChange={(e) => changeReminder(e.target.checked ? '19:00' : '')} /> Remind me every day</label>
               {remind && <input type="time" value={remind} onChange={(e) => e.target.value && changeReminder(e.target.value)} aria-label="Reminder time" style={{ width: 'auto' }} />}
@@ -116,7 +116,7 @@ export default function SettingsScreen({ data, changeTracks, account, theme, set
 
         <section>
           <h2>Access code</h2>
-          <p className="why">Needed to start your own goals and to have answers graded. Ready-made climbs work without it.</p>
+          <p className="why">Needed for your own goals and grading.</p>
           <form className="row" onSubmit={saveCode}>
             <input ref={codeRef} type="password" value={code} onChange={(e) => { setCode(e.target.value); setSaved(false) }} placeholder="Access code" aria-label="Access code" style={{ flex: 1 }} />
             <button className="btn sm">{saved ? 'Saved' : 'Save'}</button>
@@ -125,7 +125,7 @@ export default function SettingsScreen({ data, changeTracks, account, theme, set
 
         <section>
           <h2>Your data</h2>
-          <p className="why">Progress is kept in this browser, and in your account when you’re signed in. Export makes a file you can keep or import elsewhere.</p>
+          <p className="why">Back up your progress or restore it.</p>
           <div className="row">
             <button className="btn ghost sm" onClick={() => download(data)} disabled={!data.tracks.length}>Export JSON</button>
             <button className="btn ghost sm" onClick={() => fileRef.current.click()}>Import JSON</button>
