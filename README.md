@@ -13,6 +13,7 @@ Give it an objective, like "understand and implement attention" or "learn Spanis
 | Ordering | **Sort & sequence** | Drag steps into order, or sort items into categories |
 | Data | **Data notebook** | Python cells with numpy, pandas and matplotlib; hidden checks on your variables |
 | Algorithm | **Algorithm tracer** | Predict the state after each step of a real run, then complexity questions |
+| Absorbing material | **Read & retain** | Read short excerpts copied from your material and put each in your own words, then recall them from cues, then connect the ideas |
 | Interview | **Interview room** | Questions read aloud; answer out loud (live transcript) against a timer; each answer graded with what was weak, what was missing and a tighter version in your words; weak answers get one follow-up |
 
 A learner model tracks how well you know each concept and picks what comes next. Concepts open up once their prerequisites are mastered, and mastered concepts come back for spaced reviews.
@@ -25,6 +26,7 @@ CS205 (UCR, Fall 2026) final project. It builds on [Straight Shot](https://githu
 - **Objective → concept plan:** the model proposes 3–12 concepts in prerequisite order, each with a task type. The plan is validated before use: unknown types are dropped, and prerequisites may only point to earlier concepts, so the graph can't loop.
 - **Shared cache, so the model isn't paid twice:** plans and exercises don't depend on who asks, so `/api/llm` stores them in Vercel's Runtime Cache under a hash of model, prompt and variant, and serves them to every later user (30-day TTL). Repeat practice on a concept rotates through 3 variants. If a cached exercise fails verification, the retry bypasses the cache and replaces it. Gradings and chat depend on your own words and are never cached. No database needed.
 - **Any material:** paste notes or a link, or attach (or drop, or paste) a PDF, Word file or photo. Links are fetched with Anthropic's web fetch tool on the server (cached per URL for a day); PDFs and Word files are read in the browser at no cost; images are turned into notes by the model. Material the learner provides is treated as the source of truth: the model may not contradict it or invent facts about them.
+- **Reading lists:** a file, paste or message that's mostly links is read as a reading list (up to 10 links): every post is fetched, the app says which couldn't be opened, each post is digested into key points tied to exact quotes (invented quotes are dropped), and a flowchart in the chat shows a reading order, the main ideas of each post and which posts build on which. Each exercise is grounded in the post its concept came from.
 - **Change the climb by asking:** “I don't want to practice code, this is a recruiter screen” rewrites the plan. Concepts that stay keep their progress.
 - **Chat that remembers:** recent messages go with each turn, the instructions and objectives sit in a cached system prompt, and replies greet back and offer next steps as buttons.
 - **Workspaces up front:** a tab strip in every workspace, and a nudge to try another one when you missed last time, sit idle, or are on an easy streak.

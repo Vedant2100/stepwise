@@ -15,6 +15,7 @@ import { mergePlan, validatePlan } from './lib/plan.js'
 import { ENVIRONMENTS, envFor, nextReviewAt, nextStep } from './lib/planner.js'
 import { adjustPrompt, planPrompt, readPastePrompt, system } from './lib/prompts.js'
 import { URL_RE, readLink } from './lib/ingest.js'
+import { MAX_LINKS, findUrls, isReadingList, readList } from './lib/readinglist.js'
 import { today } from './lib/daily.js'
 import { normalizeRoute, routePrompt, routeSystem } from './lib/router.js'
 import { load, save } from './lib/storage.js'
@@ -128,7 +129,7 @@ export default function App() {
     await run('Planning', async () => {
       objective = objective.replace(/\s+/g, ' ').trim()
       const plan = validatePlan(await ask(system({ source: text, context }), planPrompt(objective, text, context), { variant: 0 }), text)
-      const track = { id: crypto.randomUUID(), objective, source: text, ...(context && { context }), ...plan, log: [], createdAt: Date.now() }
+      const track = { id: crypto.randomUUID(), objective, source: text, ...(context && { context }), ...(src?.pages && { pages: src.pages, map: src.map }), ...plan, log: [], createdAt: Date.now() }
       changeTracks((ts) => [track, ...ts])
       setActiveId(track.id)
       setSource(null)
@@ -260,6 +261,29 @@ export default function App() {
     say('Deleted.')
   }
 
+  async function readingList(urls) {
+    let list
+    setBusy(`Reading ${Math.min(urls.length, MAX_LINKS)} links`)
+    try {
+      list = await readList(urls)
+    } catch (e) {
+      setBusy('')
+      if (e.status === 401) push(item('access'))
+      else say(e.message, { err: !e.stopped })
+      return null
+    }
+    setBusy('')
+    const read = list.pages.length
+    const tried = read + list.failed.length
+    say(
+      `Read ${read} of ${tried} posts.` +
+        (list.failed.length ? ` Couldn’t open: ${list.failed.join(', ')}.` : '') +
+        (list.skipped ? ` I read the first ${MAX_LINKS}; ${list.skipped} more were left out.` : ''),
+    )
+    push(item('map', { map: list.map }))
+    return list
+  }
+
   async function send(text) {
     push(item('me', { text: text.length > 400 ? `${text.slice(0, 400)}… (${text.length.toLocaleString()} characters)` : text }))
     const waiting = pending.current
@@ -269,7 +293,22 @@ export default function App() {
       const more = [source?.text, skip ? '' : text].filter(Boolean).join('\n\n')
       return learn(waiting.objective, null, [waiting.context, more].filter(Boolean).join('\n\n').slice(0, SOURCE_MAX))
     }
-    const link = !source && text.match(URL_RE)
+    if (source && !source.pages && isReadingList(source.text)) {
+      const list = await readingList(findUrls(source.text))
+      if (!list) return
+      setSource(null)
+      return learn(text, list)
+    }
+    const urls = source ? [] : findUrls(text)
+    if (urls.length >= 2) {
+      const list = await readingList(urls)
+      if (!list) return
+      const rest = urls.reduce((t, u) => t.replace(u, ''), text).replace(/\s+/g, ' ').trim()
+      if (!isReadingList(text) && rest.split(' ').length >= 3) return learn(rest, list)
+      setSource(list)
+      return say('What do you want to be able to do with these posts?')
+    }
+    const link = !source && findUrls(text).length === 1 && text.match(URL_RE)
     if (link) {
       let page
       setBusy('Reading the link')
@@ -307,6 +346,7 @@ export default function App() {
       }
       return learn(read.objective, null, text)
     }
+
     if (source) return learn(text, source)
 
     let r
@@ -408,6 +448,7 @@ export default function App() {
         busy={Boolean(busy)}
         onStarter={(s) => { setSideOpen(false); startStarter(s) }}
         onToday={() => { setSideOpen(false); next() }}
+        onMap={(t) => { setSideOpen(false); push(item('map', { map: t.map })) }}
       />
       <div className="main">
         {hero ? (

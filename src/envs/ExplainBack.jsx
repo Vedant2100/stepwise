@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import Md from '../components/Md.jsx'
 import { ask } from '../lib/llm.js'
-import { gradeExplainPrompt, system } from '../lib/prompts.js'
+import { gradeExplainPrompt, sourceFor, system } from '../lib/prompts.js'
 
 function passage(source, quote) {
   const at = quote ? source.toLowerCase().indexOf(quote.toLowerCase()) : -1
@@ -15,7 +15,7 @@ export default function ExplainWorkspace({ exercise, track, concept, onDone }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const words = answer.trim() ? answer.trim().split(/\s+/).length : 0
-  const text = passage(track.source, concept.quote)
+  const text = passage(sourceFor(track, concept), concept.quote)
 
   async function submit() {
     setBusy(true)

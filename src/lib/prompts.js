@@ -4,7 +4,7 @@ export function system(track) {
   return [
     'You are Stepwise, a strict and brief tutor. Your goal is real mastery, not encouragement.',
     track?.source
-      ? 'Ground everything in the SOURCE you are given. Do not teach claims the source does not support.'
+      ? 'Ground everything in the SOURCE you are given. Do not teach claims the source does not support. Ask about the ideas in it, never about its titles, numbering, links or layout.'
       : 'No source material was given, so use well-established, standard knowledge only.',
     ...(track?.context ? ["The learner's own material is the source of truth about them and their goal. Never contradict it or make up details it doesn't contain."] : []),
     'Reply with a single JSON object and nothing else.',
@@ -35,10 +35,11 @@ Label each with ONE task type:
 - "reading": reading code: predicting what it prints, spotting and fixing bugs
 - "ordering": putting steps in the right order, or sorting items into categories
 - "data": exploring data or numerical results in Python with numpy, pandas or matplotlib
+- "absorb": taking in and remembering a lot of new information from the learner's material (posts, papers, notes); prefer it when the learner wants to learn from material they gave
 - "interview": answering interview questions out loud (telling their own background and stories, explaining why they want a role, explaining a technical topic clearly under time pressure)
 - "algorithm": tracing how a specific algorithm or data structure changes state step by step (sorting, searching, graph traversal, dynamic programming), and its complexity
 ${source ? 'For each concept, copy a short exact quote (5–25 words) from the SOURCE that supports it.' : ''}
-Return: {"title":"short title","concepts":[{"id":"kebab-id","name":"","type":"concept|procedure|skill|recall|intuition|reading|ordering|data|algorithm|interview","summary":"one sentence","prereqs":["ids of earlier concepts"]${source ? ',"quote":"exact words from the source"' : ''}}]}`
+Return: {"title":"short title","concepts":[{"id":"kebab-id","name":"","type":"concept|procedure|skill|recall|intuition|reading|ordering|data|algorithm|interview|absorb","summary":"one sentence","prereqs":["ids of earlier concepts"]${source ? ',"quote":"exact words from the source"' : ''}}]}`
 
 export const adjustPrompt = (track, change) => `${planPrompt(track.objective, track.source, track.context)}
 
@@ -46,7 +47,23 @@ The learner already has this plan: ${JSON.stringify(track.concepts.map((c) => ({
 They asked to change it: """${change}"""
 Revise the plan to do what they asked. Keep concepts that still fit, with their exact ids; drop ones that no longer fit; add what is missing. Return the full revised plan in the same JSON format.`
 
+export const digestPrompt = (title) => `The SOURCE is a post titled "${title}". Pull out what a learner should take from it.
+Return: {"summary":"one or two plain sentences","points":[{"point":"a key idea in your words","quote":"5-25 words copied exactly from the SOURCE that support it"}]} with 4-8 points, most important first.`
+
+export const mapPrompt = (digests) => `A learner is working through this reading list:
+${digests.map((d, i) => `[${i}] ${d.title}: ${d.summary} Key ideas: ${d.points.map((p) => p.point).join('; ')}`).join('\n')}
+Lay out a high-level map: the best order to read them, the 2-3 ideas to take from each, and which posts build on which.
+Return: {"themes":["2-4 short themes the list covers"],"steps":[{"doc":0,"ideas":["2-3 short ideas"]}],"links":[{"from":0,"to":1,"why":"a few words"}]} where steps cover every post once in reading order and links only connect posts that genuinely build on each other.`
+
+export function sourceFor(track, concept) {
+  if (!track.pages?.length || !concept?.quote) return track.source
+  const q = concept.quote.toLowerCase().replace(/\s+/g, ' ')
+  const page = track.pages.find((p) => p.text.toLowerCase().replace(/\s+/g, ' ').includes(q))
+  return page ? `${page.title}\n${page.url}\n\n${page.text}` : track.source
+}
+
 const SHAPES = {
+  absorb: `a read-and-retain session over the material for this concept. Split it into 3-5 short chunks in reading order. Copy each excerpt exactly from the SOURCE (1-4 sentences); if there is no SOURCE, write a short, clear passage instead. Return: {"chunks":[{"excerpt":"","key":"the takeaway in one sentence","cue":"a question that makes the learner recall the takeaway without seeing the excerpt"}],"connect":"one question that links these ideas to each other or to what the learner already knows"}`,
   explain: `an explain-it-back question. Return: {"question":"","rubric":["3–5 key points a full answer must contain"],"reference":"model answer, markdown"}`,
   steps: `a worked problem the learner solves one step at a time. Return: {"problem":"markdown","steps":[{"expected":"what this step should produce","hint":"a nudge, not the answer"}]} with 3–7 steps`,
   code: `a Python coding exercise using only the standard library. Return: {"brief":"task, markdown, with the function signature","starter":"starter code with the signature and a pass body","reference":"full correct solution","hints":["2–3 nudges, mildest first"],"tests":[{"name":"short name","code":"assert statements calling the function"}]} with 4–8 tests including edge cases`,
@@ -64,7 +81,7 @@ export function exercisePrompt(env, concept, track, mode) {
   return `Objective: "${track.objective}"
 Concept: ${concept.name} (${concept.type}) — ${concept.summary}
 ${concept.quote ? `Supporting quote: "${concept.quote}"` : ''}
-${sourceBlock(track.source)}${contextBlock(track.context)}
+${sourceBlock(sourceFor(track, concept))}${contextBlock(track.context)}
 ${mode === 'review' ? 'This is a short spaced review of a concept the learner already mastered.' : `Difficulty: ${level}.`}
 Write ${SHAPES[env]}`
 }

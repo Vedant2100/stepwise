@@ -35,14 +35,17 @@ export function Staircase({ concepts, here, onPick, now = Date.now() }) {
   )
 }
 
-function Climb({ track, onPick, onShare }) {
+function Climb({ track, onPick, onShare, onMap }) {
   const here = nextStep(track.concepts, Date.now())?.concept.id
   const done = (id) => isMastered(track.concepts.find((c) => c.id === id))
   return (
     <div>
       <div className="climb-head">
         <h2>The climb</h2>
-        <button className="btn ghost xs" onClick={onShare}>Share</button>
+        <span className="row" style={{ margin: 0, gap: 6 }}>
+          {track.map && <button className="btn ghost xs" onClick={onMap}>Reading map</button>}
+          <button className="btn ghost xs" onClick={onShare}>Share</button>
+        </span>
       </div>
       <Staircase concepts={track.concepts} here={here} onPick={onPick} />
       {here && <p className="next-up">Next up: <b>{track.concepts.find((c) => c.id === here).name}</b></p>}
@@ -71,7 +74,7 @@ function Climb({ track, onPick, onShare }) {
 const SHOWN = 4
 const SYNC_LABEL = { saving: 'Saving…', synced: 'Synced', offline: 'Offline, will retry', error: 'Couldn’t sync, retrying' }
 
-export default function Sidebar({ tracks, activeId, setActiveId, open, onClose, onNew, onPick, onSettings, account, onAccount, onShare, onHide, onStarter, onToday, busy }) {
+export default function Sidebar({ tracks, activeId, setActiveId, open, onClose, onNew, onPick, onSettings, account, onAccount, onShare, onHide, onStarter, onToday, onMap, busy }) {
   const day = today(tracks)
   const have = new Set(tracks.map((t) => t.objective.toLowerCase()))
   const starters = STARTERS.filter((s) => !have.has(s.toLowerCase()))
@@ -121,7 +124,7 @@ export default function Sidebar({ tracks, activeId, setActiveId, open, onClose, 
           <button className="btn ghost sm new" onClick={onNew}>New objective</button>
         </div>
       )}
-      {active && <Climb track={active} onPick={(c) => onPick(active, c)} onShare={() => onShare(active)} />}
+      {active && <Climb track={active} onPick={(c) => onPick(active, c)} onShare={() => onShare(active)} onMap={() => onMap(active)} />}
       {tracks.length > 0 && starters.length > 0 && (
         <details className="fold">
           <summary>Ready-made climbs, free</summary>

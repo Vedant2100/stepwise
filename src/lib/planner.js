@@ -1,6 +1,6 @@
 import { STUCK, isMastered } from './learner.js'
 
-export const TASK_TYPES = ['concept', 'procedure', 'skill', 'recall', 'intuition', 'reading', 'ordering', 'data', 'algorithm', 'interview']
+export const TASK_TYPES = ['concept', 'procedure', 'skill', 'recall', 'intuition', 'reading', 'ordering', 'data', 'algorithm', 'interview', 'absorb']
 
 export const ENVIRONMENTS = {
   explain: { label: 'Explain it back', for: 'concept' },
@@ -13,12 +13,13 @@ export const ENVIRONMENTS = {
   notebook: { label: 'Data notebook', for: 'data' },
   trace: { label: 'Algorithm tracer', for: 'algorithm' },
   interview: { label: 'Interview room', for: 'interview' },
+  absorb: { label: 'Read & retain', for: 'absorb' },
 }
 
 const ALTERNATIVES = {
-  explain: ['drill', 'interview'], steps: ['explain', 'sort'], code: ['readcode', 'trace'], drill: ['explain', 'sort'],
+  explain: ['drill', 'interview'], steps: ['explain', 'sort'], code: ['readcode', 'trace'], drill: ['absorb', 'explain'],
   sim: ['explain', 'drill'], readcode: ['code', 'trace'], sort: ['drill', 'explain'], notebook: ['code', 'sim'],
-  trace: ['code', 'readcode'], interview: ['explain', 'drill'],
+  trace: ['code', 'readcode'], interview: ['explain', 'drill'], absorb: ['drill', 'explain'],
 }
 export function alternativesFor(env, tracks) {
   const used = new Set(tracks.flatMap((t) => t.log.map((l) => l.env)))

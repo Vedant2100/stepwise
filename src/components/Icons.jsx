@@ -13,6 +13,7 @@ export const EnvIcon = {
   readcode: () => svg(<><path d="m7 8-4 4 4 4" /><circle cx="15" cy="12" r="4" /><path d="m18 15 3 3" /></>),
   sort: () => svg(<><path d="M4 6h10M4 12h7M4 18h4" /><path d="M18 4v16M15 17l3 3 3-3" /></>),
   notebook: () => svg(<><rect x="4" y="3" width="16" height="7" rx="2" /><rect x="4" y="14" width="16" height="7" rx="2" /><path d="M8 6.5h5M8 17.5l2-2 2 1.5 3-3" /></>),
+  absorb: () => svg(<><path d="M3 5h6a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H3z" /><path d="M21 5h-6a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h7z" /></>),
   interview: () => svg(<><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6" /></>),
   trace: () => svg(<><circle cx="5" cy="6" r="2" /><circle cx="12" cy="18" r="2" /><circle cx="19" cy="6" r="2" /><path d="M6.5 7.5 10.5 16M13.5 16l4-8.5" /></>),
 }

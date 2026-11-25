@@ -12,9 +12,10 @@ const NotebookWorkspace = lazy(() => import('../envs/Notebook.jsx'))
 const TracerWorkspace = lazy(() => import('../envs/Tracer.jsx'))
 const SortWorkspace = lazy(() => import('../envs/SortWorkspace.jsx'))
 const InterviewRoom = lazy(() => import('../envs/InterviewRoom.jsx'))
+const ReadRetain = lazy(() => import('../envs/ReadRetain.jsx'))
 const ENV_COMPONENTS = {
   explain: ExplainWorkspace, steps: StepWorkspace, code: CodeWorkspace, drill: DrillWorkspace, sim: SimWorkspace,
-  readcode: ReadCodeWorkspace, sort: SortWorkspace, notebook: NotebookWorkspace, trace: TracerWorkspace, interview: InterviewRoom,
+  readcode: ReadCodeWorkspace, sort: SortWorkspace, notebook: NotebookWorkspace, trace: TracerWorkspace, interview: InterviewRoom, absorb: ReadRetain,
 }
 
 const IDLE_MS = 75_000

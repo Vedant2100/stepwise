@@ -3,6 +3,7 @@ import Md from './Md.jsx'
 import Progress from './Progress.jsx'
 import { EnvIcon, Mark } from './Icons.jsx'
 import { SUGGESTIONS } from '../lib/router.js'
+import ReadingMap from './ReadingMap.jsx'
 import { ACCESS_KEY } from '../lib/llm.js'
 import { ENVIRONMENTS, alternativesFor, envFor } from '../lib/planner.js'
 const TYPE_LABEL = { concept: 'Concept', procedure: 'Procedure', skill: 'Skill', recall: 'Recall', intuition: 'Intuition', reading: 'Code reading', ordering: 'Ordering', data: 'Data', algorithm: 'Algorithm' }
@@ -52,6 +53,14 @@ export default function FeedItem({ it, data, actions, busy, openWs }) {
               <button className="btn sm" onClick={() => actions.next()} disabled={busy}>{it.nextLabel ?? 'Next exercise'}</button>
             </div>
           )}
+        </Teacher>
+      )
+
+    case 'map':
+      return (
+        <Teacher wide>
+          <p>Here’s the reading list as a map: a good order, the main ideas in each post, and how they connect.</p>
+          <ReadingMap map={it.map} />
         </Teacher>
       )
 
