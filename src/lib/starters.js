@@ -1,7 +1,7 @@
 export const STARTERS = [
   'Understand and implement scaled dot-product attention',
   'Binary search, well enough for interviews',
-  'Order food in Spanish',
+  'Robotics field engineer interview prep (warehouse robot fleets)',
   'Get a feel for how learning rate affects training',
   'Big-O notation for coding interviews',
 ]
