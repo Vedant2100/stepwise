@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Composer from './components/Composer.jsx'
 import FeedItem, { Avatar } from './components/FeedItem.jsx'
 import Sidebar from './components/Sidebar.jsx'
 import Workspace from './components/Workspace.jsx'
+import AccountScreen from './components/AccountScreen.jsx'
 import { makeExercise } from './lib/exercise.js'
 import { PASS, STUCK, isMastered, recordAttempt } from './lib/learner.js'
 import { ask, stopAll } from './lib/llm.js'
@@ -41,6 +42,8 @@ export default function App() {
   const dataRef = useRef(data)
   const end = useRef(null)
   const account = useAccount(data, dataRef, setData)
+  const [authOpen, setAuthOpen] = useState(false)
+  const closeAuth = useCallback(() => setAuthOpen(false), [])
 
   useEffect(() => {
     dataRef.current = data
@@ -223,7 +226,7 @@ export default function App() {
     if (feed.length > 1) say('What do you want to be able to do next? Paste or attach notes if you want me to teach only from them.')
   }
 
-  const actions = { next, switchEnv, finish, remove, changeTracks, push, say, openWorkspace: setOpenWs, account }
+  const actions = { next, switchEnv, finish, remove, changeTracks, push, say, openWorkspace: setOpenWs, account, signIn: () => setAuthOpen(true) }
   const active = data.tracks.find((t) => t.id === activeId)
   const hero = feed.length === 1 && !busy && !data.tracks.length
 
@@ -244,6 +247,7 @@ export default function App() {
 
   return (
     <div className="app">
+      {authOpen && <AccountScreen account={account} onClose={closeAuth} />}
       <Sidebar
         tracks={data.tracks}
         activeId={activeId}
@@ -254,7 +258,7 @@ export default function App() {
         onPick={practice}
         onSettings={() => { setSideOpen(false); push(item('settings')) }}
         account={account}
-        onAccount={() => { setSideOpen(false); push(item('account')) }}
+        onAccount={() => { setSideOpen(false); setAuthOpen(true) }}
         dark={dark}
         toggleTheme={() => setTheme(dark ? 'light' : 'dark')}
       />

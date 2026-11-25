@@ -70,7 +70,7 @@ textarea:focus, input:focus, select:focus { outline: none; border-color: var(--f
 /* app shell */
 .app { display: grid; grid-template-columns: 300px minmax(0, 1fr); min-height: 100%; }
 .side {
-  position: sticky; top: 0; height: 100vh; overflow-y: auto; background: var(--pine); color: #e7efe9;
+  position: sticky; top: 0; height: 100dvh; overflow-y: auto; background: var(--pine); color: #e7efe9;
   display: flex; flex-direction: column; gap: 22px; padding: 22px 18px 18px;
 }
 .brand { display: flex; align-items: center; gap: 10px; font: 800 22px var(--display); letter-spacing: -0.02em; color: #fff; background: none; border: 0; padding: 0; cursor: pointer; }
@@ -331,8 +331,24 @@ textarea:focus, input:focus, select:focus { outline: none; border-color: var(--f
 .sync { color: #a9c2b8; font-size: 13px; }
 .sync.synced::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #6fd49a; margin-right: 6px; }
 .sync.offline, .sync.error { color: var(--gold); }
-.account { display: flex; flex-direction: column; gap: 10px; max-width: 420px; }
-.account label { display: flex; flex-direction: column; gap: 4px; }
+
+.auth { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 24px; overflow-y: auto;
+  background: radial-gradient(120% 80% at 50% 0%, var(--pine-2), var(--pine) 70%); }
+.auth .auth-close { position: absolute; top: 18px; left: 18px; color: #fff; border-color: #ffffff40; }
+.auth .auth-close:hover:not(:disabled) { background: #ffffff14; }
+.auth-card { width: min(400px, 100%); background: var(--surface); color: var(--ink); border-radius: 22px; padding: 32px 30px 26px; box-shadow: 0 30px 80px -30px #0008; }
+.auth-card h1 { font-size: 30px; margin: 18px 0 4px; }
+.auth-card .why { margin: 0 0 20px; }
+.auth-card form, .auth-card { display: flex; flex-direction: column; }
+.auth-card label { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; font-weight: 700; font-size: 15px; }
+.auth-card label small { font-weight: 400; }
+.auth-card .bad { margin: 0 0 12px; }
+.btn.wide { width: 100%; justify-content: center; margin-top: 4px; }
+.auth-switch { margin: 18px 0 0; text-align: center; color: var(--mute); font-size: 15px; }
+.link { background: none; border: 0; padding: 0; font: inherit; font-weight: 700; color: light-dark(var(--pine-2), var(--gold)); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+@media (prefers-reduced-motion: no-preference) { .auth-card { animation: rise .25s ease-out; } }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } }
+
 
 /* other workspaces for the same concept */
 .launch .try { grid-column: 1 / -1; order: 1; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-top: 10px; border-top: 1px dashed var(--line); font-size: 14px; color: var(--mute); }

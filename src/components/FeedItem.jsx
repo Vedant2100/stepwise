@@ -2,7 +2,6 @@ import { useState } from 'react'
 import Md from './Md.jsx'
 import Progress from './Progress.jsx'
 import Settings from './Settings.jsx'
-import AccountForm from './AccountForm.jsx'
 import { EnvIcon, Mark } from './Icons.jsx'
 import { ACCESS_KEY } from '../lib/llm.js'
 import { ENVIRONMENTS, alternativesFor, envFor } from '../lib/planner.js'
@@ -96,9 +95,6 @@ export default function FeedItem({ it, data, setData, actions, busy, openWs }) {
 
     case 'settings':
       return <Teacher wide><Settings data={data} changeTracks={actions.changeTracks} /></Teacher>
-
-    case 'account':
-      return <Teacher><AccountForm account={actions.account} /></Teacher>
 
     case 'access':
       return <Teacher><AccessPrompt /></Teacher>
