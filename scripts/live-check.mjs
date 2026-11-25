@@ -5,7 +5,7 @@ import { parseJSON } from '../src/lib/llm.js'
 import { validatePlan } from '../src/lib/plan.js'
 import { envFor } from '../src/lib/planner.js'
 import { VALID } from '../src/lib/exercise.js'
-import { checkStepPrompt, digestPrompt, exercisePrompt, gradeExplainPrompt, planPrompt, system } from '../src/lib/prompts.js'
+import { adjustPrompt, checkStepPrompt, digestPrompt, exercisePrompt, gradeExplainPrompt, planPrompt, system } from '../src/lib/prompts.js'
 import { normalizeRoute, routePrompt, routeSystem } from '../src/lib/router.js'
 import { sameStep } from '../src/lib/stepcheck.js'
 import { verifyNotebook, verifyReadCode, verifyTrace } from '../src/lib/verify.js'
@@ -200,6 +200,22 @@ await step('a post is digested with quotes that really appear in it', async () =
   const kept = d.points.filter((p) => norm(text).includes(norm(p.quote)))
   console.log(`    "${page.title}": ${kept.length} of ${d.points.length} quotes found in the post`)
   if (kept.length < 3) throw new Error('too few quotes matched the post')
+})
+
+await step('"recruiter screen only" removes technical practice from an interview plan', async () => {
+  const context = 'MS Robotics student. Experience: KUKA and Yaskawa robot programming, PLC ladder logic, EtherCAT, CAN, ROS2 and MoveIt2, C++ and Python. Interviewing for a robotics field engineer role at a warehouse robotics company.'
+  const objective = 'Prepare for my robotics field engineer interview'
+  const plan = validatePlan(await ask(system({ source: '', context }), planPrompt(objective, '', context)), '')
+  const track = { objective, source: '', context, ...plan }
+  const revised = validatePlan(await ask(system(track), adjustPrompt(track, 'This is a recruiter screen. Only the recruiter side: my background, pitch and motivation. Nothing technical, no code.')), '')
+  const technical = revised.concepts.filter((c) => ['skill', 'algorithm', 'data', 'reading', 'procedure', 'intuition'].includes(c.type))
+  console.log(`    before: ${plan.concepts.map((c) => c.type).join(', ')}`)
+  console.log(`    after:  ${revised.concepts.map((c) => `${c.name} (${c.type})`).join('; ')}`)
+  if (technical.length) throw new Error(`technical concepts left: ${technical.map((c) => c.name).join(', ')}`)
+  if (revised.concepts.filter((c) => c.type === 'interview').length < revised.concepts.length / 2) throw new Error('most concepts should be interview practice')
+  const tech = validatePlan(await ask(system(track), adjustPrompt(track, 'Actually this is the technical round: the robotics and controls questions. Skip the pitch and motivation.')), '')
+  console.log(`    technical round: ${tech.concepts.map((c) => `${c.name} (${c.type})`).join('; ')}`)
+  if (tech.concepts.some((c) => /pitch|motivation|why (this|the) (role|company)|tell me about yourself/i.test(c.name))) throw new Error('pitch or motivation concepts left in a technical round')
 })
 
 const tracks = [{ id: 't1', title: 'Attention', objective: 'Understand attention', concepts: [{ pL: 0.97 }, { pL: 0.3 }] }]

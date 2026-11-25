@@ -278,7 +278,8 @@ export default function App() {
     say(
       `Read ${read} of ${tried} posts.` +
         (list.failed.length ? ` Couldn’t open: ${list.failed.join(', ')}.` : '') +
-        (list.skipped ? ` I read the first ${MAX_LINKS}; ${list.skipped} more were left out.` : ''),
+        (list.notArticles ? ` Skipped ${list.notArticles} link${list.notArticles > 1 ? 's' : ''} that aren’t articles (notebooks, social posts, videos, job listings, logins).` : '') +
+        (list.skipped ? ` I read the first ${MAX_LINKS} articles; ${list.skipped} more are in your list. Send them separately to read those too.` : ''),
     )
     push(item('map', { map: list.map }))
     return list

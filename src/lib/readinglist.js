@@ -8,9 +8,25 @@ const norm = (s) => s.toLowerCase().replace(/\s+/g, ' ')
 
 export const findUrls = (text) => [...new Set(text.match(/https?:\/\/[^\s<>"')\]]+/g) ?? [])].map((u) => u.replace(/[.,;:]+$/, ''))
 
+const NOT_ARTICLES = /(colab\.research\.google\.com|(\/\/|\.)x\.com\b|twitter\.com|youtube\.com|youtu\.be|linkedin\.com|ashbyhq\.com|greenhouse\.io|lever\.co|google\.com\/about\/careers|vscode\.dev|docs\.craft\.do|drawboard\.com|\/login\b)/i
+
 export function isReadingList(text) {
-  const lines = text.split('\n').filter((l) => l.trim())
-  return findUrls(text).length >= 2 && lines.filter((l) => /https?:\/\//.test(l)).length >= lines.length / 2
+  const urls = findUrls(text).length
+  const lines = text.split('\n').filter((l) => l.trim()).length
+  return urls >= 5 || (urls >= 2 && urls >= lines * 0.3)
+}
+
+export function pickArticles(urls) {
+  const seen = new Set()
+  const unique = urls.filter((u) => {
+    const url = new URL(u)
+    url.hash = ''
+    for (const k of [...url.searchParams.keys()]) if (k.startsWith('utm_')) url.searchParams.delete(k)
+    const key = url.href.replace(/\/$/, '')
+    return !seen.has(key) && seen.add(key)
+  })
+  const articles = unique.filter((u) => !NOT_ARTICLES.test(u))
+  return { articles, skipped: unique.length - articles.length }
 }
 
 async function digest(page) {
@@ -32,7 +48,9 @@ function cleanMap(raw, n) {
   return { steps, links, themes }
 }
 
-export async function readList(urls) {
+export async function readList(all) {
+  const { articles: urls, skipped: notArticles } = pickArticles(all)
+  if (!urls.length) throw new Error('None of those links look like articles (they’re notebooks, social posts, videos, job listings or logins), so there’s nothing to read.')
   const tried = urls.slice(0, MAX_LINKS)
   const results = await Promise.allSettled(tried.map((u) => readLink(u).then((p) => ({ ...p, url: u }))))
   const denied = results.find((r) => r.status === 'rejected' && r.reason?.status === 401)
@@ -49,6 +67,7 @@ export async function readList(urls) {
     pages: pages.map((p) => ({ title: p.title, url: p.url, text: p.text.slice(0, PAGE_CHARS) })),
     map: { ...map, docs: digests.map(({ title, url, summary }) => ({ title, url, summary })) },
     skipped: urls.length - tried.length,
+    notArticles,
     failed,
   }
 }

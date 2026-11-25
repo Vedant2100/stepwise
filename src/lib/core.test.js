@@ -213,3 +213,41 @@ describe('adjusting a climb', async () => {
     expect(m.map((c) => c.id)).toEqual(['a', 'c'])
   })
 })
+
+describe('reading lists', async () => {
+  const { isReadingList, pickArticles, findUrls } = await import('./readinglist.js')
+  const exportFile = `LINK EXPORT
+Source: browser storage
+Entries: 6
+
+TRAIN
+
+1. Some notebook - Colab
+https://colab.research.google.com/github/a/b/c.ipynb
+
+2. A good post
+https://example.com/post?utm_source=chatgpt.com
+
+3. Someone on X
+https://x.com/someone/status/1
+
+4. Another post
+https://blog.example.org/2026/11/01/idea.html
+
+5. A good post
+https://example.com/post#intro
+
+6. Research Engineer @ Somewhere
+https://jobs.ashbyhq.com/somewhere/123/application`
+
+  it('recognises an export with titles above links as a reading list, not plain notes', () => {
+    expect(isReadingList(exportFile)).toBe(true)
+    expect(isReadingList('A paragraph of notes that cites https://a.com once.\nMore notes here.\nAnd more.')).toBe(false)
+  })
+
+  it('drops duplicates (ignoring tracking and anchors) and links that are not articles', () => {
+    const { articles, skipped } = pickArticles(findUrls(exportFile))
+    expect(articles).toEqual(['https://example.com/post?utm_source=chatgpt.com', 'https://blog.example.org/2026/11/01/idea.html'])
+    expect(skipped).toBe(3)
+  })
+})

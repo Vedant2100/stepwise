@@ -26,6 +26,7 @@ Return: {"kind":"notes|request","objective":"one sentence, or empty for notes","
 export const planPrompt = (objective, source, context) => `The learner's objective: "${objective}"
 ${sourceBlock(source)}${contextBlock(context)}
 Break the objective into 3–12 concepts the learner must master, ordered so every concept comes after its prerequisites.
+The objective sets the scope. Material about the learner tells you who they are; it doesn't add topics they didn't ask to practice. If the objective names a kind of interview or practice (for example a recruiter screen, behavioral questions, no coding), every concept must fit it.
 Label each with ONE task type:
 - "concept": understanding an idea (why/what it means)
 - "procedure": carrying out steps (a derivation, a calculation, an algorithm by hand)
@@ -45,7 +46,7 @@ export const adjustPrompt = (track, change) => `${planPrompt(track.objective, tr
 
 The learner already has this plan: ${JSON.stringify(track.concepts.map((c) => ({ id: c.id, name: c.name, type: c.type, mastered: c.pL >= 0.95 })))}
 They asked to change it: """${change}"""
-Revise the plan to do what they asked. Keep concepts that still fit, with their exact ids; drop ones that no longer fit; add what is missing. Return the full revised plan in the same JSON format.`
+Their request overrides the earlier plan. If they narrow the focus (for example only the recruiter side, nothing technical, no code), drop every concept outside it, even ones already practiced, and replace them with concepts inside it. Keep a concept only if it fits the new focus as it stands, using its exact id. Return the full revised plan in the same JSON format.`
 
 export const digestPrompt = (title) => `The SOURCE is a post titled "${title}". Pull out what a learner should take from it.
 Return: {"summary":"one or two plain sentences","points":[{"point":"a key idea in your words","quote":"5-25 words copied exactly from the SOURCE that support it"}]} with 4-8 points, most important first.`
