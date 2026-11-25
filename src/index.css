@@ -498,7 +498,6 @@ textarea:focus, input:focus, select:focus { outline: none; border-color: var(--f
 .starters { display: flex; flex-direction: column; gap: 2px; margin-top: 6px; }
 .starters button { text-align: left; background: none; border: 0; color: #d8e4de; font: 15px/1.35 var(--body); padding: 6px 8px; border-radius: 10px; cursor: pointer; }
 .starters button:hover:not(:disabled) { background: #ffffff14; color: #fff; }
-.examples-label { margin: 18px 0 -8px; font-size: 14px; color: var(--mute); }
 
 /* compact sidebar */
 .side .goal { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 2px 10px; padding: 7px 10px; }
