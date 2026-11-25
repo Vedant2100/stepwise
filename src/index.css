@@ -648,3 +648,7 @@ textarea:focus, input:focus, select:focus { outline: none; border-color: var(--f
 .app.side-hidden .topbar { display: flex; align-items: center; gap: 8px; padding: 12px 16px; }
 .app.side-hidden .topbar-brand { display: inline-flex; align-items: center; gap: 8px; font: 800 17px var(--display); }
 :root[data-look='glass'] .topbar { background: transparent; -webkit-backdrop-filter: var(--glass); backdrop-filter: var(--glass); }
+
+/* inline access code */
+.msg .access { margin-top: 10px; max-width: 360px; }
+.msg .access input { flex: 1; min-width: 0; }

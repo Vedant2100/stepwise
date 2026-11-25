@@ -10,6 +10,16 @@ const TYPE_LABEL = { concept: 'Concept', procedure: 'Procedure', skill: 'Skill',
 
 export const Avatar = () => <span className="avatar"><Mark size={30} /></span>
 
+function AccessForm({ onSubmit }) {
+  const [code, setCode] = useState('')
+  return (
+    <form className="row access" onSubmit={(e) => { e.preventDefault(); if (code.trim()) onSubmit(code.trim()) }}>
+      <input type="password" autoFocus value={code} onChange={(e) => setCode(e.target.value)} placeholder="Access code" aria-label="Access code" autoComplete="off" />
+      <button className="btn sm" disabled={!code.trim()}>Continue</button>
+    </form>
+  )
+}
+
 function Teacher({ err, wide, children }) {
   return (
     <div className={`msg t${err ? ' err' : ''}${wide ? ' wide' : ''}`}>
@@ -124,10 +134,12 @@ export default function FeedItem({ it, data, actions, busy, openWs }) {
 
     case 'access':
       return (
-        <Teacher>
-          <p>This needs an access code.</p>
-          <div className="row"><button className="btn sm" onClick={() => actions.openSettings('access')}>Enter access code</button></div>
-        </Teacher>
+        it.done ? null : (
+          <Teacher err={it.wrong}>
+            <p>{it.wrong ? 'That code didn’t work. Try again.' : 'Enter your access code to continue.'}</p>
+            <AccessForm onSubmit={(code) => actions.unlock(it.id, code)} />
+          </Teacher>
+        )
       )
 
     case 'confirmDelete':

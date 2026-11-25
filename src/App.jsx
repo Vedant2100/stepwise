@@ -10,7 +10,7 @@ import ShareDialog from './components/ShareDialog.jsx'
 import { PENDING_KEY, copyClimb } from './lib/share.js'
 import { makeExercise } from './lib/exercise.js'
 import { PASS, STUCK, isMastered, recordAttempt } from './lib/learner.js'
-import { ask, stopAll } from './lib/llm.js'
+import { ACCESS_KEY, ask, stopAll } from './lib/llm.js'
 import { mergePlan, validatePlan } from './lib/plan.js'
 import { ENVIRONMENTS, envFor, nextReviewAt, nextStep } from './lib/planner.js'
 import { adjustPrompt, planPrompt, readPastePrompt, system } from './lib/prompts.js'
@@ -48,6 +48,7 @@ export default function App() {
   const [busy, setBusy] = useState('')
   const [source, setSource] = useState(null)
   const pending = useRef(null)
+  const retry = useRef(null)
   const [activeId, setActiveId] = useState(data.tracks[0]?.id ?? null)
   const [openWs, setOpenWs] = useState(null)
   const [sideOpen, setSideOpen] = useState(false)
@@ -112,6 +113,20 @@ export default function App() {
     dataRef.current = next
     setData(next)
   }
+  function needCode(again) {
+    retry.current = again
+    setFeed((f) => {
+      const last = f[f.length - 1]
+      return last?.kind === 'access' ? [...f.slice(0, -1), { ...last, done: false, wrong: true }] : [...f, item('access')]
+    })
+  }
+  function unlock(id, code) {
+    localStorage.setItem(ACCESS_KEY, code)
+    patch(id, { done: true })
+    const again = retry.current
+    retry.current = null
+    again?.()
+  }
   const openExercise = () => [...feed].reverse().find((x) => x.kind === 'exercise' && !x.done)
 
   async function run(label, fn) {
@@ -119,7 +134,7 @@ export default function App() {
     try {
       await fn()
     } catch (e) {
-      if (e.status === 401) push(item('access'))
+      if (e.status === 401) needCode(() => run(label, fn))
       else say(e.message, { err: !e.stopped })
     }
     setBusy('')
@@ -277,14 +292,14 @@ export default function App() {
     say('Deleted.')
   }
 
-  async function readingList(urls) {
+  async function readingList(urls, again) {
     let list
     setBusy(`Reading ${Math.min(urls.length, MAX_LINKS)} links`)
     try {
       list = await readList(urls)
     } catch (e) {
       setBusy('')
-      if (e.status === 401) push(item('access'))
+      if (e.status === 401) needCode(again)
       else say(e.message, { err: !e.stopped })
       return null
     }
@@ -301,8 +316,9 @@ export default function App() {
     return list
   }
 
-  async function send(text) {
-    push(item('me', { text: text.length > 400 ? `${text.slice(0, 400)}… (${text.length.toLocaleString()} characters)` : text }))
+  async function send(text, resent) {
+    const again = () => send(text, true)
+    if (!resent) push(item('me', { text: text.length > 400 ? `${text.slice(0, 400)}… (${text.length.toLocaleString()} characters)` : text }))
     const waiting = pending.current
     if (waiting) {
       pending.current = null
@@ -311,14 +327,14 @@ export default function App() {
       return learn(waiting.objective, null, [waiting.context, more].filter(Boolean).join('\n\n').slice(0, SOURCE_MAX))
     }
     if (source && !source.pages && isReadingList(source.text)) {
-      const list = await readingList(findUrls(source.text))
+      const list = await readingList(findUrls(source.text), again)
       if (!list) return
       setSource(null)
       return learn(text, list)
     }
     const urls = source ? [] : findUrls(text)
     if (urls.length >= 2) {
-      const list = await readingList(urls)
+      const list = await readingList(urls, again)
       if (!list) return
       const rest = urls.reduce((t, u) => t.replace(u, ''), text).replace(/\s+/g, ' ').trim()
       if (!isReadingList(text) && rest.split(' ').length >= 3) return learn(rest, list)
@@ -333,7 +349,7 @@ export default function App() {
         page = await readLink(link[0])
       } catch (e) {
         setBusy('')
-        return e.status === 401 ? push(item('access')) : say(e.message, { err: true })
+        return e.status === 401 ? needCode(again) : say(e.message, { err: true })
       }
       setBusy('')
       const doc = { name: page.title, text: page.text.slice(0, SOURCE_MAX) }
@@ -349,7 +365,7 @@ export default function App() {
         read = await ask(system(), readPastePrompt(text))
       } catch (e) {
         setBusy('')
-        return e.status === 401 ? push(item('access')) : say(e.message, { err: !e.stopped })
+        return e.status === 401 ? needCode(again) : say(e.message, { err: !e.stopped })
       }
       setBusy('')
       if (read.kind !== 'request' || !read.objective) {
@@ -378,7 +394,7 @@ export default function App() {
       r = normalizeRoute(await ask(routeSystem(dataRef.current.tracks, current), routePrompt(text), undefined, history), dataRef.current.tracks)
     } catch (e) {
       setBusy('')
-      return e.status === 401 ? push(item('access')) : say(e.message, { err: !e.stopped })
+      return e.status === 401 ? needCode(again) : say(e.message, { err: !e.stopped })
     }
     setBusy('')
     if (r.say || r.suggest.length) say(r.say, { suggest: r.suggest })
@@ -410,7 +426,7 @@ export default function App() {
     if (feed.length > 1) say('What do you want to be able to do next? Paste or attach notes if you want me to teach only from them.')
   }
 
-  const actions = { newObjective, progress: () => push(item('progress')), next, switchEnv, finish, remove, changeTracks, push, say, openWorkspace: setOpenWs, account, signIn: () => setAuthOpen(true), openSettings: (focus) => setSettingsOpen(focus) }
+  const actions = { newObjective, progress: () => push(item('progress')), next, switchEnv, finish, remove, changeTracks, push, say, openWorkspace: setOpenWs, account, signIn: () => setAuthOpen(true), openSettings: (focus) => setSettingsOpen(focus), unlock }
   const active = data.tracks.find((t) => t.id === activeId)
   const hero = feed.length === 1 && !busy && !data.tracks.length
 
