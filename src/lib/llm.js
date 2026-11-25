@@ -12,6 +12,16 @@ export function parseJSON(text) {
 export const stopAll = () => inflight.forEach((c) => c.abort())
 
 export async function ask(system, prompt, share, history) {
+  try {
+    return await askOnce(system, prompt, share, history)
+  } catch (e) {
+    // A reply that isn't valid JSON is usually a one-off; ask once more (a fresh variant, so a cached bad reply isn't reused).
+    if (!(e instanceof SyntaxError) && e.message !== 'The model did not return JSON.') throw e
+    return askOnce(system, prompt, share && { ...share, variant: ((share.variant ?? 0) + 1) % 10 }, history)
+  }
+}
+
+async function askOnce(system, prompt, share, history) {
   const stop = new AbortController()
   inflight.add(stop)
   try {

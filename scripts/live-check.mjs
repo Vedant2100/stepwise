@@ -202,20 +202,22 @@ await step('a post is digested with quotes that really appear in it', async () =
   if (kept.length < 3) throw new Error('too few quotes matched the post')
 })
 
-await step('"recruiter screen only" removes technical practice from an interview plan', async () => {
+await step('interview plans follow the app: technical by default, recruiter seeded, no meta concepts', async () => {
+  const { INTERVIEW_NOTE, TECHNICAL_NOTE, asInterview, interviewFormat } = await import('../src/lib/interviews.js')
   const context = 'MS Robotics student. Experience: KUKA and Yaskawa robot programming, PLC ladder logic, EtherCAT, CAN, ROS2 and MoveIt2, C++ and Python. Interviewing for a robotics field engineer role at a warehouse robotics company.'
   const objective = 'Prepare for my robotics field engineer interview'
-  const plan = validatePlan(await ask(system({ source: '', context }), planPrompt(objective, '', context)), '')
-  const track = { objective, source: '', context, ...plan }
-  const revised = validatePlan(await ask(system(track), adjustPrompt(track, 'This is a recruiter screen. Only the recruiter side: my background, pitch and motivation. Nothing technical, no code.')), '')
-  const technical = revised.concepts.filter((c) => ['skill', 'algorithm', 'data', 'reading', 'procedure', 'intuition'].includes(c.type))
-  console.log(`    before: ${plan.concepts.map((c) => c.type).join(', ')}`)
-  console.log(`    after:  ${revised.concepts.map((c) => `${c.name} (${c.type})`).join('; ')}`)
-  if (technical.length) throw new Error(`technical concepts left: ${technical.map((c) => c.name).join(', ')}`)
-  if (revised.concepts.filter((c) => c.type === 'interview').length < revised.concepts.length / 2) throw new Error('most concepts should be interview practice')
-  const tech = validatePlan(await ask(system(track), adjustPrompt(track, 'Actually this is the technical round: the robotics and controls questions. Skip the pitch and motivation.')), '')
-  console.log(`    technical round: ${tech.concepts.map((c) => `${c.name} (${c.type})`).join('; ')}`)
-  if (tech.concepts.some((c) => /pitch|motivation|why (this|the) (role|company)|tell me about yourself/i.test(c.name))) throw new Error('pitch or motivation concepts left in a technical round')
+  const META = /interview (room|environment|format|process|structure)|practice (room|environment|session)|screen structure/i
+  const plan = asInterview(validatePlan(await ask(system({ source: '', context }), planPrompt(objective, '', context) + TECHNICAL_NOTE + INTERVIEW_NOTE), ''))
+  console.log(`    technical: ${plan.concepts.map((c) => c.name).join('; ')}`)
+  if (plan.concepts.some((c) => META.test(c.name))) throw new Error('meta concept in the technical plan')
+  if (plan.concepts.some((c) => /pitch|motivation|tell me about yourself/i.test(c.name))) throw new Error('recruiter concepts in the default technical plan')
+  for (const request of ['This is a recruiter screen. Only my background, pitch and motivation.', 'make it recruiter side only, not technical', 'focus on my background and motivation for warehouse fleets']) {
+    if (interviewFormat(request) !== 'recruiter') throw new Error(`"${request}" should switch to the seeded recruiter round`)
+  }
+  const track = { objective, source: '', context, interview: 'technical', ...plan }
+  const revised = asInterview(validatePlan(await ask(system(track), adjustPrompt(track, 'more on diagnosing fleet failures in the field, less theory') + INTERVIEW_NOTE), ''))
+  console.log(`    adjusted: ${revised.concepts.map((c) => c.name).join('; ')}`)
+  if (revised.concepts.some((c) => META.test(c.name))) throw new Error('meta concept after an adjust')
 })
 
 await step('the seeded recruiter screen asks real recruiter questions', async () => {
