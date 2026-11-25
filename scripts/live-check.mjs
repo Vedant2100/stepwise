@@ -180,7 +180,7 @@ for (const [env, concept] of NEW) {
 }
 
 console.log('\n## Chat router')
-const tracks = [{ id: 't1', title: 'Attention', objective: 'Understand attention' }]
+const tracks = [{ id: 't1', title: 'Attention', objective: 'Understand attention', concepts: [{ pL: 0.97 }, { pL: 0.3 }] }]
 const current = { concept: { name: 'Softmax by hand' }, env: 'steps', exercise: { problem: 'softmax([0,0])' } }
 for (const [text, want] of [
   ['hi!', 'chat'], ['next one please', 'next'], ['teach me how DPO works', 'learn'], ['can I do this one in code instead?', 'switch'],
