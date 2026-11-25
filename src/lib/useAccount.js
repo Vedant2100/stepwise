@@ -81,7 +81,6 @@ export default function useAccount(data, dataRef, setData) {
     if (!username) return
     const changed = content(data) !== pushed.current
     if (!changed && status !== 'offline' && status !== 'error') return
-    if (changed && status === 'synced') setStatus('saving')
     const t = setTimeout(push, changed ? PUSH_DELAY : RETRY_DELAY)
     return () => clearTimeout(t)
   }, [data, username, status, push])
@@ -105,5 +104,7 @@ export default function useAccount(data, dataRef, setData) {
     apply({ tracks: [], deleted: [], sync: { version: 0, username: null } })
   }
 
-  return { username, status, signIn, signOut }
+  // Unsaved local changes mean "saving" right away, not one render later.
+  const shown = status === 'synced' && username && content(data) !== pushed.current ? 'saving' : status
+  return { username, status: shown, signIn, signOut }
 }

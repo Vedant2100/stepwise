@@ -1,4 +1,4 @@
-import json, re
+import json, secrets, re
 from playwright.sync_api import sync_playwright, expect
 from _env import BASE, LAUNCH, OUT, PYO, check_errors
 C = lambda i, n, t: {"id": i, "name": n, "type": t, "summary": f"About {n}.", "prereqs": []}
@@ -10,6 +10,7 @@ def llm(route):
     reply = next((v for k, v in PLANS.items() if k in p), DRILL) if "Break the objective" in p else DRILL
     route.fulfill(json={"text": json.dumps(reply)})
 errors = []
+USER = f'vedant{secrets.token_hex(3)}'  # unique per run: the dev server keeps accounts in memory
 def setup(b, name, size):
     ctx = b.new_context(viewport=size)
     page = ctx.new_page(); page.route('**/api/llm', llm)
@@ -30,10 +31,10 @@ with sync_playwright() as pw:
     dlg = laptop.get_by_role('dialog')
     dlg.get_by_role('button', name='Create an account').click()
     laptop.screenshot(path=f'{OUT}/auth.png')
-    dlg.get_by_label('Username').fill('Vedant'); dlg.get_by_label('Password').fill('correct horse')
+    dlg.get_by_label('Username').fill(USER.capitalize()); dlg.get_by_label('Password').fill('correct horse')
     dlg.get_by_role('button', name='Create account').click()
     expect(dlg).to_have_count(0)
-    expect(laptop.get_by_text('Signed in as vedant')).to_be_visible()
+    expect(laptop.get_by_text(f'Signed in as {USER}')).to_be_visible()
     expect(laptop.locator('.sync')).to_have_text('Synced', timeout=10000)
     print('1. laptop: progress made signed-out, then account created, synced')
 
@@ -43,7 +44,7 @@ with sync_playwright() as pw:
     phone.get_by_role('button', name='Back to chat').click()
     phone.get_by_role('button', name='Show sidebar').click(); phone.get_by_role('button', name='Sign in to sync').click()
     dlg = phone.get_by_role('dialog')
-    dlg.get_by_label('Username').fill('vedant'); dlg.get_by_label('Password').fill('wrong password')
+    dlg.get_by_label('Username').fill(USER); dlg.get_by_label('Password').fill('wrong password')
     dlg.get_by_role('button', name='Sign in').click()
     expect(dlg.get_by_text('Wrong username or password.')).to_be_visible()
     phone.screenshot(path=f'{OUT}/auth-phone.png')
