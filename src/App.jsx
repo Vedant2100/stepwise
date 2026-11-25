@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import Composer from './components/Composer.jsx'
 import FeedItem, { Avatar } from './components/FeedItem.jsx'
 import Sidebar from './components/Sidebar.jsx'
+import { PanelIcon } from './components/Icons.jsx'
 import Workspace from './components/Workspace.jsx'
 import AccountScreen from './components/AccountScreen.jsx'
 import ShareDialog from './components/ShareDialog.jsx'
@@ -11,7 +12,7 @@ import { PASS, STUCK, isMastered, recordAttempt } from './lib/learner.js'
 import { ask, stopAll } from './lib/llm.js'
 import { validatePlan } from './lib/plan.js'
 import { ENVIRONMENTS, envFor, nextReviewAt, nextStep } from './lib/planner.js'
-import { planPrompt, system } from './lib/prompts.js'
+import { planPrompt, readPastePrompt, system } from './lib/prompts.js'
 import { normalizeRoute, routePrompt } from './lib/router.js'
 import { load, save } from './lib/storage.js'
 import useAccount from './lib/useAccount.js'
@@ -20,6 +21,7 @@ const SOURCE_MAX = 15_000
 const PASTE_AS_SOURCE = 800
 let seq = 0
 const item = (kind, props) => ({ id: ++seq, kind, ...props })
+const listJoin = (xs) => (xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`)
 const fmtDate = (t) => new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 
 // A review takes about two minutes, so the nudge can say what keeping things costs.
@@ -41,9 +43,16 @@ export default function App() {
   const [feed, setFeed] = useState(() => [item('t', greeting(data.tracks, Date.now()))])
   const [busy, setBusy] = useState('')
   const [source, setSource] = useState(null)
+  const pending = useRef(null)
   const [activeId, setActiveId] = useState(data.tracks[0]?.id ?? null)
   const [openWs, setOpenWs] = useState(null)
   const [sideOpen, setSideOpen] = useState(false)
+  // Desktop: the sidebar can be collapsed (remembered). Phones: it's a drawer opened from the same button.
+  const [sideHidden, setSideHidden] = useState(() => localStorage.getItem('stepwise.sideHidden') === '1')
+  useEffect(() => localStorage.setItem('stepwise.sideHidden', sideHidden ? '1' : '0'), [sideHidden])
+  const narrow = () => matchMedia('(max-width: 900px)').matches
+  const showSide = () => (narrow() ? setSideOpen(true) : setSideHidden(false))
+  const hideSide = () => (narrow() ? setSideOpen(false) : setSideHidden(true))
   const [systemDark, setSystemDark] = useState(() => matchMedia('(prefers-color-scheme: dark)').matches)
   const [theme, setTheme] = useState(() => localStorage.getItem('stepwise.theme') ?? '')
   const dark = theme ? theme === 'dark' : systemDark
@@ -103,12 +112,13 @@ export default function App() {
     setBusy('')
   }
 
-  async function learn(objective, src) {
+  // context: the learner's own background for this goal (from a pasted request); tailors but doesn't ground.
+  async function learn(objective, src, context = '') {
     const text = (src?.text ?? '').slice(0, SOURCE_MAX)
     await run('Planning', async () => {
       objective = objective.replace(/\s+/g, ' ').trim()
-      const plan = validatePlan(await ask(system({ source: text }), planPrompt(objective, text), { variant: 0 }), text)
-      const track = { id: crypto.randomUUID(), objective, source: text, ...plan, log: [], createdAt: Date.now() }
+      const plan = validatePlan(await ask(system({ source: text }), planPrompt(objective, text, context), { variant: 0 }), text)
+      const track = { id: crypto.randomUUID(), objective, source: text, ...(context && { context }), ...plan, log: [], createdAt: Date.now() }
       changeTracks((ts) => [track, ...ts])
       setActiveId(track.id)
       setSource(null)
@@ -221,9 +231,34 @@ export default function App() {
 
   async function send(text) {
     push(item('me', { text: text.length > 400 ? `${text.slice(0, 400)}… (${text.length.toLocaleString()} characters)` : text }))
+    // Waiting on material a request mentioned: add what they send, or plan without it.
+    const waiting = pending.current
+    if (waiting) {
+      pending.current = null
+      const skip = /^\s*(go|skip|plan|continue|without|no)\b/i.test(text) && !source
+      const more = [source?.text, skip ? '' : text].filter(Boolean).join('\n\n')
+      return learn(waiting.objective, null, [waiting.context, more].filter(Boolean).join('\n\n').slice(0, SOURCE_MAX))
+    }
     if (!source && text.length > PASTE_AS_SOURCE) {
-      setSource({ name: 'Pasted text', text: text.slice(0, SOURCE_MAX) })
-      return say('Got it, I’ll treat that as source material and teach only what it supports. What do you want to be able to do with it?')
+      let read
+      setBusy('Reading')
+      try {
+        read = await ask(system(), readPastePrompt(text))
+      } catch (e) {
+        setBusy('')
+        return e.status === 401 ? push(item('access')) : say(e.message, { err: !e.stopped })
+      }
+      setBusy('')
+      if (read.kind !== 'request' || !read.objective) {
+        setSource({ name: 'Pasted text', text: text.slice(0, SOURCE_MAX) })
+        return say('Got it, I’ll treat that as source material and teach only what it supports. What do you want to be able to do with it?')
+      }
+      const missing = (Array.isArray(read.missing) ? read.missing : []).filter((m) => typeof m === 'string' && m.trim()).slice(0, 5)
+      if (missing.length) {
+        pending.current = { objective: read.objective, context: text }
+        return say(`Goal: **${read.objective}**\n\nYour message mentions ${listJoin(missing)}, but ${missing.length > 1 ? 'they aren’t' : 'it isn’t'} here. Paste or attach ${missing.length > 1 ? 'them' : 'it'} so the plan fits you, or say “go” to plan without.`)
+      }
+      return learn(read.objective, null, text)
     }
     if (source || !dataRef.current.tracks.length) return learn(text, source)
 
@@ -281,7 +316,7 @@ export default function App() {
   )
 
   return (
-    <div className="app">
+    <div className={`app${sideHidden ? ' side-hidden' : ''}`}>
       {authOpen && <AccountScreen account={account} onClose={closeAuth} />}
       {sharing && <ShareDialog track={sharing} onClose={closeShare} />}
       <Sidebar
@@ -290,6 +325,7 @@ export default function App() {
         setActiveId={(id) => { setActiveId(id); setSideOpen(false) }}
         open={sideOpen}
         onClose={() => setSideOpen(false)}
+        onHide={hideSide}
         onNew={newObjective}
         onPick={practice}
         onSettings={() => { setSideOpen(false); push(item('settings')) }}
@@ -303,7 +339,7 @@ export default function App() {
         {hero ? (
           <>
             <div className="hero">
-              <button className="btn ghost sm menu" onClick={() => setSideOpen(true)}>Menu</button>
+              <button className="icon-btn menu" onClick={showSide} aria-label="Show sidebar" title="Show sidebar"><PanelIcon /></button>
               <h1>What do you want to be able to do?</h1>
               <p>Name a goal. Stepwise breaks it into concepts, picks the right kind of practice for each one, and keeps track of what you’ve mastered. Paste or attach notes and it teaches only from them.</p>
             </div>
@@ -312,11 +348,13 @@ export default function App() {
         ) : (
           <>
             <header className="main-head">
-              <button className="btn ghost sm menu" onClick={() => setSideOpen(true)}>Menu</button>
-              <div>
-                <h1>{active ? active.title : 'Stepwise'}</h1>
-                {active && <p>{active.objective}</p>}
-              </div>
+              <button className="icon-btn menu" onClick={showSide} aria-label="Show sidebar" title="Show sidebar"><PanelIcon /></button>
+              {active && (
+                <div>
+                  <h1>{active.title}</h1>
+                  <p>{active.objective}</p>
+                </div>
+              )}
             </header>
             <div className="wrap">
               <main className="feed" aria-live="polite">

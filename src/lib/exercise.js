@@ -19,6 +19,8 @@ export const VALID = {
   trace: (x) =>
     typeof x.code === 'string' && Array.isArray(x.questions) &&
     x.questions.every((q) => nonEmpty(q.choices) && Number.isInteger(q.answer) && q.answer >= 0 && q.answer < q.choices.length),
+  interview: (x) =>
+    nonEmpty(x.questions) && x.questions.every((q) => typeof q.ask === 'string' && q.ask.trim() && nonEmpty(q.strong)),
   sim: (x) =>
     typeof x.compute === 'string' && nonEmpty(x.questions) && nonEmpty(x.params) &&
     x.params.every((q) => /^[A-Za-z_]\w*$/.test(q.name) && [q.min, q.max, q.step, q.value].every(Number.isFinite) && q.min < q.max),

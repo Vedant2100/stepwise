@@ -1,6 +1,6 @@
 import { BKT, MASTERED, isMastered } from '../lib/learner.js'
 import { ENVIRONMENTS, envFor, nextStep } from '../lib/planner.js'
-import { Mark } from './Icons.jsx'
+import { Mark, PanelIcon } from './Icons.jsx'
 
 // The climb, drawn as a staircase rising left to right. Each step's height is its place in the climb;
 // marigold fills it as mastery grows; the flag marks the step the planner would pick next.
@@ -67,13 +67,16 @@ function Climb({ track, onPick, onShare }) {
 
 const SYNC_LABEL = { saving: 'Saving…', synced: 'Synced', offline: 'Offline, will retry', error: 'Couldn’t sync, retrying' }
 
-export default function Sidebar({ tracks, activeId, setActiveId, open, onClose, onNew, onPick, onSettings, dark, toggleTheme, account, onAccount, onShare }) {
+export default function Sidebar({ tracks, activeId, setActiveId, open, onClose, onNew, onPick, onSettings, dark, toggleTheme, account, onAccount, onShare, onHide }) {
   const active = tracks.find((t) => t.id === activeId)
   return (
     <>
     {open && <div className="scrim" onClick={onClose} aria-hidden="true" />}
     <aside className={`side${open ? ' open' : ''}`} aria-label="Objectives">
-      <button className="brand" onClick={onNew}><Mark /> Stepwise</button>
+      <div className="side-top">
+        <button className="brand" onClick={onNew}><Mark /> Stepwise</button>
+        <button className="icon-btn" onClick={onHide} aria-label="Hide sidebar" title="Hide sidebar"><PanelIcon /></button>
+      </div>
       {tracks.length > 0 && (
         <div>
           <h2>Objectives</h2>

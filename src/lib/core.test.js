@@ -35,7 +35,7 @@ describe('learner model', () => {
 
 describe('planner', () => {
   it('maps each task type to one environment', () => {
-    expect(TASK_TYPES.map(envFor)).toEqual(['explain', 'steps', 'code', 'drill', 'sim', 'readcode', 'sort', 'notebook', 'trace'])
+    expect(TASK_TYPES.map(envFor)).toEqual(['explain', 'steps', 'code', 'drill', 'sim', 'readcode', 'sort', 'notebook', 'trace', 'interview'])
   })
 
   it('only offers concepts whose prerequisites are mastered', () => {

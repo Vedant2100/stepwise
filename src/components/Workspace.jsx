@@ -10,9 +10,10 @@ const ReadCodeWorkspace = lazy(() => import('../envs/ReadCode.jsx'))
 const NotebookWorkspace = lazy(() => import('../envs/Notebook.jsx'))
 const TracerWorkspace = lazy(() => import('../envs/Tracer.jsx'))
 const SortWorkspace = lazy(() => import('../envs/SortWorkspace.jsx'))
+const InterviewRoom = lazy(() => import('../envs/InterviewRoom.jsx'))
 const ENV_COMPONENTS = {
   explain: ExplainWorkspace, steps: StepWorkspace, code: CodeWorkspace, drill: DrillWorkspace, sim: SimWorkspace,
-  readcode: ReadCodeWorkspace, sort: SortWorkspace, notebook: NotebookWorkspace, trace: TracerWorkspace,
+  readcode: ReadCodeWorkspace, sort: SortWorkspace, notebook: NotebookWorkspace, trace: TracerWorkspace, interview: InterviewRoom,
 }
 
 // A full-screen workspace for one exercise. It stays mounted (just hidden) while the learner is back in the chat.

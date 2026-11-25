@@ -13,6 +13,7 @@ Give it an objective, like "understand and implement attention" or "learn Spanis
 | Ordering | **Sort & sequence** | Drag steps into order, or sort items into categories |
 | Data | **Data notebook** | Python cells with numpy, pandas and matplotlib; hidden checks on your variables |
 | Algorithm | **Algorithm tracer** | Predict the state after each step of a real run, then complexity questions |
+| Interview | **Interview room** | Questions read aloud; answer out loud (live transcript) against a timer; each answer graded with what was weak, what was missing and a tighter version in your words; weak answers get one follow-up |
 
 A learner model tracks how well you know each concept and picks what comes next. Concepts open up once their prerequisites are mastered, and mastered concepts come back for spaced reviews.
 
@@ -20,9 +21,12 @@ CS205 (UCR, Fall 2026) final project. It builds on [Straight Shot](https://githu
 
 ## Features
 
-- **Chat-first teacher** (ported from Straight Shot): one conversation is the whole interface. Type an objective, paste notes (long pastes become source material) or attach a `.txt`/`.md` file; say “next”, “skip”, “switch to code”, “how am I doing?” or ask about the exercise. A model-based router picks the action, and its choice is validated before anything runs. Starting an exercise opens a full-screen workspace for its task type; “← Chat” minimises it without losing your work.
+- **Chat-first teacher** (ported from Straight Shot): one conversation is the whole interface. Type an objective, paste notes or a request (the model decides which a long paste is; if a request mentions things that aren't there, like a resume, Stepwise asks for them first) or attach a `.txt`/`.md` file; say “next”, “skip”, “switch to code”, “how am I doing?” or ask about the exercise. A model-based router picks the action, and its choice is validated before anything runs. Starting an exercise opens a full-screen workspace for its task type; “← Chat” minimises it without losing your work.
 - **Objective → concept plan:** the model proposes 3–12 concepts in prerequisite order, each with a task type. The plan is validated before use: unknown types are dropped, and prerequisites may only point to earlier concepts, so the graph can't loop.
 - **Shared cache, so the model isn't paid twice:** plans and exercises don't depend on who asks, so `/api/llm` stores them in Vercel's Runtime Cache under a hash of model, prompt and variant, and serves them to every later user (30-day TTL). Repeat practice on a concept rotates through 3 variants. If a cached exercise fails verification, the retry bypasses the cache and replaces it. Gradings and chat depend on your own words and are never cached. No database needed.
+- **Starter climbs:** five ready-made objectives whose plans and first exercises are pre-generated into the shared cache (`scripts/warm.mjs`, run by the *Warm starter climbs* workflow). Cached replies are served without the access code, so a first-time visitor can start one immediately; anything that reaches the model still needs the code.
+- **Accounts and sync:** optional username/password accounts (scrypt hashes, HttpOnly session cookie, rate-limited sign-in) with progress stored in Upstash Redis. Each objective carries an `updatedAt`, deletions leave tombstones, and saves use a versioned compare-and-set, so two devices merge per objective instead of overwriting each other.
+- **Shareable climbs:** a public read-only page (`/c/<id>`) showing a climb's concepts and progress, with “Start this climb” to begin your own copy. Only the plan and progress are published, never notes, answers or the username.
 - **Stop and timeouts:** every model call has a 90-second limit, and a Stop button cancels one in progress.
 - **Grounding check:** with source material, every concept must quote the source, and the quote is checked against it word for word. Concepts whose quote isn't found are flagged.
 - **Environment chosen per concept,** with a recommended default and a manual override. Each attempt logs which environment was recommended and which was used.
