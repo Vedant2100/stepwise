@@ -5,7 +5,7 @@ import { parseJSON } from '../src/lib/llm.js'
 import { validatePlan } from '../src/lib/plan.js'
 import { envFor } from '../src/lib/planner.js'
 import { VALID } from '../src/lib/exercise.js'
-import { checkStepPrompt, exercisePrompt, gradeExplainPrompt, planPrompt, system } from '../src/lib/prompts.js'
+import { checkStepPrompt, digestPrompt, exercisePrompt, gradeExplainPrompt, planPrompt, system } from '../src/lib/prompts.js'
 import { normalizeRoute, routePrompt, routeSystem } from '../src/lib/router.js'
 import { sameStep } from '../src/lib/stepcheck.js'
 import { verifyNotebook, verifyReadCode, verifyTrace } from '../src/lib/verify.js'
@@ -187,6 +187,19 @@ await step('a link is fetched through /api/ingest', async () => {
   if (!res.ok) throw new Error(`HTTP ${res.status}: ${page.error}`)
   console.log(`    "${page.title}", ${page.text?.length ?? 0} characters${page.pdf ? ' (pdf)' : ''}`)
   if (!(page.text?.length > 500)) throw new Error('too little text came back')
+})
+
+await step('a post is digested with quotes that really appear in it', async () => {
+  calls++
+  const res = await fetch(`${URL}/api/ingest`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-access-code': CODE }, body: JSON.stringify({ url: 'https://lilianweng.github.io/posts/2018-06-24-attention/' }) })
+  const page = await res.json()
+  if (!res.ok) throw new Error(`HTTP ${res.status}: ${page.error}`)
+  const text = page.text.slice(0, 12000)
+  const d = await ask(system({ source: text }), `SOURCE:\n<<<\n${text}\n>>>\n\n${digestPrompt(page.title)}`)
+  const norm = (x) => x.toLowerCase().replace(/\s+/g, ' ')
+  const kept = d.points.filter((p) => norm(text).includes(norm(p.quote)))
+  console.log(`    "${page.title}": ${kept.length} of ${d.points.length} quotes found in the post`)
+  if (kept.length < 3) throw new Error('too few quotes matched the post')
 })
 
 const tracks = [{ id: 't1', title: 'Attention', objective: 'Understand attention', concepts: [{ pL: 0.97 }, { pL: 0.3 }] }]
