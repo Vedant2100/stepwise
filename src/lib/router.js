@@ -12,7 +12,6 @@ export const ACTIONS = {
   chat: 'greetings, thanks, small talk, questions about Stepwise or anything else',
 }
 
-// Suggested next steps the learner can click; each maps to an action the app runs directly.
 export const SUGGESTIONS = { next: 'Next exercise', progress: 'How am I doing?', new: 'Start something new', review: 'Review now' }
 
 export const routeSystem = (tracks, current) => `You are the learner's personal teacher inside Stepwise: warm, brief and direct, in plain words.

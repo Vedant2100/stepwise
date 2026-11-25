@@ -8,7 +8,6 @@ const MAX_CHARS = 60_000
 const TTL = 60 * 60 * 24 * 30
 const cache = getCache({ namespace: 'stepwise-llm-v1' })
 
-// The API needs alternating turns starting with the user, so merge runs and drop a leading reply.
 function conversation(history, prompt) {
   const out = []
   for (const m of [...history, { role: 'user', content: prompt }]) {

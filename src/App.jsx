@@ -301,7 +301,6 @@ export default function App() {
     await run('Thinking', () => start(track, { concept, mode: isMastered(concept) ? 'review' : 'learn' }))
   }
 
-  // Ready-made climbs skip the router: their plan is already stored, so no model call is needed.
   function startStarter(s) {
     push(item('me', { text: s }))
     learn(s)
