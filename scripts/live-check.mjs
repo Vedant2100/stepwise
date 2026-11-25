@@ -218,6 +218,16 @@ await step('"recruiter screen only" removes technical practice from an interview
   if (tech.concepts.some((c) => /pitch|motivation|why (this|the) (role|company)|tell me about yourself/i.test(c.name))) throw new Error('pitch or motivation concepts left in a technical round')
 })
 
+await step('the seeded recruiter screen asks real recruiter questions', async () => {
+  const { seededPlan } = await import('../src/lib/interviews.js')
+  const track = { objective: 'Prepare for my recruiter screen for a robotics field engineer role', source: '', context: 'MS Robotics student; deployed three KUKA robots at a 3D printing company; built a pick-and-place arm with a vision-language model.', ...seededPlan('recruiter') }
+  for (const c of track.concepts.slice(0, 2)) {
+    const x = await ask(system(track), exercisePrompt('interview', c, track, 'learn'))
+    console.log(`    ${c.name}: ${x.questions.map((q) => q.ask).join(' | ')}`)
+    if (!VALID.interview(x)) throw new Error('invalid interview exercise')
+  }
+})
+
 const tracks = [{ id: 't1', title: 'Attention', objective: 'Understand attention', concepts: [{ pL: 0.97 }, { pL: 0.3 }] }]
 const current = { concept: { name: 'Softmax by hand' }, env: 'steps', exercise: { problem: 'softmax([0,0])' } }
 for (const [text, want] of [

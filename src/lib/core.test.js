@@ -251,3 +251,23 @@ https://jobs.ashbyhq.com/somewhere/123/application`
     expect(skipped).toBe(4)
   })
 })
+
+describe('interview formats', async () => {
+  const { isInterview, interviewFormat, seededPlan, asInterview } = await import('./interviews.js')
+  it('spots interview prep and picks the round, technical by default', () => {
+    expect(isInterview('Prepare for my Nimble field engineer interview')).toBe(true)
+    expect(isInterview('Understand attention')).toBe(false)
+    expect(interviewFormat('make it recruiter side only, not technical')).toBe('recruiter')
+    expect(interviewFormat('this is way too technical for a recruiter screen')).toBe('recruiter')
+    expect(interviewFormat('focus on behavioral questions')).toBe('behavioral')
+    expect(interviewFormat('switch to the technical round')).toBe('technical')
+    expect(interviewFormat('Prepare for my interview')).toBe(null)
+  })
+  it('seeds a recruiter screen with the questions recruiters ask, all in the interview room', () => {
+    const plan = seededPlan('recruiter')
+    expect(plan.concepts.map((c) => c.name)).toContain('Tell me about yourself')
+    expect(plan.concepts.map((c) => c.name)).toContain('Walk me through a project')
+    expect(plan.concepts.every((c) => c.type === 'interview')).toBe(true)
+    expect(asInterview({ title: 't', concepts: [{ id: 'a', type: 'skill' }] }).concepts[0].type).toBe('interview')
+  })
+})

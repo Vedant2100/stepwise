@@ -17,6 +17,7 @@ import { adjustPrompt, planPrompt, readPastePrompt, system } from './lib/prompts
 import { URL_RE, readLink } from './lib/ingest.js'
 import { MAX_LINKS, findUrls, isReadingList, readList } from './lib/readinglist.js'
 import { today } from './lib/daily.js'
+import { TECHNICAL_NOTE, asInterview, interviewFormat, isInterview, seededPlan } from './lib/interviews.js'
 import { normalizeRoute, routePrompt, routeSystem } from './lib/router.js'
 import { load, save } from './lib/storage.js'
 import useAccount from './lib/useAccount.js'
@@ -124,12 +125,20 @@ export default function App() {
     setBusy('')
   }
 
+  async function planFor(objective, text, context, interview) {
+    const plan = validatePlan(await ask(system({ source: text, context }), planPrompt(objective, text, context) + (interview ? TECHNICAL_NOTE : ''), { variant: 0 }), text)
+    return interview ? asInterview(plan) : plan
+  }
+
   async function learn(objective, src, context = '') {
     const text = (src?.text ?? '').slice(0, SOURCE_MAX)
     await run('Planning', async () => {
       objective = objective.replace(/\s+/g, ' ').trim()
-      const plan = validatePlan(await ask(system({ source: text, context }), planPrompt(objective, text, context), { variant: 0 }), text)
-      const track = { id: crypto.randomUUID(), objective, source: text, ...(context && { context }), ...(src?.pages && { pages: src.pages, map: src.map }), ...plan, log: [], createdAt: Date.now() }
+      const interview = isInterview(objective) ? (interviewFormat(objective) ?? 'technical') : null
+      const plan = interview && interview !== 'technical'
+        ? seededPlan(interview)
+        : await planFor(objective, text, context, interview)
+      const track = { id: crypto.randomUUID(), objective, source: text, ...(interview && { interview }), ...(context && { context }), ...(src?.pages && { pages: src.pages, map: src.map }), ...plan, log: [], createdAt: Date.now() }
       changeTracks((ts) => [track, ...ts])
       setActiveId(track.id)
       setSource(null)
@@ -164,8 +173,15 @@ export default function App() {
     const open = openExercise()
     if (open) { retire(open.id); patch(open.id, { done: 'skipped' }) }
     await run('Reworking the climb', async () => {
-      const plan = validatePlan(await ask(system(track), adjustPrompt(track, change)), track.source)
-      const updated = { ...track, title: plan.title, concepts: mergePlan(track.concepts, plan.concepts) }
+      const format = track.interview || isInterview(track.objective) ? interviewFormat(change) : null
+      let plan
+      if (format === 'recruiter' || format === 'behavioral') plan = seededPlan(format)
+      else if (format === 'technical') plan = await planFor(track.objective, track.source, track.context, 'technical')
+      else {
+        plan = validatePlan(await ask(system(track), adjustPrompt(track, change)), track.source)
+        if (track.interview) plan = asInterview(plan)
+      }
+      const updated = { ...track, ...(format && { interview: format }), title: plan.title, concepts: mergePlan(track.concepts, plan.concepts) }
       changeTracks((ts) => ts.map((t) => (t.id === track.id ? updated : t)))
       push(item('plan', { trackId: track.id, revised: true }))
       await start(updated, nextStep(updated.concepts, Date.now()))
@@ -493,7 +509,7 @@ export default function App() {
           </>
         )}
       </div>
-      {feed.filter((x) => x.kind === 'exercise' && (!x.done || x.id === closing)).map((x) => (
+      {feed.filter((x) => x.kind === 'exercise' && (!x.done || x.id === closing) && data.tracks.find((t) => t.id === x.trackId)?.concepts.some((c) => c.id === x.conceptId)).map((x) => (
         <Workspace
           key={x.id}
           it={x}

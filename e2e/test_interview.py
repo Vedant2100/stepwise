@@ -10,6 +10,7 @@ IV = {"role": "Hiring manager", "questions": [
 seen = []
 def llm(route):
     p = json.loads(route.request.post_data)["prompt"]; seen.append(p)
+    if 'recruiter side' in p: return route.fulfill(json={"text": json.dumps({"action": "adjust", "topic": "recruiter side only, not technical", "say": "", "suggest": []})})
     if route_reply(p): return route.fulfill(json={"text": json.dumps(route_reply(p))})
     if 'Decide what it is' in p: out = {"kind": "request", "objective": "Prepare for my Nimble robotics field engineer interview", "missing": ["your resume", "the two job descriptions"]}
     elif 'Break the objective' in p: out = PLAN
@@ -61,6 +62,17 @@ with sync_playwright() as pw:
     p.get_by_role('button', name='Record it').click()
     expect(p.get_by_text('70/100 on Why Nimble')).to_be_visible()
     print('4. weak answer -> one follow-up; score = average of main questions (55, 85 -> 70), recorded')
+    plans = [x for x in seen if 'Break the objective' in x]
+    assert 'technical interview preparation' in plans[-1], 'an interview with no round named defaults to technical'
+    p.get_by_label('Message').fill('make it recruiter side only, not technical'); p.get_by_label('Message').press('Enter')
+    expect(p.get_by_text('Updated the climb for Recruiter screen')).to_be_visible()
+    assert len([x for x in seen if 'Break the objective' in x]) == len(plans), 'the recruiter round is seeded, not generated'
+    t = json.loads(p.evaluate("localStorage.getItem('stepwise.v1')"))['tracks'][0]
+    names = [c['name'] for c in t['concepts']]
+    assert names[:2] == ['Tell me about yourself', 'Walk me through a project'] and all(c['type'] == 'interview' for c in t['concepts']) and t['interview'] == 'recruiter', names
+    expect(p.locator('.ws.open .tab.on')).to_have_text('Interview room')
+    print('4b. no round named -> technical; "recruiter side" switches to the seeded recruiter screen, all in the interview room')
+    p.get_by_role('button', name='Back to chat').click()
     p.get_by_role('button', name='Hide sidebar').click(); expect(p.locator('.side')).to_be_hidden()
     p.reload(); expect(p.locator('.side')).to_be_hidden()
     p.get_by_role('button', name='Show sidebar').click(); expect(p.locator('.side')).to_be_visible()
