@@ -556,3 +556,8 @@ textarea:focus, input:focus, select:focus { outline: none; border-color: var(--f
 .settings-card form.row { flex-direction: row; align-items: center; }
 .gain span { white-space: nowrap; }
 .settings-card .row { align-items: center; margin: 0; }
+.card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 8px; }
+.card-head h1 { margin: 0; }
+.card-head .icon-btn { color: var(--mute); }
+.settings-card section h2 { color: var(--ink); }
+:root[data-look='glass'] .auth-card { background: light-dark(rgb(255 255 255 / 0.86), rgb(20 34 30 / 0.86)); }

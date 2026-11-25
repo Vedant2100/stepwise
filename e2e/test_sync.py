@@ -76,7 +76,7 @@ with sync_playwright() as pw:
     phone.get_by_role('dialog').get_by_role('button', name='Sign out').click()
     expect(phone.get_by_role('dialog').get_by_role('button', name='Sign in', exact=True)).to_be_visible()
     phone.screenshot(path=f'{OUT}/settings-phone.png')
-    phone.get_by_role('button', name='Back').click()
+    phone.get_by_role('button', name='Close settings').click()
     expect(phone.get_by_role('dialog')).to_have_count(0)
     phone.get_by_role('button', name='Show sidebar').click()
     expect(phone.locator('.goal')).to_have_count(0)

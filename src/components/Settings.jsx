@@ -21,6 +21,7 @@ export default function SettingsScreen({ data, changeTracks, account, theme, set
   const [busy, setBusy] = useState(false)
   const codeRef = useRef(null)
   const backRef = useRef(null)
+  const fileRef = useRef(null)
 
   useEffect(() => {
     ;(focus === 'access' ? codeRef : backRef).current?.focus()
@@ -59,10 +60,14 @@ export default function SettingsScreen({ data, changeTracks, account, theme, set
   }
 
   return (
-    <div className="auth settings" role="dialog" aria-modal="true" aria-labelledby="settings-title">
-      <button ref={backRef} className="btn ghost sm auth-close" onClick={onClose}>Back</button>
+    <div className="auth settings" role="dialog" onClick={(e) => e.target === e.currentTarget && onClose()} aria-modal="true" aria-labelledby="settings-title">
       <div className="auth-card settings-card">
-        <h1 id="settings-title">Settings</h1>
+        <div className="card-head">
+          <h1 id="settings-title">Settings</h1>
+          <button ref={backRef} className="icon-btn" onClick={onClose} aria-label="Close settings" title="Close (Esc)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
+          </button>
+        </div>
 
         <section>
           <h2>Account</h2>
@@ -103,10 +108,8 @@ export default function SettingsScreen({ data, changeTracks, account, theme, set
           <p className="why">Progress is kept in this browser, and in your account when you’re signed in. Export makes a file you can keep or import elsewhere.</p>
           <div className="row">
             <button className="btn ghost sm" onClick={() => download(data)} disabled={!data.tracks.length}>Export JSON</button>
-            <label className="btn ghost sm">
-              Import JSON
-              <input type="file" accept=".json,application/json" hidden onChange={(e) => e.target.files[0] && importFile(e.target.files[0])} />
-            </label>
+            <button className="btn ghost sm" onClick={() => fileRef.current.click()}>Import JSON</button>
+            <input ref={fileRef} type="file" accept=".json,application/json" hidden onChange={(e) => e.target.files[0] && importFile(e.target.files[0])} />
           </div>
         </section>
         {message && <p role="status">{message}</p>}

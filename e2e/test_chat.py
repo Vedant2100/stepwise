@@ -119,7 +119,7 @@ with sync_playwright() as pw:
     page.get_by_role('button', name='Settings').click()
     page.get_by_role('radio', name='Dark').click(); page.wait_for_timeout(400)
     page.screenshot(path=f'{OUT}/settings.png')
-    page.get_by_role('button', name='Back').click()
+    page.get_by_role('button', name='Close settings').click()
     expect(page.locator('html')).to_have_attribute('data-theme', 'dark')
     page.locator('details.tr summary').last.click()
     page.screenshot(path=f'{OUT}/chat-progress-dark.png')
