@@ -269,7 +269,15 @@ textarea:focus, input:focus, select:focus { outline: none; border-color: var(--f
 .staircase .step { cursor: pointer; }
 .staircase .riser { fill: #ffffff14; stroke: #ffffff26; }
 .staircase .step:hover .riser { fill: #ffffff24; }
-.staircase .mastery { fill: var(--gold); }
+.staircase .mastery { fill: var(--gold); transform-box: fill-box; transform-origin: bottom; }
+.staircase .step.mastered .riser { stroke: var(--gold); }
+.staircase .step.fading .mastery { opacity: 0.45; }
+@media (prefers-reduced-motion: no-preference) {
+  .staircase .mastery { transition: transform .9s cubic-bezier(.2, .8, .2, 1); }
+  .staircase .flag { transition: transform .7s cubic-bezier(.3, 1.4, .5, 1); }
+  .staircase .step.mastered .mastery { animation: glow 1.2s ease-out 1; }
+}
+@keyframes glow { 0% { filter: brightness(1.6) drop-shadow(0 0 6px var(--gold)); } 100% { filter: none; } }
 .staircase .flag path { stroke: #fff; stroke-width: 2; fill: none; stroke-linecap: round; }
 .staircase .flag .pennant { fill: var(--gold); stroke: var(--gold); stroke-width: 1; }
 .empty-climb p { color: #a9c2b8; font-size: 14px; margin: 0; }
@@ -357,3 +365,41 @@ textarea:focus, input:focus, select:focus { outline: none; border-color: var(--f
 .next-up { margin: 4px 0 8px; font-size: 14px; color: #a9c2b8; }
 .next-up b { color: #fff; }
 .goal small { font-family: var(--display); }
+
+/* moments: progress after an exercise */
+.gain { display: flex; align-items: center; gap: 10px; margin: 10px 0 4px; font-size: 14px; color: var(--mute); }
+.gain .bar { position: relative; flex: 0 1 220px; height: 8px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.gain .bar i { position: absolute; inset: 0 auto 0 0; width: var(--to); background: var(--gold); border-radius: 99px; }
+.gain .bar s { position: absolute; top: -2px; bottom: -2px; left: var(--from); width: 2px; background: var(--ink); opacity: .35; }
+.badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.badge { display: inline-flex; align-items: center; gap: 6px; font: 700 14px var(--body); padding: 5px 12px; border-radius: 999px; }
+.badge.mastered { background: var(--gold); color: #1a2522; }
+.badge.unlocked { background: light-dark(#dfece6, #1d3a32); color: light-dark(var(--pine), #e7efe9); }
+@media (prefers-reduced-motion: no-preference) {
+  .gain .bar i { animation: grow 1s cubic-bezier(.2, .8, .2, 1) both; }
+  .badge { animation: pop .45s cubic-bezier(.3, 1.6, .5, 1) both; }
+  .badge:nth-child(2) { animation-delay: .1s; } .badge:nth-child(3) { animation-delay: .2s; }
+}
+@keyframes grow { from { width: var(--from); } }
+@keyframes pop { from { opacity: 0; transform: scale(.6); } }
+
+/* sharing */
+.climb-head { display: flex; align-items: center; justify-content: space-between; }
+.climb-head h2 { margin: 0; }
+.side .climb-head .btn { color: #e7efe9; border-color: #ffffff33; }
+.side .climb-head .btn:hover:not(:disabled) { background: #ffffff12; }
+.share-url { width: 100%; margin: 4px 0 12px; font: 14px var(--mono); }
+.shared { min-height: 100dvh; background: radial-gradient(120% 60% at 50% 0%, var(--pine-2), var(--pine) 70%); color: #fff; padding: 22px clamp(16px, 4vw, 40px) 60px; }
+.shared .brand { text-decoration: none; margin-bottom: 28px; }
+.shared-card { max-width: 620px; margin: 0 auto; display: flex; flex-direction: column; }
+.shared-card h1 { font-size: clamp(34px, 6vw, 56px); letter-spacing: -0.03em; margin: 4px 0 6px; }
+.shared-card .why { color: #a9c2b8; margin: 0; }
+.shared-card .center { text-align: center; margin-top: 16px; font-size: 15px; }
+.shared-stat { font-size: 18px; margin: 0 0 18px; color: #d8e4de; }
+.shared-stat b { font: 800 26px var(--display); color: var(--gold); }
+.shared-stairs { background: #ffffff0a; border: 1px solid #ffffff1a; border-radius: 18px; padding: 14px 16px 6px; margin-bottom: 18px; }
+.shared-list { list-style: none; counter-reset: step; padding: 0; margin: 0 0 24px; display: flex; flex-direction: column; gap: 2px; }
+.shared-list li { counter-increment: step; display: grid; grid-template-columns: 30px 1fr; padding: 8px 0; border-bottom: 1px solid #ffffff14; }
+.shared-list li::before { content: counter(step); grid-row: span 2; font: 700 14px var(--display); color: #a9c2b8; padding-top: 2px; }
+.shared-list li.done::before { content: "★"; color: var(--gold); }
+.shared-list small { color: #a9c2b8; font-size: 14px; }

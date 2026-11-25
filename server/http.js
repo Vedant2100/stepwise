@@ -10,5 +10,8 @@ export function respond(res, { status, data, token }, secure = true) {
   res.end(JSON.stringify(data))
 }
 
+// The client IP (for rate limits) comes from the platform's forwarding header.
+export const clientIp = (headers) => (headers['x-forwarded-for'] ?? '').split(',')[0].trim() || headers['x-real-ip'] || ''
+
 export const vercel = (handle) => async (req, res) =>
-  respond(res, await handle({ method: req.method, body: req.body, cookie: req.headers.cookie ?? '' }))
+  respond(res, await handle({ method: req.method, body: req.body, query: req.query ?? {}, ip: clientIp(req.headers), cookie: req.headers.cookie ?? '' }))

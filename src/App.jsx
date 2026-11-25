@@ -4,6 +4,8 @@ import FeedItem, { Avatar } from './components/FeedItem.jsx'
 import Sidebar from './components/Sidebar.jsx'
 import Workspace from './components/Workspace.jsx'
 import AccountScreen from './components/AccountScreen.jsx'
+import ShareDialog from './components/ShareDialog.jsx'
+import { PENDING_KEY, copyClimb } from './lib/share.js'
 import { makeExercise } from './lib/exercise.js'
 import { PASS, STUCK, isMastered, recordAttempt } from './lib/learner.js'
 import { ask, stopAll } from './lib/llm.js'
@@ -20,17 +22,23 @@ let seq = 0
 const item = (kind, props) => ({ id: ++seq, kind, ...props })
 const fmtDate = (t) => new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 
+// A review takes about two minutes, so the nudge can say what keeping things costs.
 function greeting(tracks, now) {
-  if (!tracks.length) {
-    return 'What do you want to be able to do?'
-  }
+  if (!tracks.length) return { text: 'What do you want to be able to do?' }
   const due = tracks.flatMap((t) => t.concepts).filter((c) => c.review && c.review.due <= now).length
-  return `Welcome back. ${tracks.length} objective${tracks.length > 1 ? 's' : ''}${due ? `, ${due} review${due > 1 ? 's' : ''} due` : ''}. Press Next to keep climbing, or tell me something new to learn.`
+  if (due) {
+    return {
+      text: `Welcome back. ${due === 1 ? '1 thing you mastered is' : `${due} things you mastered are`} starting to fade. About ${due * 2} minutes of review keeps ${due === 1 ? 'it' : 'them'}.`,
+      next: true,
+      nextLabel: 'Review now',
+    }
+  }
+  return { text: `Welcome back. ${tracks.length} objective${tracks.length > 1 ? 's' : ''}. Press Next to keep climbing, or tell me something new to learn.` }
 }
 
 export default function App() {
   const [data, setData] = useState(load)
-  const [feed, setFeed] = useState(() => [item('t', { text: greeting(data.tracks, Date.now()) })])
+  const [feed, setFeed] = useState(() => [item('t', greeting(data.tracks, Date.now()))])
   const [busy, setBusy] = useState('')
   const [source, setSource] = useState(null)
   const [activeId, setActiveId] = useState(data.tracks[0]?.id ?? null)
@@ -44,6 +52,8 @@ export default function App() {
   const account = useAccount(data, dataRef, setData)
   const [authOpen, setAuthOpen] = useState(false)
   const closeAuth = useCallback(() => setAuthOpen(false), [])
+  const [sharing, setSharing] = useState(null)
+  const closeShare = useCallback(() => setSharing(null), [])
 
   useEffect(() => {
     dataRef.current = data
@@ -107,6 +117,27 @@ export default function App() {
     })
   }
 
+  // Arriving from a shared climb's "Start this climb": add a fresh copy (or reopen an existing one) and begin.
+  useEffect(() => {
+    const raw = localStorage.getItem(PENDING_KEY)
+    if (!raw) return
+    localStorage.removeItem(PENDING_KEY)
+    let snap
+    try { snap = JSON.parse(raw) } catch { return }
+    const have = dataRef.current.tracks.find((t) => t.objective === snap.objective && t.title === snap.title)
+    if (have) {
+      setActiveId(have.id)
+      return say(`You already have **${have.title}**. Press Next to keep climbing.`, { next: true })
+    }
+    const track = copyClimb(snap)
+    run('Thinking', async () => {
+      changeTracks((ts) => [track, ...ts])
+      setActiveId(track.id)
+      push(item('plan', { trackId: track.id }))
+      await start(track, nextStep(track.concepts, Date.now()))
+    })
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
   // Due reviews anywhere come first, then the focused objective, then any other.
   function pickNext(focusId) {
     const now = Date.now()
@@ -168,13 +199,17 @@ export default function App() {
     patch(it.id, { done: 'finished', score })
     setOpenWs(null)
     const unlocked = updated.concepts.filter((c) => !isMastered(c) && c.prereqs.includes(after.id) && c.prereqs.every((p) => isMastered(updated.concepts.find((x) => x.id === p))))
+    const mastered = isMastered(after) && !isMastered(before)
     say(
-      `**${score}/100** on ${before.name}. Mastery went from ${Math.round(before.pL * 100)}% to ${Math.round(after.pL * 100)}%.` +
-        (isMastered(after) && !isMastered(before) ? ` Mastered; first review ${fmtDate(after.review.due)}.` : '') +
-        (unlocked.length ? ` Unlocked: ${unlocked.map((c) => c.name).join(', ')}.` : '') +
+      `**${score}/100** on ${before.name}.` +
+        (mastered ? ` First review ${fmtDate(after.review.due)}, so it sticks.` : '') +
         (score < PASS && after.misses < STUCK ? ' Next, another go at it with a different exercise.' : '') +
         (after.misses >= STUCK ? ' Three misses in a row, so we’ll move on and come back to this one later.' : ''),
-      { next: true },
+      {
+        next: true,
+        gain: { from: Math.round(before.pL * 100), to: Math.round(after.pL * 100) },
+        badges: [...(mastered ? [{ kind: 'mastered', text: `Mastered ${before.name}` }] : []), ...unlocked.map((c) => ({ kind: 'unlocked', text: `Unlocked ${c.name}` }))],
+      },
     )
   }
 
@@ -248,6 +283,7 @@ export default function App() {
   return (
     <div className="app">
       {authOpen && <AccountScreen account={account} onClose={closeAuth} />}
+      {sharing && <ShareDialog track={sharing} onClose={closeShare} />}
       <Sidebar
         tracks={data.tracks}
         activeId={activeId}
@@ -259,6 +295,7 @@ export default function App() {
         onSettings={() => { setSideOpen(false); push(item('settings')) }}
         account={account}
         onAccount={() => { setSideOpen(false); setAuthOpen(true) }}
+        onShare={(t) => { setSideOpen(false); setSharing(t) }}
         dark={dark}
         toggleTheme={() => setTheme(dark ? 'light' : 'dark')}
       />

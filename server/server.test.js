@@ -73,3 +73,31 @@ describe('synced data', () => {
       expect((await handleData({ method: 'PUT', cookie: c, body }, db)).status).toBe(400)
   })
 })
+
+describe('shared climbs', async () => {
+  const { handleShare, cleanShare } = await import('./share.js')
+  const { createStore } = await import('./store.js')
+  const concepts = [{ id: 'a', name: 'A', type: 'recall', summary: 's', prereqs: [], pL: 0.5, attempts: 3, misses: 1 }, { id: 'b', name: 'B', type: 'concept', prereqs: ['a'], pL: 0.1 }]
+  const climb = { title: 'T', objective: 'o', concepts, startedAt: 1, source: 'private notes', log: [{ answer: 'secret' }] }
+
+  it('publishes only whitelisted fields and serves them back', async () => {
+    const db = createStore({})
+    const { status, data } = await handleShare({ method: 'POST', body: climb, ip: '1.1.1.1' }, db)
+    expect(status).toBe(200)
+    expect(data.id).toMatch(/^[A-Za-z0-9]{10}$/)
+    const got = await handleShare({ method: 'GET', query: { id: data.id } }, db)
+    expect(JSON.stringify(got.data)).not.toMatch(/private notes|secret|attempts|misses/)
+    expect(got.data.concepts.map((c) => c.name)).toEqual(['A', 'B'])
+  })
+
+  it('rejects bad shapes, bad ids, and too many links from one IP', async () => {
+    const db = createStore({})
+    expect(cleanShare({ ...climb, concepts: [{ ...concepts[1], prereqs: ['zzz'] }] })).toBeNull()
+    expect(cleanShare({ ...climb, concepts: [{ ...concepts[0], type: 'virus' }] })).toBeNull()
+    expect((await handleShare({ method: 'GET', query: { id: '../etc' } }, db)).status).toBe(400)
+    expect((await handleShare({ method: 'GET', query: { id: 'AAAAAAAAAA' } }, db)).status).toBe(404)
+    for (let i = 0; i < 20; i++) await handleShare({ method: 'POST', body: climb, ip: '2.2.2.2' }, db)
+    expect((await handleShare({ method: 'POST', body: climb, ip: '2.2.2.2' }, db)).status).toBe(429)
+    expect((await handleShare({ method: 'POST', body: climb, ip: '3.3.3.3' }, db)).status).toBe(200)
+  })
+})

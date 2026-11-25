@@ -49,3 +49,17 @@ describe('shared cache in /api/llm', () => {
     expect(fetch).not.toHaveBeenCalled()
   })
 })
+
+describe('access code and the shared cache', () => {
+  const locked = { ANTHROPIC_API_KEY: 'test', STEPWISE_ACCESS_CODE: 'secret' }
+  it('serves stored replies without the code, but needs it to reach the model', async () => {
+    const fetch = stubModel()
+    const body = { system: 's', prompt: `starter ${Math.random()}`, cache: { variant: 0 } }
+    expect((await callLLM(body, '', locked)).status).toBe(401)
+    await callLLM(body, 'secret', locked)
+    expect((await callLLM(body, '', locked)).data.cached).toBe(true)
+    expect((await callLLM({ ...body, cache: { variant: 0, fresh: true } }, '', locked)).status).toBe(401)
+    expect((await callLLM({ system: 's', prompt: 'grade it' }, 'nope', locked)).status).toBe(401)
+    expect(fetch).toHaveBeenCalledTimes(1)
+  })
+})

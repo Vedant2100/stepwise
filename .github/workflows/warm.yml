@@ -1,0 +1,23 @@
+name: Warm starter climbs
+
+# Pre-generates the starter climbs into production's shared cache (scripts/warm.mjs).
+# Run after changing prompts, the model, or src/lib/starters.js. Cached entries last 30 days.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 9 */20 * *'
+
+jobs:
+  warm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node scripts/warm.mjs
+        env:
+          URL: https://stepwise-topaz-nine.vercel.app
+          CODE: ${{ secrets.STEPWISE_ACCESS_CODE }}

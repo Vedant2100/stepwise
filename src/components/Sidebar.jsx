@@ -4,41 +4,46 @@ import { Mark } from './Icons.jsx'
 
 // The climb, drawn as a staircase rising left to right. Each step's height is its place in the climb;
 // marigold fills it as mastery grows; the flag marks the step the planner would pick next.
-function Staircase({ concepts, here, onPick }) {
+export function Staircase({ concepts, here, onPick, now = Date.now() }) {
   const n = concepts.length
   const W = 264, H = 120, gap = 3
   const w = (W - gap * (n - 1)) / n
+  const geo = (i) => ({ x: i * (w + gap), h: ((i + 1) / n) * H })
+  const at = concepts.findIndex((c) => c.id === here)
   return (
     <svg className="staircase" viewBox={`0 0 ${W} ${H + 18}`} role="img" aria-label="Progress up the climb">
       {concepts.map((c, i) => {
-        const h = ((i + 1) / n) * H
-        const x = i * (w + gap)
-        // Fill from the starting guess (empty) to the mastery line (full), so untouched steps show no gold.
-        const fill = Math.max(0, Math.min(1, (c.pL - BKT.init) / (MASTERED - BKT.init))) * h
+        const { x, h } = geo(i)
+        // Gold rises from the starting guess (empty) to the mastery line (full), so untouched steps stay empty.
+        const level = Math.max(0, Math.min(1, (c.pL - BKT.init) / (MASTERED - BKT.init)))
+        const fading = c.review && c.review.due <= now
         return (
-          <g key={c.id} className="step" onClick={() => onPick(c)}>
-            <title>{`${c.name}: ${Math.round(c.pL * 100)}%`}</title>
+          <g key={c.id} className={`step${isMastered(c) ? ' mastered' : ''}${fading ? ' fading' : ''}`} onClick={() => onPick(c)}>
+            <title>{`${c.name}: ${Math.round(c.pL * 100)}%${fading ? ', review due' : ''}`}</title>
             <rect x={x} y={18 + H - h} width={w} height={h} rx="4" className="riser" />
-            <rect x={x} y={18 + H - fill} width={w} height={fill} rx="4" className="mastery" />
-            {c.id === here && (
-              <g transform={`translate(${x + w / 2}, ${18 + H - h - 3})`} className="flag">
-                <path d="M0 0V-15" />
-                <path d="M0 -15h9l-3 4 3 4H0" className="pennant" />
-              </g>
-            )}
+            <rect x={x} y={18 + H - h} width={w} height={h} rx="4" className="mastery" style={{ transform: `scaleY(${level})` }} />
           </g>
         )
       })}
+      {at >= 0 && (
+        <g className="flag" style={{ transform: `translate(${geo(at).x + w / 2}px, ${18 + H - geo(at).h - 3}px)` }}>
+          <path d="M0 0V-15" />
+          <path d="M0 -15h9l-3 4 3 4H0" className="pennant" />
+        </g>
+      )}
     </svg>
   )
 }
 
-function Climb({ track, onPick }) {
+function Climb({ track, onPick, onShare }) {
   const here = nextStep(track.concepts, Date.now())?.concept.id
   const done = (id) => isMastered(track.concepts.find((c) => c.id === id))
   return (
     <div>
-      <h2>The climb</h2>
+      <div className="climb-head">
+        <h2>The climb</h2>
+        <button className="btn ghost xs" onClick={onShare}>Share</button>
+      </div>
       <Staircase concepts={track.concepts} here={here} onPick={onPick} />
       {here && <p className="next-up">Next up: <b>{track.concepts.find((c) => c.id === here).name}</b></p>}
       <div className="climb">
@@ -62,7 +67,7 @@ function Climb({ track, onPick }) {
 
 const SYNC_LABEL = { saving: 'Saving…', synced: 'Synced', offline: 'Offline, will retry', error: 'Couldn’t sync, retrying' }
 
-export default function Sidebar({ tracks, activeId, setActiveId, open, onClose, onNew, onPick, onSettings, dark, toggleTheme, account, onAccount }) {
+export default function Sidebar({ tracks, activeId, setActiveId, open, onClose, onNew, onPick, onSettings, dark, toggleTheme, account, onAccount, onShare }) {
   const active = tracks.find((t) => t.id === activeId)
   return (
     <>
@@ -87,7 +92,7 @@ export default function Sidebar({ tracks, activeId, setActiveId, open, onClose, 
           <button className="btn ghost sm new" onClick={onNew}>New objective</button>
         </div>
       )}
-      {active && <Climb track={active} onPick={(c) => onPick(active, c)} />}
+      {active && <Climb track={active} onPick={(c) => onPick(active, c)} onShare={() => onShare(active)} />}
       {!tracks.length && (
         <div className="empty-climb">
           <Staircase concepts={[0.15, 0.3, 0.45, 0.6, 0.75].map((v, i) => ({ id: String(i), name: '', pL: 0 }))} onPick={() => {}} />

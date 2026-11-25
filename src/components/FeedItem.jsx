@@ -30,9 +30,20 @@ export default function FeedItem({ it, data, setData, actions, busy, openWs }) {
       return (
         <Teacher err={it.err}>
           <Md>{it.text}</Md>
+          {it.gain && (
+            <div className="gain">
+              <div className="bar" style={{ '--from': `${it.gain.from}%`, '--to': `${it.gain.to}%` }} role="img" aria-label={`Mastery ${it.gain.from}% to ${it.gain.to}%`}><i /><s /></div>
+              <span>{it.gain.to}% mastered</span>
+            </div>
+          )}
+          {it.badges?.length > 0 && (
+            <div className="badges">
+              {it.badges.map((b) => <span key={b.text} className={`badge ${b.kind}`}>{b.kind === 'mastered' ? '★' : '↑'} {b.text}</span>)}
+            </div>
+          )}
           {it.next && (
             <div className="row">
-              <button className="btn sm" onClick={() => actions.next()} disabled={busy}>Next exercise</button>
+              <button className="btn sm" onClick={() => actions.next()} disabled={busy}>{it.nextLabel ?? 'Next exercise'}</button>
             </div>
           )}
         </Teacher>
