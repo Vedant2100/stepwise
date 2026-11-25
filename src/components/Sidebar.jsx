@@ -3,6 +3,7 @@ import { BKT, MASTERED, isMastered } from '../lib/learner.js'
 import { ENVIRONMENTS, envFor, nextStep } from '../lib/planner.js'
 import { GearIcon, Mark, PanelIcon } from './Icons.jsx'
 import { STARTERS } from '../lib/starters.js'
+import { today } from '../lib/daily.js'
 
 export function Staircase({ concepts, here, onPick, now = Date.now() }) {
   const n = concepts.length
@@ -70,7 +71,8 @@ function Climb({ track, onPick, onShare }) {
 const SHOWN = 4
 const SYNC_LABEL = { saving: 'Saving…', synced: 'Synced', offline: 'Offline, will retry', error: 'Couldn’t sync, retrying' }
 
-export default function Sidebar({ tracks, activeId, setActiveId, open, onClose, onNew, onPick, onSettings, account, onAccount, onShare, onHide, onStarter, busy }) {
+export default function Sidebar({ tracks, activeId, setActiveId, open, onClose, onNew, onPick, onSettings, account, onAccount, onShare, onHide, onStarter, onToday, busy }) {
+  const day = today(tracks)
   const have = new Set(tracks.map((t) => t.objective.toLowerCase()))
   const starters = STARTERS.filter((s) => !have.has(s.toLowerCase()))
   const [allGoals, setAllGoals] = useState(false)
@@ -84,6 +86,19 @@ export default function Sidebar({ tracks, activeId, setActiveId, open, onClose, 
         <button className="brand" onClick={onNew}><Mark /> Stepwise</button>
         <button className="icon-btn" onClick={onHide} aria-label="Hide sidebar" title="Hide sidebar"><PanelIcon /></button>
       </div>
+      {tracks.length > 0 && (
+        <button className="today" onClick={onToday} disabled={busy || day.done >= day.goal && !day.due}>
+          <svg viewBox="0 0 44 44" className="ring" aria-hidden="true">
+            <circle cx="22" cy="22" r="18" />
+            <circle cx="22" cy="22" r="18" className="fill" style={{ strokeDasharray: `${Math.min(1, day.done / day.goal) * 113} 113` }} />
+          </svg>
+          <span>
+            <b>{day.done >= day.goal ? 'Today’s climb done' : 'Today’s climb'}</b>
+            <small>{day.done >= day.goal ? `${day.done} steps today` : `${day.done} of ${day.goal} · about ${day.minutes} min`}</small>
+            {day.streak > 0 && <small>{day.streak}-day streak</small>}
+          </span>
+        </button>
+      )}
       {tracks.length > 0 && (
         <div>
           <h2>Objectives</h2>

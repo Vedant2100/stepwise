@@ -583,3 +583,15 @@ textarea:focus, input:focus, select:focus { outline: none; border-color: var(--f
 @media (prefers-reduced-motion: no-preference) { .nudge { animation: rise .35s cubic-bezier(.2, .8, .2, 1); } }
 :root[data-look='glass'] .nudge, :root[data-look='glass'] .more .menu { background: light-dark(rgb(255 255 255 / 0.8), rgb(20 34 30 / 0.85)); -webkit-backdrop-filter: var(--glass); backdrop-filter: var(--glass); }
 @media (max-width: 900px) { .env-tabs { margin-left: 0; width: 100%; } }
+
+/* today's climb */
+.today { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; border: 1px solid #ffffff22; background: #ffffff0d; color: inherit; font: inherit; padding: 10px 12px; border-radius: 16px; cursor: pointer; }
+.today:hover:not(:disabled) { background: #ffffff18; }
+.today:disabled { cursor: default; }
+.today .ring { width: 44px; height: 44px; flex: none; transform: rotate(-90deg); }
+.today .ring circle { fill: none; stroke: #ffffff26; stroke-width: 5; }
+.today .ring .fill { stroke: var(--gold); stroke-linecap: round; transition: stroke-dasharray .8s cubic-bezier(.2, .8, .2, 1); }
+.today span { display: flex; flex-direction: column; line-height: 1.3; min-width: 0; }
+.today b { font-size: 15px; }
+.today small { font-size: 13px; color: #a9c2b8; }
+.check { display: inline-flex !important; flex-direction: row !important; align-items: center; gap: 8px; font-weight: 600 !important; margin: 0 !important; } .check input { width: auto; min-height: 0; }

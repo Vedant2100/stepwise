@@ -30,7 +30,9 @@ with sync_playwright() as pw:
     expect(me.locator('.badge.unlocked')).to_have_text('↑ Unlocked Paying')
     expect(me.locator('.gain')).to_be_visible()
     me.wait_for_timeout(1200); me.screenshot(path=f'{OUT}/m2-badges.png')
-    print('2. progress bar + Mastered and Unlocked badges')
+    expect(me.locator('.today')).to_contain_text('1 of 3')
+    expect(me.locator('.today')).to_contain_text('1-day streak')
+    print('2. progress bar + Mastered and Unlocked badges; today ring 1 of 3, streak started')
 
     me.get_by_role('button', name='Share').click()
     dlg = me.get_by_role('dialog'); dlg.get_by_role('button', name='Create link').click()

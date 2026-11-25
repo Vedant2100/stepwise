@@ -179,3 +179,25 @@ describe('sync merge', async () => {
     expect(m.deleted).toEqual(expect.arrayContaining([{ id: 'a', at: 10 }]))
   })
 })
+
+describe('daily climb', async () => {
+  const { today } = await import('./daily.js')
+  const D = 86_400_000
+  const now = new Date(2026, 10, 24, 18).getTime()
+  const track = (log, concepts = []) => ({ log, concepts })
+
+  it('sets a goal from due reviews plus one new step, between 3 and 8', () => {
+    const due = Array.from({ length: 4 }, () => ({ review: { due: now - 1 } }))
+    expect(today([track([], due)], now).goal).toBe(5)
+    expect(today([track([])], now).goal).toBe(3)
+    expect(today([track([], Array(20).fill({ review: { due: 0 } }))], now).goal).toBe(8)
+  })
+
+  it('counts a streak of consecutive days, and today still counts before you practice', () => {
+    const at = (daysAgo) => ({ at: now - daysAgo * D, mode: 'learn' })
+    expect(today([track([at(1), at(2), at(3), at(5)])], now).streak).toBe(3)
+    expect(today([track([at(0), at(1)])], now).streak).toBe(2)
+    expect(today([track([at(2)])], now).streak).toBe(0)
+    expect(today([track([at(0), at(0)])], now).done).toBe(2)
+  })
+})

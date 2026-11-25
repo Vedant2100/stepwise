@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ACCESS_KEY } from '../lib/llm.js'
 import { download, parseData } from '../lib/storage.js'
+import { REMINDER_KEY, canRemind, setReminder } from '../lib/reminder.js'
 
 const SYNC_LABEL = { saving: 'Saving…', synced: 'Everything is saved to your account.', offline: 'Offline. Changes will save when you’re back online.', error: 'Couldn’t save just now. Retrying.' }
 
@@ -19,6 +20,7 @@ export default function SettingsScreen({ data, changeTracks, account, theme, set
   const [saved, setSaved] = useState(false)
   const [message, setMessage] = useState('')
   const [busy, setBusy] = useState(false)
+  const [remind, setRemind] = useState(localStorage.getItem(REMINDER_KEY) ?? '')
   const codeRef = useRef(null)
   const backRef = useRef(null)
   const fileRef = useRef(null)
@@ -51,6 +53,13 @@ export default function SettingsScreen({ data, changeTracks, account, theme, set
       setMessage(e.message)
     }
     setBusy(false)
+  }
+
+  async function changeReminder(time) {
+    const ok = await setReminder(time)
+    if (!ok) return setMessage('Notifications are turned off for Stepwise. Allow them in your phone’s settings.')
+    setRemind(time)
+    localStorage.setItem(REMINDER_KEY, time)
   }
 
   function saveCode(e) {
@@ -93,6 +102,17 @@ export default function SettingsScreen({ data, changeTracks, account, theme, set
           <div className="setting"><span>Theme</span><Choice label="Theme" value={theme} onChange={setTheme} options={[['', 'System'], ['light', 'Light'], ['dark', 'Dark']]} /></div>
           <div className="setting"><span>Look</span><Choice label="Look" value={look} onChange={setLook} options={[['solid', 'Solid'], ['glass', 'Liquid glass']]} /></div>
         </section>
+
+        {canRemind && (
+          <section>
+            <h2>Daily reminder</h2>
+            <p className="why">A nudge when today’s climb is ready. Miss a day and the next set is just a little bigger.</p>
+            <div className="setting">
+              <label className="check"><input type="checkbox" checked={Boolean(remind)} onChange={(e) => changeReminder(e.target.checked ? '19:00' : '')} /> Remind me every day</label>
+              {remind && <input type="time" value={remind} onChange={(e) => e.target.value && changeReminder(e.target.value)} aria-label="Reminder time" style={{ width: 'auto' }} />}
+            </div>
+          </section>
+        )}
 
         <section>
           <h2>Access code</h2>

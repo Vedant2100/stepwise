@@ -15,6 +15,7 @@ import { validatePlan } from './lib/plan.js'
 import { ENVIRONMENTS, envFor, nextReviewAt, nextStep } from './lib/planner.js'
 import { planPrompt, readPastePrompt, system } from './lib/prompts.js'
 import { URL_RE, readLink } from './lib/ingest.js'
+import { today } from './lib/daily.js'
 import { normalizeRoute, routePrompt, routeSystem } from './lib/router.js'
 import { load, save } from './lib/storage.js'
 import useAccount from './lib/useAccount.js'
@@ -213,7 +214,10 @@ export default function App() {
       concepts: track.concepts.map((c) => (c.id === after.id ? after : c)),
       log: [...track.log, { conceptId: it.conceptId, env: it.env, defaultEnv: envFor(before.type), mode: it.mode, score, at: now, ms: now - it.started }],
     }
+    const dayBefore = today(dataRef.current.tracks, now)
     changeTracks((ts) => ts.map((t) => (t.id === track.id ? updated : t)))
+    const dayAfter = today(dataRef.current.tracks, now)
+    const dayDone = dayBefore.done < dayBefore.goal && dayAfter.done >= dayBefore.goal
     retire(it.id)
     patch(it.id, { done: 'finished', score })
     setOpenWs(null)
@@ -227,7 +231,11 @@ export default function App() {
       {
         next: true,
         gain: { from: Math.round(before.pL * 100), to: Math.round(after.pL * 100) },
-        badges: [...(mastered ? [{ kind: 'mastered', text: `Mastered ${before.name}` }] : []), ...unlocked.map((c) => ({ kind: 'unlocked', text: `Unlocked ${c.name}` }))],
+        badges: [
+          ...(mastered ? [{ kind: 'mastered', text: `Mastered ${before.name}` }] : []),
+          ...unlocked.map((c) => ({ kind: 'unlocked', text: `Unlocked ${c.name}` })),
+          ...(dayDone ? [{ kind: 'mastered', text: `Today’s climb done · ${dayAfter.streak}-day streak` }] : []),
+        ],
       },
     )
   }
@@ -384,6 +392,7 @@ export default function App() {
         dark={dark}
         busy={Boolean(busy)}
         onStarter={(s) => { setSideOpen(false); startStarter(s) }}
+        onToday={() => { setSideOpen(false); next() }}
       />
       <div className="main">
         {hero ? (
