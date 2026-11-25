@@ -74,8 +74,7 @@ export default function CodeWorkspace({ exercise, onDone, active }) {
           <CodeMirror value={code} height="100%" style={{ height: '100%' }} extensions={extensions} theme={isDark() ? 'dark' : 'light'} onChange={setCode} />
         </div>
         <div className="tbar">
-          <button className="btn sm" onClick={run} disabled={busy}>{busy ? (runs ? 'Running…' : 'Loading Python…') : 'Run tests'}</button>
-          <span className="kbd">⌘/Ctrl + Enter</span>
+          <button className="btn sm" title="⌘/Ctrl + Enter" onClick={run} disabled={busy}>{busy ? (runs ? 'Running…' : 'Loading Python…') : 'Run tests'}</button>
           <span className="why">{runs ? 'reruns as you type' : 'first run loads Python (a few seconds)'}</span>
         </div>
       </section>

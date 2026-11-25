@@ -71,8 +71,7 @@ export default function ExplainWorkspace({ exercise, track, concept, onDone }) {
         />
         {!result && (
           <div className="row" style={{ margin: 0 }}>
-            <button className="btn" onClick={submit} disabled={busy || words < 3}>{busy ? 'Grading…' : 'Submit'}</button>
-            <span className="kbd">⌘/Ctrl + Enter</span>
+            <button className="btn" title="⌘/Ctrl + Enter" onClick={submit} disabled={busy || words < 3}>{busy ? 'Grading…' : 'Submit'}</button>
           </div>
         )}
         {error && <p className="bad">{error}</p>}

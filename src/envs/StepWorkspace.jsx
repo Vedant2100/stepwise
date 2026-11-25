@@ -83,8 +83,7 @@ export default function StepWorkspace({ exercise, track, onDone }) {
             {hinted && <p className="nudge">{exercise.steps[i].hint}</p>}
             {feedback && <p className="bad">{feedback}</p>}
             <div className="row" style={{ margin: 0 }}>
-              <button className="btn" onClick={check} disabled={busy || !input.trim()}>{busy ? 'Checking…' : 'Check step'}</button>
-              <span className="kbd">⌘/Ctrl + Enter</span>
+              <button className="btn" title="⌘/Ctrl + Enter" onClick={check} disabled={busy || !input.trim()}>{busy ? 'Checking…' : 'Check step'}</button>
               <button className="btn ghost sm" onClick={() => setHinted(true)} disabled={hinted || !exercise.steps[i].hint}>Hint</button>
               <button className="btn ghost sm" onClick={() => advance(exercise.steps[i].expected, 0)} disabled={tries === 0} title={tries ? '' : 'Try it first'}>
                 Show this step
