@@ -40,7 +40,7 @@ async function fetchPage(url, env, store) {
     messages: [{ role: 'user', content: `Fetch ${url} and then reply with just the word done.` }],
   }, 'web-fetch-2025-09-10')
   const result = data.content.find((c) => c.type === 'web_fetch_tool_result')?.content
-  if (!result) throw Object.assign(new Error(`That page couldn’t be fetched (${data.stop_reason}: ${data.content.map((c) => c.type).join(', ') || 'empty'}).`), { status: 422 })
+  if (!result) throw Object.assign(new Error('That page couldn’t be fetched.'), { status: 422 })
   if (result.type === 'web_fetch_tool_error') throw Object.assign(new Error(FETCH_ERRORS[result.error_code] || 'That page couldn’t be fetched.'), { status: 422 })
   const doc = result.content
   const out = doc.source.type === 'text'
