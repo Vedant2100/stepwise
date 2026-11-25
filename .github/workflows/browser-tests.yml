@@ -1,0 +1,39 @@
+name: Browser tests
+
+# End-to-end tests in a real browser (e2e/). Model calls are mocked, so they cost nothing.
+# They run only when app behaviour can change: not for styling-only (src/index.css) or docs changes.
+# Run them by hand from the Actions tab any time.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['src/**', '!src/index.css', 'api/**', 'server/**', 'e2e/**', 'index.html', 'vite.config.js', 'package.json', 'package-lock.json']
+  pull_request:
+    paths: ['src/**', '!src/index.css', 'api/**', 'server/**', 'e2e/**', 'index.html', 'vite.config.js', 'package.json', 'package-lock.json']
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - run: pip install playwright && python -m playwright install --with-deps chromium
+      - name: Start the app
+        run: |
+          npx vite --port 5179 --strictPort > vite.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://localhost:5179/ > /dev/null && exit 0; sleep 1; done
+          cat vite.log; exit 1
+      - run: e2e/run.sh
+      - if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: screenshots
+          path: e2e/out/

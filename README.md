@@ -58,6 +58,14 @@ npm test               # unit tests (learner model, planner, plan validation)
 npm run build
 ```
 
+Browser tests (`e2e/`) drive the real app in Chromium with the model mocked, covering every workspace, the chat router, accounts and sync across two browsers, sharing, the interview room and the Stop button. They run in GitHub Actions when app code changes (not for styling- or docs-only changes); locally:
+
+```bash
+pip install playwright && python -m playwright install chromium
+npx vite --port 5179 &   # then:
+e2e/run.sh
+```
+
 The API key is read only by `api/llm.js` on the server, in local development and on Vercel alike. It is never sent to the browser.
 
 ## Deploy
