@@ -46,6 +46,11 @@ export default function App() {
   const [activeId, setActiveId] = useState(data.tracks[0]?.id ?? null)
   const [openWs, setOpenWs] = useState(null)
   const [sideOpen, setSideOpen] = useState(false)
+  const [closing, setClosing] = useState(null)
+  const retire = (id) => {
+    setClosing(id)
+    setTimeout(() => setClosing((c) => (c === id ? null : c)), 400)
+  }
   const [sideHidden, setSideHidden] = useState(() => localStorage.getItem('stepwise.sideHidden') === '1')
   useEffect(() => localStorage.setItem('stepwise.sideHidden', sideHidden ? '1' : '0'), [sideHidden])
   const narrow = () => matchMedia('(max-width: 900px)').matches
@@ -173,7 +178,7 @@ export default function App() {
 
   async function next(focusId = activeId) {
     const open = openExercise()
-    if (open) patch(open.id, { done: 'skipped' })
+    if (open) { retire(open.id); patch(open.id, { done: 'skipped' }) }
     const pick = pickNext(focusId)
     if (!pick) {
       const all = dataRef.current.tracks.flatMap((t) => t.concepts)
@@ -189,6 +194,7 @@ export default function App() {
     if (!open) return say('There’s no exercise open to switch.')
     const track = dataRef.current.tracks.find((t) => t.id === open.trackId)
     const concept = track.concepts.find((c) => c.id === open.conceptId)
+    retire(open.id)
     patch(open.id, { done: 'switched' })
     await run('Thinking', () => start(track, { concept, mode: open.mode }, env))
   }
@@ -204,6 +210,7 @@ export default function App() {
       log: [...track.log, { conceptId: it.conceptId, env: it.env, defaultEnv: envFor(before.type), mode: it.mode, score, at: now, ms: now - it.started }],
     }
     changeTracks((ts) => ts.map((t) => (t.id === track.id ? updated : t)))
+    retire(it.id)
     patch(it.id, { done: 'finished', score })
     setOpenWs(null)
     const unlocked = updated.concepts.filter((c) => !isMastered(c) && c.prereqs.includes(after.id) && c.prereqs.every((p) => isMastered(updated.concepts.find((x) => x.id === p))))
@@ -283,7 +290,7 @@ export default function App() {
     setSideOpen(false)
     setActiveId(track.id)
     const open = openExercise()
-    if (open) patch(open.id, { done: 'skipped' })
+    if (open) { retire(open.id); patch(open.id, { done: 'skipped' }) }
     await run('Thinking', () => start(track, { concept, mode: isMastered(concept) ? 'review' : 'learn' }))
   }
 
@@ -378,7 +385,7 @@ export default function App() {
           </>
         )}
       </div>
-      {feed.filter((x) => x.kind === 'exercise' && !x.done).map((x) => (
+      {feed.filter((x) => x.kind === 'exercise' && (!x.done || x.id === closing)).map((x) => (
         <Workspace
           key={x.id}
           it={x}

@@ -205,8 +205,25 @@ textarea:focus, input:focus, select:focus { outline: none; border-color: var(--f
 .att:hover { background: var(--line); }
 
 /* full-screen workspaces */
-.ws { position: fixed; inset: 0; z-index: 40; background: var(--bg); display: flex; flex-direction: column; }
-.ws[hidden] { display: none; }
+.ws {
+  position: fixed; inset: 0; z-index: 40; background: var(--bg); display: flex; flex-direction: column;
+  opacity: 0; transform: translateY(14px) scale(0.985); visibility: hidden; pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s linear 0.3s;
+}
+.ws.open {
+  opacity: 1; transform: none; visibility: visible; pointer-events: auto;
+  transition: opacity 0.24s ease, transform 0.36s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s;
+}
+.app > :is(.side, .main) { transition: transform 0.36s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.36s ease; }
+.app:has(.ws.open) > :is(.side, .main) { transform: scale(0.985); filter: blur(2px); }
+@media (prefers-reduced-motion: no-preference) {
+  .feed > * { animation: enter 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+}
+@keyframes enter { from { opacity: 0; transform: translateY(8px); } }
+@media (prefers-reduced-motion: reduce) {
+  .ws, .ws.open, .app > :is(.side, .main) { transition: none; transform: none; }
+  .app:has(.ws.open) > :is(.side, .main) { filter: none; }
+}
 .ws-head { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; padding: 10px clamp(12px, 2vw, 24px); background: var(--pine); color: #fff; }
 .ws-head .title { display: flex; flex-direction: column; line-height: 1.2; }
 .ws-head .title b { font: 700 19px var(--display); }

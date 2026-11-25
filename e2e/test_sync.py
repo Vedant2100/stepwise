@@ -22,7 +22,7 @@ with sync_playwright() as pw:
     b = pw.chromium.launch(**LAUNCH)
     lctx, laptop = setup(b, 'laptop', {'width': 1280, 'height': 800})
     # progress before having an account
-    send(laptop, 'Laptop goal'); expect(laptop.locator('.ws:not([hidden])')).to_have_count(1)
+    send(laptop, 'Laptop goal'); expect(laptop.locator('.ws.open')).to_have_count(1)
     laptop.get_by_label('Your answer').fill('a'); laptop.get_by_label('Your answer').press('Enter')
     laptop.get_by_role('button', name='Record it').click()
     expect(laptop.get_by_text('100/100 on Term one')).to_be_visible()
@@ -40,7 +40,7 @@ with sync_playwright() as pw:
 
     # second device: phone-sized, signs in, gets laptop progress
     pctx, phone = setup(b, 'phone', {'width': 390, 'height': 844})
-    send(phone, 'Phone goal'); expect(phone.locator('.ws:not([hidden])')).to_have_count(1)
+    send(phone, 'Phone goal'); expect(phone.locator('.ws.open')).to_have_count(1)
     phone.get_by_role('button', name='Back to chat').click()
     phone.get_by_role('button', name='Show sidebar').click(); phone.get_by_role('button', name='Sign in to sync').click()
     dlg = phone.get_by_role('dialog')

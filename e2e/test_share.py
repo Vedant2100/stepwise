@@ -23,7 +23,7 @@ with sync_playwright() as pw:
 
     # Finish an exercise on "Ordering" (0.9): pass -> mastered + unlock Paying
     me.locator('.stair', has_text='Ordering').click(); 
-    expect(me.locator('.ws:not([hidden])')).to_have_count(1)
+    expect(me.locator('.ws.open')).to_have_count(1)
     me.get_by_label('Your answer').fill('a'); me.get_by_label('Your answer').press('Enter')
     me.get_by_role('button', name='Record it').click()
     expect(me.locator('.badge.mastered')).to_have_text('★ Mastered Ordering')
@@ -43,7 +43,7 @@ with sync_playwright() as pw:
     expect(them.get_by_text('MY PRIVATE NOTES')).to_have_count(0)
     them.wait_for_timeout(1000); them.screenshot(path=f'{OUT}/m4-shared.png', full_page=True)
     them.get_by_role('button', name='Start this climb').click()
-    expect(them.locator('.ws:not([hidden])')).to_have_count(1)
+    expect(them.locator('.ws.open')).to_have_count(1)
     them.get_by_role('button', name='Back to chat').click()
     them.get_by_role('button', name='Show sidebar').click()
     expect(them.locator('.goal')).to_have_text('Order food in Spanish0 of 4 mastered')

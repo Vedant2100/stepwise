@@ -51,7 +51,7 @@ with sync_playwright() as pw:
     page.goto(BASE + '/')
     msg = page.get_by_label('Message'); send = lambda t: (msg.fill(t), msg.press('Enter'))
     send(SOURCE); expect(page.get_by_text('treat that as source material')).to_be_visible(); send('Understand attention')
-    ws = lambda: page.locator('.ws:not([hidden])')
+    ws = lambda: page.locator('.ws.open')
     shot = lambda n: page.screenshot(path=f'{OUT}/ws-{n}.png')
     record = lambda: ws().get_by_role('button', name=re.compile('^Record'))
 

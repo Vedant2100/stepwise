@@ -21,7 +21,7 @@ export default function Workspace({ it, track, open, busy, onClose, onSwitch, on
   const Env = ENV_COMPONENTS[it.env]
   const recommended = envFor(concept.type)
   return (
-    <div className="ws" hidden={!open} role="dialog" aria-label={`${ENVIRONMENTS[it.env].label}: ${concept.name}`}>
+    <div className={`ws${open ? ' open' : ''}`} inert={!open} aria-hidden={!open} role="dialog" aria-label={`${ENVIRONMENTS[it.env].label}: ${concept.name}`}>
       <header className="ws-head">
         <button className="btn ghost sm" onClick={onClose}>Back to chat</button>
         <span className="chip">{it.mode === 'review' ? `Review in ${ENVIRONMENTS[it.env].label.toLowerCase()}` : ENVIRONMENTS[it.env].label}</span>

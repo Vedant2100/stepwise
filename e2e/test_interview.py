@@ -33,7 +33,7 @@ with sync_playwright() as pw:
     expect(p.get_by_text('Your message mentions your resume and the two job descriptions')).to_be_visible()
     print('1. long paste read as a request; asks for the missing resume and job descriptions')
     p.get_by_label('Message').fill('RESUME: Archtech Automation 2023-2024, Printerior KUKA deployment'); p.get_by_label('Message').press('Enter')
-    expect(p.locator('.ws:not([hidden])')).to_have_count(1)
+    expect(p.locator('.ws.open')).to_have_count(1)
     plan_prompt = next(x for x in seen if 'Break the objective' in x)
     assert 'ABOUT THE LEARNER' in plan_prompt and 'RESUME: Archtech' in plan_prompt and 'SOURCE:' not in plan_prompt
     print('2. planned with the paste + resume as background (not as strict source)')

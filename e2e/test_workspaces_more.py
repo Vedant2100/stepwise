@@ -38,7 +38,7 @@ with sync_playwright() as pw:
     page.on('pageerror', lambda e: errors.append(str(e))); page.on('console', lambda m: m.type == 'error' and errors.append(m.text))
     page.goto(BASE + '/')
     page.get_by_label('Message').fill('CS fundamentals'); page.get_by_label('Message').press('Enter')
-    ws = lambda: page.locator('.ws:not([hidden])')
+    ws = lambda: page.locator('.ws.open')
     shot = lambda n: page.screenshot(path=f'{OUT}/n-{n}.png')
     def open_concept(name):
         if ws().count(): ws().get_by_role('button', name='Back to chat').click()

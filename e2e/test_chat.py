@@ -53,7 +53,7 @@ with sync_playwright() as pw:
     page.goto(BASE + '/')
     msg = page.get_by_label('Message')
     send = lambda t: (msg.fill(t), msg.press('Enter'))
-    ws = lambda: page.locator('.ws:not([hidden])')
+    ws = lambda: page.locator('.ws.open')
     expect(page.get_by_role('heading', name='What do you want to be able to do?')).to_be_visible()
 
     send(SOURCE)
