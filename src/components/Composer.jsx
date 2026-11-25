@@ -62,7 +62,7 @@ export default function Composer({ busy, source, setSource, onSend, onStarter, h
           rows={1}
           onPaste={dropped}
           value={text}
-          placeholder={hasTracks ? 'Ask a question, say “next”, or name something new to learn' : 'e.g. Understand how transformers use attention'}
+          placeholder={innerWidth < 600 ? (hasTracks ? 'Ask, or say “next”' : 'Name a goal') : hasTracks ? 'Ask a question, say “next”, or name something new to learn' : 'e.g. Understand how transformers use attention'}
           onChange={(e) => {
             setText(e.target.value)
             e.target.style.height = 'auto'

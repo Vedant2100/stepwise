@@ -433,7 +433,7 @@ export default function App() {
             <div className="wrap">
               <main className="feed" aria-live="polite">
                 {feed.map((it) => (
-                  <FeedItem key={it.id} it={it} data={data} setData={setData} actions={actions} busy={Boolean(busy)} openWs={openWs} />
+                  <FeedItem key={it.id} it={it} data={data} actions={actions} busy={Boolean(busy)} openWs={openWs} />
                 ))}
                 {busy && (
                   <div className="msg t">

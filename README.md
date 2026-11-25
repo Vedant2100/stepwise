@@ -55,11 +55,14 @@ CS205 (UCR, Fall 2026) final project. It builds on [Straight Shot](https://githu
 
 ## Setup
 
+Needs Node.js 22 or later (Vite 8 and Capacitor 8 require it).
+
 ```bash
 npm install
 cp .env.example .env   # add ANTHROPIC_API_KEY
 npm run dev            # http://localhost:5173
-npm test               # unit tests (learner model, planner, plan validation)
+npm run lint           # ESLint
+npm test               # unit tests (learner model, planner, accounts, sync, sharing, ingest)
 npm run build
 ```
 
@@ -81,9 +84,10 @@ Secrets live in GitHub (Settings → Secrets → Actions) alongside `VERCEL_TOKE
 
 | Variable | Required | Purpose |
 |---|---|---|
-| `ANTHROPIC_API_KEY` | yes | Used only by the `/api/llm` function |
+| `ANTHROPIC_API_KEY` | yes | Used only on the server, by `/api/llm` and `/api/ingest` |
 | `STEPWISE_ACCESS_CODE` | recommended | If set, users enter it under Settings before the app calls the model, so strangers can't spend your key |
 | `STEPWISE_MODEL` | no | Model id; defaults to `claude-haiku-5-5`, the cheapest API model |
+| `KV_REST_API_URL`, `KV_REST_API_TOKEN` | for accounts | Upstash Redis, added by connecting the Upstash integration in Vercel. Without them, accounts live in memory (local development only) |
 
 ## Mobile apps
 
@@ -111,15 +115,26 @@ src/
 │   ├── harness.py     runs learner code and tests (from Straight Shot)
 │   ├── router.js      chat actions, router prompt and validation
 │   ├── llm.js         client for /api/llm
+│   ├── ingest.js      reads links, PDFs, Word files and images
+│   ├── daily.js       today's goal and streak, from your history
+│   ├── sync.js        merging this browser's copy with the account's
+│   ├── useAccount.js  sign-in and background sync
+│   ├── share.js       shareable climb links
+│   ├── starters.js    ready-made climbs
+│   ├── reminder.js    daily reminder in the phone apps
 │   └── storage.js     localStorage, import/export validation
 ├── App.jsx            the teacher: feed state and actions
-├── envs/              the four environments
-└── components/        Sidebar (staircase), Workspace, FeedItem, Composer, Progress, Settings, Icons, Md
-api/llm.js             server-side proxy to the Anthropic API
+├── envs/              the ten workspaces, including the interview room
+└── components/        Sidebar, Workspace, FeedItem, Composer, Progress, Settings, sign-in, sharing, Icons, Md
+api/                   serverless functions: llm (model proxy and shared cache), ingest, auth, data, share
+server/                accounts, sessions, sync and the Redis store behind them
+scripts/               live check against the real model, starter-climb pre-generation
+e2e/                   browser tests
+android/, ios/         Capacitor apps
 ```
 
 ## Lineage
 
-Stepwise builds on Straight Shot (Study Loop), which already picked a teaching method per kind of material. From it, Stepwise reuses its chat-first interface and look, the test harness, the verify-tests-against-a-reference idea, the code-runner design (worker, timeout and restart), SM-2 scheduling and the guardrails. What changes: Straight Shot has the model generate a whole custom workspace per subject, while Stepwise keeps four fixed environments and generates only their content. It also replaces the free-text learner note with a per-concept mastery model and a prerequisite graph, and replaces the single 100 KB HTML file with a tested React app.
+Stepwise builds on Straight Shot (Study Loop), which already picked a teaching method per kind of material. From it, Stepwise reuses its chat-first interface and look, the test harness, the verify-tests-against-a-reference idea, the code-runner design (worker, timeout and restart), SM-2 scheduling and the guardrails. What changes: Straight Shot has the model generate a whole custom workspace per subject, while Stepwise keeps a fixed set of tested workspaces and generates only their content. It also replaces the free-text learner note with a per-concept mastery model and a prerequisite graph, and replaces the single 100 KB HTML file with a tested React app.
 
 See [THESIS.md](THESIS.md) for the reasoning and [AI_USAGE.md](AI_USAGE.md) for how AI tools were used.

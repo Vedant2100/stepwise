@@ -8,6 +8,7 @@ const scrypt = promisify(scryptCb)
 const SESSION_TTL = 60 * 60 * 24 * 30
 const FAIL_LIMIT = 5
 const FAIL_WINDOW = 60 * 15
+const SIGNUPS_PER_IP_PER_HOUR = 10
 export const COOKIE = 'sw_session'
 
 const USERNAME = /^[a-z0-9_-]{3,32}$/
@@ -25,6 +26,7 @@ export async function verifyPassword(password, stored) {
   return timingSafeEqual(got, want)
 }
 
+const DUMMY_HASH = `scrypt$${'0'.repeat(32)}$${'0'.repeat(128)}`
 const err = (status, error) => ({ status, data: { error } })
 
 function checkCredentials(body) {
@@ -56,9 +58,10 @@ export async function getSession(store, cookieHeader) {
   return s ? { ...s, token } : null
 }
 
-export async function register(store, body) {
+export async function register(store, body, ip = '') {
   const c = checkCredentials(body)
   if (c.error) return c.error
+  if ((await store.incr(`signup:${ip || 'unknown'}`, 3600)) > SIGNUPS_PER_IP_PER_HOUR) return err(429, 'Too many new accounts from this network. Try again later.')
   const user = { id: randomBytes(12).toString('hex'), username: c.username, hash: await hashPassword(c.password), createdAt: Date.now() }
   if (!(await store.set(`user:${c.username}`, user, { nx: true }))) return err(409, 'That username is taken.')
   return startSession(store, user)
@@ -70,7 +73,7 @@ export async function login(store, body) {
   const failKey = `fail:${c.username}`
   if (((await store.get(failKey)) ?? 0) >= FAIL_LIMIT) return err(429, 'Too many failed attempts. Try again in 15 minutes.')
   const user = await store.get(`user:${c.username}`)
-  if (!user || !(await verifyPassword(c.password, user.hash))) {
+  if (!(await verifyPassword(c.password, user?.hash ?? DUMMY_HASH)) || !user) {
     await store.incr(failKey, FAIL_WINDOW)
     return err(401, 'Wrong username or password.')
   }

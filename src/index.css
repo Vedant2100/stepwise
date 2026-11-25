@@ -281,8 +281,8 @@ textarea:focus, input:focus, select:focus { outline: none; border-color: var(--f
 .app.side-hidden .icon-btn.menu { display: inline-grid; position: fixed; top: 14px; left: 14px; z-index: 20; color: var(--mute); }
 @media (max-width: 900px) {
   .app { grid-template-columns: minmax(0, 1fr); }
-  .side { position: fixed; inset: 0 auto 0 0; width: min(320px, 86vw); z-index: 30; transform: translateX(-100%); transition: transform 180ms ease; box-shadow: 0 0 60px #0006; }
-  .side.open { transform: none; }
+  .side { position: fixed; inset: 0 auto 0 0; width: min(320px, 86vw); z-index: 30; transform: translateX(-100%); transition: transform 180ms ease, box-shadow 180ms ease; }
+  .side.open { transform: none; box-shadow: 0 0 60px #0006; }
   .icon-btn.menu { display: inline-grid; }
   .app.side-hidden .side { display: flex; }
   .app.side-hidden .menu { position: static; }
@@ -595,3 +595,4 @@ textarea:focus, input:focus, select:focus { outline: none; border-color: var(--f
 .today b { font-size: 15px; }
 .today small { font-size: 13px; color: #a9c2b8; }
 .check { display: inline-flex !important; flex-direction: row !important; align-items: center; gap: 8px; font-weight: 600 !important; margin: 0 !important; } .check input { width: auto; min-height: 0; }
+.env-tabs > * { flex: none; }

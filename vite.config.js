@@ -34,7 +34,7 @@ function devApi(env) {
         server.middlewares.use(path, async (req, res) => {
           const body = req.method === 'GET' ? null : await readJSON(req)
           const query = Object.fromEntries(new URL(req.url, 'http://dev').searchParams)
-          respond(res, await handle({ method: req.method, body, query, ip: '127.0.0.1', cookie: req.headers.cookie ?? '' }), false)
+          respond(res, await handle({ method: req.method, body, query, ip: `dev-${Math.random()}`, cookie: req.headers.cookie ?? '' }), false)
         })
       }
     },

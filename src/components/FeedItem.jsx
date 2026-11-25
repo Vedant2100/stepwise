@@ -18,7 +18,7 @@ function Teacher({ err, wide, children }) {
   )
 }
 
-export default function FeedItem({ it, data, setData, actions, busy, openWs }) {
+export default function FeedItem({ it, data, actions, busy, openWs }) {
   const track = data.tracks.find((t) => t.id === it.trackId)
 
   switch (it.kind) {

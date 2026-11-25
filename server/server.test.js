@@ -101,3 +101,14 @@ describe('shared climbs', async () => {
     expect((await handleShare({ method: 'POST', body: climb, ip: '3.3.3.3' }, db)).status).toBe(200)
   })
 })
+
+describe('account abuse limits', () => {
+  it('limits new accounts per network and answers unknown users like wrong passwords', async () => {
+    const db = createStore({})
+    for (let i = 0; i < 10; i++) expect((await handleAuth({ method: 'POST', body: { action: 'register', username: `user${i}x`, password: 'correct horse' }, ip: '9.9.9.9' }, db)).status).toBe(200)
+    expect((await handleAuth({ method: 'POST', body: { action: 'register', username: 'user99x', password: 'correct horse' }, ip: '9.9.9.9' }, db)).status).toBe(429)
+    expect((await handleAuth({ method: 'POST', body: { action: 'register', username: 'other', password: 'correct horse' }, ip: '8.8.8.8' }, db)).status).toBe(200)
+    const missing = await handleAuth({ method: 'POST', body: { action: 'login', username: 'nobody', password: 'correct horse' } }, db)
+    expect(missing).toMatchObject({ status: 401, data: { error: 'Wrong username or password.' } })
+  })
+})
