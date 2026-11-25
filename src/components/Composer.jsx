@@ -1,10 +1,12 @@
 import { useRef, useState } from 'react'
 
 import { STARTERS } from '../lib/starters.js'
+import { readFile } from '../lib/ingest.js'
 
 export default function Composer({ busy, source, setSource, onSend, onStarter, hasOpen, hasTracks, onNext, onProgress, sourceMax, centered }) {
   const [text, setText] = useState('')
   const [error, setError] = useState('')
+  const [reading, setReading] = useState('')
   const file = useRef(null)
   const box = useRef(null)
 
@@ -19,12 +21,26 @@ export default function Composer({ busy, source, setSource, onSend, onStarter, h
 
   async function attach(f) {
     setError('')
-    if (f.size > 2_000_000) return setError('That file is over 2 MB.')
-    setSource({ name: f.name, text: (await f.text()).slice(0, sourceMax) })
+    setReading(f.name || 'your image')
+    try {
+      const doc = await readFile(f)
+      setSource({ name: doc.title, text: doc.text.slice(0, sourceMax) })
+    } catch (e) {
+      setError(e.status === 401 ? 'Reading images needs an access code. Add one in Settings.' : e.message)
+    }
+    setReading('')
+  }
+
+  function dropped(e) {
+    const f = [...(e.clipboardData ?? e.dataTransfer).files][0]
+    if (!f) return
+    e.preventDefault()
+    attach(f)
   }
 
   return (
-    <form className={`composer${centered ? ' centered' : ''}`} onSubmit={submit}>
+    <form className={`composer${centered ? ' centered' : ''}`} onSubmit={submit} onDrop={dropped} onDragOver={(e) => e.preventDefault()}>
+      {reading && <div className="pkg">Reading <b>{reading}</b>…</div>}
       {source && (
         <div className="pkg">
           <span><b>{source.name}</b> attached ({source.text.length.toLocaleString()} characters). Now say what you want to be able to do with it.</span>
@@ -39,11 +55,12 @@ export default function Composer({ busy, source, setSource, onSend, onStarter, h
         </div>
       )}
       <div className="cbar">
-        <button type="button" className="btn ghost att" onClick={() => file.current.click()} title="Attach notes (.txt, .md)" aria-label="Attach notes">+</button>
-        <input ref={file} type="file" accept=".txt,.md,text/plain,text/markdown" hidden onChange={(e) => { if (e.target.files[0]) attach(e.target.files[0]); e.target.value = '' }} />
+        <button type="button" className="btn ghost att" onClick={() => file.current.click()} title="Attach a PDF, Word file, notes or an image" aria-label="Attach notes">+</button>
+        <input ref={file} type="file" accept=".pdf,.docx,.txt,.md,.csv,image/*,text/plain,text/markdown,application/pdf" hidden onChange={(e) => { if (e.target.files[0]) attach(e.target.files[0]); e.target.value = '' }} />
         <textarea
           ref={box}
           rows={1}
+          onPaste={dropped}
           value={text}
           placeholder={hasTracks ? 'Ask a question, say “next”, or name something new to learn' : 'e.g. Understand how transformers use attention'}
           onChange={(e) => {
@@ -54,7 +71,7 @@ export default function Composer({ busy, source, setSource, onSend, onStarter, h
           onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && submit(e)}
           aria-label="Message"
         />
-        <button className="btn" disabled={busy || !text.trim()}>{hasTracks ? 'Send' : 'Start'}</button>
+        <button className="btn" disabled={busy || reading || !text.trim()}>{hasTracks ? 'Send' : 'Start'}</button>
       </div>
       {!hasTracks && centered && (
         <div className="examples">

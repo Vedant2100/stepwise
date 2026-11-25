@@ -1,6 +1,7 @@
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import { callLLM } from './api/llm.js'
+import { handleIngest } from './api/ingest.js'
 import { handleAuth } from './api/auth.js'
 import { handleData } from './api/data.js'
 import { respond } from './server/http.js'
@@ -24,6 +25,9 @@ function devApi(env) {
       server.middlewares.use('/api/llm', async (req, res) => {
         const { status, data } = await callLLM(await readJSON(req), req.headers['x-access-code'], env)
         respond(res, { status, data })
+      })
+      server.middlewares.use('/api/ingest', async (req, res) => {
+        respond(res, await handleIngest(await readJSON(req), req.headers['x-access-code'], env, sharedStore()), false)
       })
       const share = (r) => handleShare(r, sharedStore())
       for (const [path, handle] of [['/api/auth', handleAuth], ['/api/data', handleData], ['/api/share', share]]) {

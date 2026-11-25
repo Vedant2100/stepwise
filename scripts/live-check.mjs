@@ -180,6 +180,15 @@ for (const [env, concept] of NEW) {
 }
 
 console.log('\n## Chat router')
+await step('a link is fetched through /api/ingest', async () => {
+  calls++
+  const res = await fetch(`${URL}/api/ingest`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-access-code': CODE }, body: JSON.stringify({ url: 'https://en.wikipedia.org/wiki/Softmax_function' }) })
+  const page = await res.json()
+  if (!res.ok) throw new Error(`HTTP ${res.status}: ${page.error}`)
+  console.log(`    "${page.title}", ${page.text?.length ?? 0} characters${page.pdf ? ' (pdf)' : ''}`)
+  if (!(page.text?.length > 500)) throw new Error('too little text came back')
+})
+
 const tracks = [{ id: 't1', title: 'Attention', objective: 'Understand attention', concepts: [{ pL: 0.97 }, { pL: 0.3 }] }]
 const current = { concept: { name: 'Softmax by hand' }, env: 'steps', exercise: { problem: 'softmax([0,0])' } }
 for (const [text, want] of [

@@ -14,6 +14,7 @@ import { ask, stopAll } from './lib/llm.js'
 import { validatePlan } from './lib/plan.js'
 import { ENVIRONMENTS, envFor, nextReviewAt, nextStep } from './lib/planner.js'
 import { planPrompt, readPastePrompt, system } from './lib/prompts.js'
+import { URL_RE, readLink } from './lib/ingest.js'
 import { normalizeRoute, routePrompt, routeSystem } from './lib/router.js'
 import { load, save } from './lib/storage.js'
 import useAccount from './lib/useAccount.js'
@@ -246,6 +247,23 @@ export default function App() {
       const more = [source?.text, skip ? '' : text].filter(Boolean).join('\n\n')
       return learn(waiting.objective, null, [waiting.context, more].filter(Boolean).join('\n\n').slice(0, SOURCE_MAX))
     }
+    const link = !source && text.match(URL_RE)
+    if (link) {
+      let page
+      setBusy('Reading the link')
+      try {
+        page = await readLink(link[0])
+      } catch (e) {
+        setBusy('')
+        return e.status === 401 ? push(item('access')) : say(e.message, { err: true })
+      }
+      setBusy('')
+      const doc = { name: page.title, text: page.text.slice(0, SOURCE_MAX) }
+      const rest = text.replace(link[0], '').trim()
+      if (rest.split(/\s+/).length >= 3) return learn(rest, doc)
+      setSource(doc)
+      return say(`I read **${page.title}**. What do you want to be able to do with it?`)
+    }
     if (!source && text.length > PASTE_AS_SOURCE) {
       let read
       setBusy('Reading')
@@ -373,7 +391,7 @@ export default function App() {
             <div className="hero">
               <button className="icon-btn menu" onClick={showSide} aria-label="Show sidebar" title="Show sidebar"><PanelIcon /></button>
               <h1>What do you want to be able to do?</h1>
-              <p>Name a goal. Stepwise breaks it into concepts, picks the right kind of practice for each one, and keeps track of what you’ve mastered. Paste or attach notes and it teaches only from them.</p>
+              <p>Name a goal. Stepwise breaks it into concepts, picks the right kind of practice for each one, and keeps track of what you’ve mastered. Paste notes or a link, or attach a PDF, Word file or photo, and it teaches only from that.</p>
             </div>
             {composer}
           </>
