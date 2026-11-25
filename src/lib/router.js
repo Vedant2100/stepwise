@@ -2,6 +2,7 @@ import { ENVIRONMENTS } from './planner.js'
 
 export const ACTIONS = {
   learn: 'they want to learn something new ("topic" = their objective, with every detail they gave)',
+  adjust: 'they want to change the current climb: skip a kind of practice, refocus, drop or add concepts ("topic" = the change, in their words)',
   next: 'move on / give me something to practice',
   skip: 'skip the current exercise',
   switch: 'redo the current exercise in another environment ("env")',

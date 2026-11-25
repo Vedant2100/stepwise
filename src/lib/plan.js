@@ -29,3 +29,11 @@ export function validatePlan(raw, source) {
   if (!concepts.length) throw new Error('None of the planned concepts were usable.')
   return { title: typeof raw.title === 'string' && raw.title.trim() ? raw.title.trim() : 'Untitled', concepts }
 }
+
+export function mergePlan(old, revised) {
+  const byId = new Map(old.map((c) => [c.id, c]))
+  return revised.map((c) => {
+    const had = byId.get(c.id)
+    return had ? { ...c, pL: had.pL, attempts: had.attempts, misses: had.misses ?? 0, review: had.review } : c
+  })
+}

@@ -36,7 +36,7 @@ with sync_playwright() as pw:
     p.get_by_label('Message').fill('RESUME: Archtech Automation 2023-2024, Printerior KUKA deployment'); p.get_by_label('Message').press('Enter')
     expect(p.locator('.ws.open')).to_have_count(1)
     plan_prompt = next(x for x in seen if 'Break the objective' in x)
-    assert 'ABOUT THE LEARNER' in plan_prompt and 'RESUME: Archtech' in plan_prompt and 'SOURCE:' not in plan_prompt
+    assert "THE LEARNER'S OWN MATERIAL" in plan_prompt and 'RESUME: Archtech' in plan_prompt and 'SOURCE:' not in plan_prompt
     print('2. planned with the paste + resume as background (not as strict source)')
     expect(p.get_by_text('Why do you want to work at Nimble?')).to_be_visible()
     assert p.evaluate('window.__spoken')[0] == 'Why do you want to work at Nimble?'

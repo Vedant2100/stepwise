@@ -11,9 +11,9 @@ import { PENDING_KEY, copyClimb } from './lib/share.js'
 import { makeExercise } from './lib/exercise.js'
 import { PASS, STUCK, isMastered, recordAttempt } from './lib/learner.js'
 import { ask, stopAll } from './lib/llm.js'
-import { validatePlan } from './lib/plan.js'
+import { mergePlan, validatePlan } from './lib/plan.js'
 import { ENVIRONMENTS, envFor, nextReviewAt, nextStep } from './lib/planner.js'
-import { planPrompt, readPastePrompt, system } from './lib/prompts.js'
+import { adjustPrompt, planPrompt, readPastePrompt, system } from './lib/prompts.js'
 import { URL_RE, readLink } from './lib/ingest.js'
 import { today } from './lib/daily.js'
 import { normalizeRoute, routePrompt, routeSystem } from './lib/router.js'
@@ -127,7 +127,7 @@ export default function App() {
     const text = (src?.text ?? '').slice(0, SOURCE_MAX)
     await run('Planning', async () => {
       objective = objective.replace(/\s+/g, ' ').trim()
-      const plan = validatePlan(await ask(system({ source: text }), planPrompt(objective, text, context), { variant: 0 }), text)
+      const plan = validatePlan(await ask(system({ source: text, context }), planPrompt(objective, text, context), { variant: 0 }), text)
       const track = { id: crypto.randomUUID(), objective, source: text, ...(context && { context }), ...plan, log: [], createdAt: Date.now() }
       changeTracks((ts) => [track, ...ts])
       setActiveId(track.id)
@@ -156,6 +156,20 @@ export default function App() {
       await start(track, nextStep(track.concepts, Date.now()))
     })
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function adjust(change) {
+    const track = dataRef.current.tracks.find((t) => t.id === activeId) ?? dataRef.current.tracks[0]
+    if (!track) return learn(change, null)
+    const open = openExercise()
+    if (open) { retire(open.id); patch(open.id, { done: 'skipped' }) }
+    await run('Reworking the climb', async () => {
+      const plan = validatePlan(await ask(system(track), adjustPrompt(track, change)), track.source)
+      const updated = { ...track, title: plan.title, concepts: mergePlan(track.concepts, plan.concepts) }
+      changeTracks((ts) => ts.map((t) => (t.id === track.id ? updated : t)))
+      push(item('plan', { trackId: track.id, revised: true }))
+      await start(updated, nextStep(updated.concepts, Date.now()))
+    })
+  }
 
   function pickNext(focusId) {
     const now = Date.now()
@@ -312,6 +326,7 @@ export default function App() {
     setBusy('')
     if (r.say || r.suggest.length) say(r.say, { suggest: r.suggest })
     if (r.action === 'learn') return learn(r.topic || text, null)
+    if (r.action === 'adjust') return adjust(r.topic || text)
     if (r.action === 'next' || r.action === 'skip') return next()
     if (r.action === 'focus') return next(r.trackId ?? activeId)
     if (r.action === 'switch' && r.env) return switchEnv(r.env)

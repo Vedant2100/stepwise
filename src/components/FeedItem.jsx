@@ -59,7 +59,7 @@ export default function FeedItem({ it, data, setData, actions, busy, openWs }) {
       if (!track) return null
       return (
         <Teacher wide>
-          <p>Here’s the climb for <b>{track.title}</b>: {track.concepts.length} concepts, each with the practice that suits it. We start at step 1.</p>
+          <p>{it.revised ? 'Updated the climb' : 'Here’s the climb'} for <b>{track.title}</b>: {track.concepts.length} concepts, each with the practice that suits it. We start at step 1.</p>
           <div className="plan-card">
             <div className="plan-envs">
               {[...new Set(track.concepts.map((c) => envFor(c.type)))].map((env) => {
@@ -86,6 +86,7 @@ export default function FeedItem({ it, data, setData, actions, busy, openWs }) {
     case 'exercise': {
       if (!track) return null
       const concept = track.concepts.find((c) => c.id === it.conceptId)
+      if (!concept) return null
       const Icon = EnvIcon[it.env]
       const status = {
         finished: 'Recorded',

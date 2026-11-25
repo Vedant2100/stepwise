@@ -201,3 +201,15 @@ describe('daily climb', async () => {
     expect(today([track([at(0), at(0)])], now).done).toBe(2)
   })
 })
+
+describe('adjusting a climb', async () => {
+  const { mergePlan } = await import('./plan.js')
+  it('keeps progress on concepts that stay and starts new ones fresh', () => {
+    const old = [{ id: 'a', name: 'A', pL: 0.97, attempts: 4, misses: 0, review: { due: 1, interval: 1, ease: 2.5, reps: 1 } }, { id: 'b', name: 'B', pL: 0.4, attempts: 1 }]
+    const revised = [{ id: 'a', name: 'A, refocused', type: 'interview', pL: 0.1, attempts: 0, review: null, prereqs: [] }, { id: 'c', name: 'C', type: 'interview', pL: 0.1, attempts: 0, review: null, prereqs: ['a'] }]
+    const m = mergePlan(old, revised)
+    expect(m[0]).toMatchObject({ id: 'a', name: 'A, refocused', type: 'interview', pL: 0.97, attempts: 4 })
+    expect(m[1]).toMatchObject({ id: 'c', pL: 0.1, attempts: 0 })
+    expect(m.map((c) => c.id)).toEqual(['a', 'c'])
+  })
+})

@@ -16,9 +16,11 @@ EX = {
   "Python coding exercise": {"brief": "Write `softmax(xs)`.", "starter": "def softmax(xs):\n    pass\n", "hints": ["use math.exp"],
      "reference": "import math\ndef softmax(xs):\n    e = [math.exp(x) for x in xs]\n    return [v / sum(e) for v in e]\n",
      "tests": [{"name": "sums to one", "code": "assert abs(sum(softmax([1,2,3])) - 1) < 1e-9"}, {"name": "uniform", "code": "assert softmax([0,0]) == [0.5,0.5]"}, {"name": "bad", "code": "assert softmax([0,0]) == [1,0]"}]},
+  "mock interview round": {"role": "Recruiter", "questions": [{"ask": "Tell me about yourself.", "seconds": 60, "strong": ["clear arc"], "followup": "Why this role?"}]},
   "retrieval drill": {"cards": [{"front": "Scaling factor?", "back": "1/sqrt(d_k)"}, {"front": "Normaliser?", "back": "softmax"}]},
 }
-ROUTES = {"hi there": {"action": "chat", "say": "Hi! You're 2 steps up Attention. Ready for the next one?", "suggest": ["next", "progress"]},
+ROUTES = {"dont wanna practice code": {"action": "adjust", "topic": "no code; focus on my pitch for a recruiter screen", "say": "Got it, reworking your climb.", "suggest": []},
+          "hi there": {"action": "chat", "say": "Hi! You're 2 steps up Attention. Ready for the next one?", "suggest": ["next", "progress"]},
           "how am i doing": {"action": "progress", "say": "Here's where you are."},
           "switch to steps": {"action": "switch", "env": "steps", "say": ""},
           "what is a softmax": {"action": "help", "say": "Think about turning scores into probabilities."},
@@ -34,6 +36,7 @@ def llm(route):
         histories.append(json.loads(route.request.post_data).get("history") or [])
         said = re.search(r'LEARNER SAYS: """(.*?)"""', p, re.S).group(1).lower()
         reply = next((v for k, v in ROUTES.items() if k in said), {"action": "chat", "say": "ok"})
+    elif "They asked to change it" in p: reply = {"title": "Attention, recruiter screen", "concepts": [PLAN["concepts"][0], {"id": "pitch", "name": "Pitch your background", "type": "interview", "summary": "60 seconds.", "prereqs": []}]}
     elif "Break the objective" in p: reply = PLAN
     elif "Grade strictly" in p: reply = {"score": 85, "verdict": "Solid.", "points": [{"met": True, "note": ""}, {"met": False, "note": "never said they sum to one"}]}
     elif "Is the learner's step correct" in p: reply = {"ok": True, "feedback": ""}
@@ -142,11 +145,17 @@ with sync_playwright() as pw:
     expect(page.locator('details.tr')).to_have_count(2)
     print('6b. greeting answered with suggestion buttons; recent conversation sent as history')
 
+    send('btw I dont wanna practice code, recruiter screen')
+    expect(page.get_by_text('Updated the climb for Attention, recruiter screen')).to_be_visible()
+    t = json.loads(page.evaluate("localStorage.getItem('stepwise.v1')"))['tracks'][0]
+    assert [c['id'] for c in t['concepts']] == ['weighted-sum', 'pitch'], t['concepts']
+    assert t['concepts'][0]['attempts'] == 1 and t['concepts'][0]['pL'] > 0.1, t['concepts'][0]
+    print('6c. asking to change the climb rewrites it; kept concepts keep their progress')
     page.reload()
     expect(page.get_by_text('Welcome back. 1 objective')).to_be_visible()
     t = json.loads(page.evaluate("localStorage.getItem('stepwise.v1')"))['tracks'][0]
     log = [(l['conceptId'], l['env'], l['defaultEnv'], l['score']) for l in t['log']]
-    assert [x[0] for x in log] == ['weighted-sum', 'impl', 'terms', 'terms'] and log[-1][1] == 'steps' and log[-1][2] == 'drill', log
+    assert [x[0] for x in log][:4] == ['weighted-sum', 'impl', 'terms', 'terms'] and log[-1][1] == 'steps' and log[-1][2] == 'drill', log
     print('7. persisted; log records recommended vs used environment:', log)
     b.close()
 print('model calls:', len(calls)); check_errors(errors)

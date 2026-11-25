@@ -6,13 +6,13 @@ export function system(track) {
     track?.source
       ? 'Ground everything in the SOURCE you are given. Do not teach claims the source does not support.'
       : 'No source material was given, so use well-established, standard knowledge only.',
+    ...(track?.context ? ["The learner's own material is the source of truth about them and their goal. Never contradict it or make up details it doesn't contain."] : []),
     'Reply with a single JSON object and nothing else.',
   ].join('\n')
 }
 
 const sourceBlock = (source) => (source ? `\nSOURCE:\n<<<\n${source.slice(0, SOURCE_LIMIT)}\n>>>\n` : '')
-const contextBlock = (context) => (context ? `\nABOUT THE LEARNER (use this to choose and tailor concepts and exercises; it is not teaching material):\n<<<\n${context.slice(0, SOURCE_LIMIT)}\n>>>\n` : '')
-
+const contextBlock = (context) => (context ? `\nTHE LEARNER'S OWN MATERIAL (source of truth about them and their goal: use these facts exactly as given, never contradict them, and never invent facts about the learner such as experience, numbers, dates, names or companies; if something you need is missing, ask the learner instead of guessing):\n<<<\n${context.slice(0, SOURCE_LIMIT)}\n>>>\n` : '')
 export const readPastePrompt = (text) => `A learner pasted this message into a learning app:
 <<<
 ${text.slice(0, SOURCE_LIMIT)}
@@ -39,6 +39,12 @@ Label each with ONE task type:
 - "algorithm": tracing how a specific algorithm or data structure changes state step by step (sorting, searching, graph traversal, dynamic programming), and its complexity
 ${source ? 'For each concept, copy a short exact quote (5–25 words) from the SOURCE that supports it.' : ''}
 Return: {"title":"short title","concepts":[{"id":"kebab-id","name":"","type":"concept|procedure|skill|recall|intuition|reading|ordering|data|algorithm|interview","summary":"one sentence","prereqs":["ids of earlier concepts"]${source ? ',"quote":"exact words from the source"' : ''}}]}`
+
+export const adjustPrompt = (track, change) => `${planPrompt(track.objective, track.source, track.context)}
+
+The learner already has this plan: ${JSON.stringify(track.concepts.map((c) => ({ id: c.id, name: c.name, type: c.type, mastered: c.pL >= 0.95 })))}
+They asked to change it: """${change}"""
+Revise the plan to do what they asked. Keep concepts that still fit, with their exact ids; drop ones that no longer fit; add what is missing. Return the full revised plan in the same JSON format.`
 
 const SHAPES = {
   explain: `an explain-it-back question. Return: {"question":"","rubric":["3–5 key points a full answer must contain"],"reference":"model answer, markdown"}`,
