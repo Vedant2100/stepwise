@@ -17,7 +17,7 @@ import { adjustPrompt, planPrompt, readPastePrompt, system } from './lib/prompts
 import { URL_RE, readLink } from './lib/ingest.js'
 import { MAX_LINKS, findUrls, isReadingList, readList } from './lib/readinglist.js'
 import { today } from './lib/daily.js'
-import { TECHNICAL_NOTE, asInterview, interviewFormat, isInterview, seededPlan } from './lib/interviews.js'
+import { INTERVIEW_NOTE, TECHNICAL_NOTE, asInterview, interviewFormat, isInterview, seededPlan } from './lib/interviews.js'
 import { normalizeRoute, routePrompt, routeSystem } from './lib/router.js'
 import { load, save } from './lib/storage.js'
 import useAccount from './lib/useAccount.js'
@@ -141,7 +141,7 @@ export default function App() {
   }
 
   async function planFor(objective, text, context, interview) {
-    const plan = validatePlan(await ask(system({ source: text, context }), planPrompt(objective, text, context) + (interview ? TECHNICAL_NOTE : ''), { variant: 0 }), text)
+    const plan = validatePlan(await ask(system({ source: text, context }), planPrompt(objective, text, context) + (interview ? TECHNICAL_NOTE + INTERVIEW_NOTE : ''), { variant: 0 }), text)
     return interview ? asInterview(plan) : plan
   }
 
@@ -193,7 +193,7 @@ export default function App() {
       if (format === 'recruiter' || format === 'behavioral') plan = seededPlan(format)
       else if (format === 'technical') plan = await planFor(track.objective, track.source, track.context, 'technical')
       else {
-        plan = validatePlan(await ask(system(track), adjustPrompt(track, change)), track.source)
+        plan = validatePlan(await ask(system(track), adjustPrompt(track, change) + (track.interview ? INTERVIEW_NOTE : '')), track.source)
         if (track.interview) plan = asInterview(plan)
       }
       const updated = { ...track, ...(format && { interview: format }), title: plan.title, concepts: mergePlan(track.concepts, plan.concepts) }

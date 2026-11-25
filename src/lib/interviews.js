@@ -29,7 +29,7 @@ const SEEDS = {
 export const isInterview = (text = '') => /\binterview|recruiter|phone screen|hr screen|screening call|hiring manager|onsite\b/i.test(text)
 
 export function interviewFormat(text = '') {
-  if (/recruiter|hr screen|phone screen|screening call|non-?technical|not technical|too technical/i.test(text)) return 'recruiter'
+  if (/recruiter|hr screen|phone screen|screening call|non-?technical|not technical|too technical|about (me|myself|yourself)|my background|candidate background|motivation|why (this|the) (company|role)/i.test(text)) return 'recruiter'
   if (/behaviou?ral|star stor/i.test(text)) return 'behavioral'
   if (/technical/i.test(text)) return 'technical'
   return null
@@ -45,4 +45,12 @@ export function seededPlan(format) {
 
 export const TECHNICAL_NOTE = '\nThis is technical interview preparation. Make every concept a technical area the interviewer will probe for this role, named as something the learner must explain or work through out loud.'
 
-export const asInterview = (plan) => ({ ...plan, concepts: plan.concepts.map((c) => ({ ...c, type: 'interview' })) })
+// Every concept is something the interviewer asks the candidate. Never the practice tool, the "interview room", or how interviews work.
+export const INTERVIEW_NOTE = '\nEvery concept is a question or topic the interviewer will put to the candidate in this round (about the candidate, their work, the role, or the field). Never make a concept about this practice app, the "interview room", the interview format, or how the interview process works.'
+
+const META = /interview (room|environment|format|process|structure|logistics)|practice (room|environment|session)|\benvironment and format\b/i
+
+export const asInterview = (plan) => {
+  const kept = plan.concepts.filter((c) => !META.test(`${c.name} ${c.summary ?? ''}`))
+  return { ...plan, concepts: (kept.length ? kept : plan.concepts).map((c) => ({ ...c, type: 'interview' })) }
+}

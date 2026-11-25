@@ -269,5 +269,8 @@ describe('interview formats', async () => {
     expect(plan.concepts.map((c) => c.name)).toContain('Walk me through a project')
     expect(plan.concepts.every((c) => c.type === 'interview')).toBe(true)
     expect(asInterview({ title: 't', concepts: [{ id: 'a', type: 'skill' }] }).concepts[0].type).toBe('interview')
+    const meta = asInterview({ title: 't', concepts: [{ id: 'm', name: 'Interview room environment and format' }, { id: 'b', name: 'Your background' }] })
+    expect(meta.concepts.map((c) => c.id)).toEqual(['b'])
+    expect(interviewFormat('focus on my background and motivation for warehouse fleets')).toBe('recruiter')
   })
 })
