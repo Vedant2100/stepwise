@@ -80,6 +80,13 @@ Secrets live in GitHub (Settings → Secrets → Actions) alongside `VERCEL_TOKE
 | `STEPWISE_ACCESS_CODE` | recommended | If set, users enter it under Settings before the app calls the model, so strangers can't spend your key |
 | `STEPWISE_MODEL` | no | Model id; defaults to `claude-haiku-5-5`, the cheapest API model |
 
+## Mobile apps
+
+Android and iOS apps are built with Capacitor (`android/`, `ios/`). They load the deployed site, so they always match the web version, with microphone permission for the interview room. The *Mobile apps* workflow builds a debug APK and an iOS simulator app and attaches both to the run as artifacts.
+
+- **Android:** install `stepwise-android/app-debug.apk` on a phone (allow installs from unknown sources) or an emulator.
+- **iOS:** unzip `stepwise-ios-simulator.zip` and drag `App.app` onto a running iOS Simulator (Xcode 26+). A real iPhone needs the app signed with an Apple account in Xcode (`npx cap open ios`).
+
 ## How it fits together
 
 ```

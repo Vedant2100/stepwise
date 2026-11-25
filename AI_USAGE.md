@@ -19,6 +19,7 @@
 - **Accounts and sync:** designed username/password accounts on Upstash Redis with merging per objective (timestamps, deletion tombstones, compare-and-set saves), and a two-browser test to prove it.
 - **Product direction:** when I asked how to make people actually want to use it, proposed starter climbs served from the shared cache, progress animations, and shareable climb pages; I chose which to build.
 - **Interview room:** I set the constraints (no deadlines, mastery-driven, voice with free tools, no extra writing workspace); the agent designed the environment around the browser's own speech APIs, plus reading long pastes for intent and asking for missing material.
+- **Mobile apps:** set up Capacitor 8 for Android and iOS with app icons and microphone permissions, and a GitHub Actions workflow that builds both (an APK, and an iOS simulator app on a macOS runner).
 - **Look:** built an optional liquid-glass look and iterated on it from screenshots.
 - **Testing:** unit tests for the core logic, and browser tests (now in `e2e/`, run in CI when app code changes) through every workspace, the chat router, accounts across two browsers, sharing, the interview room and Stop, with the model mocked and real Python via Pyodide. Pre-generation of the starter climbs runs the same prompts and Python checks against production.
 
