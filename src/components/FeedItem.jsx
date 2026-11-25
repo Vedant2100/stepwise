@@ -14,7 +14,7 @@ function AccessForm({ onSubmit }) {
   const [code, setCode] = useState('')
   return (
     <form className="row access" onSubmit={(e) => { e.preventDefault(); if (code.trim()) onSubmit(code.trim()) }}>
-      <input type="password" autoFocus value={code} onChange={(e) => setCode(e.target.value)} placeholder="Access code" aria-label="Access code" autoComplete="off" />
+      <input className="secret" autoFocus value={code} onChange={(e) => setCode(e.target.value)} placeholder="Access code" aria-label="Access code" autoComplete="off" autoCapitalize="off" spellCheck={false} data-1p-ignore data-lpignore="true" />
       <button className="btn sm" disabled={!code.trim()}>Continue</button>
     </form>
   )

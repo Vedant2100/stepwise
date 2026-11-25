@@ -438,7 +438,12 @@ textarea:focus, input:focus, select:focus { outline: none; border-color: var(--f
 .iv-top { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; align-items: center; }
 .iv-voice { display: inline-flex; gap: 6px; align-items: center; font-size: 14px; color: var(--mute); cursor: pointer; }
 .iv-voice input { width: auto; min-height: 0; }
-.iv-q { font: 700 clamp(22px, 3vw, 28px)/1.25 var(--display); letter-spacing: -0.015em; margin: 6px 0 10px; }
+.iv-q { font: 700 clamp(20px, 2.6vw, 26px)/1.3 var(--display); letter-spacing: -0.01em; margin: 4px 0 14px; text-wrap: pretty; }
+.iv-top .why { display: inline-flex; align-items: center; gap: 10px; font-size: 14px; }
+.iv-n { color: var(--mute); font-variant-numeric: tabular-nums; }
+.iv-tag { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 99px; background: color-mix(in srgb, var(--gold) 22%, transparent); color: light-dark(#7a4f00, var(--gold)); }
+.iv-top .icon-btn[aria-pressed='false'] { opacity: .6; }
+.iv-hint { margin: 8px 0 0; font-size: 14px; }
 .iv-clock { display: flex; align-items: center; gap: 12px; font: 600 15px var(--body); color: var(--mute); }
 .iv-clock .bar { flex: 1; height: 8px; border-radius: 99px; background: var(--line); overflow: hidden; }
 .iv-clock .bar i { display: block; height: 100%; background: var(--pine-2); border-radius: 99px; transition: width .25s linear; }
@@ -656,3 +661,5 @@ textarea:focus, input:focus, select:focus { outline: none; border-color: var(--f
 /* inline access code */
 .msg .access { margin-top: 10px; max-width: 360px; }
 .msg .access input { flex: 1; min-width: 0; }
+/* the access code is hidden as you type, but isn't a password field, so browsers don't offer to save it as your login */
+input.secret { -webkit-text-security: disc; text-security: disc; }

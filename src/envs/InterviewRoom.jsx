@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { ask } from '../lib/llm.js'
 import { gradeInterviewPrompt, system } from '../lib/prompts.js'
 import { PASS } from '../lib/learner.js'
+import { SpeakerIcon } from '../components/Icons.jsx'
 
 const SR = typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition)
 const VOICE_KEY = 'stepwise.interviewVoice'
@@ -13,9 +14,16 @@ function speak(text, on) {
   speechSynthesis.speak(Object.assign(new SpeechSynthesisUtterance(text), { rate: 1.02 }))
 }
 
+// A follow-up is only asked if it reads as a real question, not a template with [placeholders].
+const spoken = (t) => (typeof t === 'string' && t.trim() && !/\[[^\]]*\]|\{[^}]*\}/.test(t) ? t.trim() : '')
+
+// "Hiring manager, Robotics Field Engineering (warehouse fleets)" → "Hiring manager"
+const shortRole = (role) => (typeof role === 'string' && role.split(/[,(]/)[0].trim()) || 'Interviewer'
+
 export default function InterviewRoom({ exercise, track, onDone }) {
   const [i, setI] = useState(0)
   const [followup, setFollowup] = useState(false)
+  const [probeText, setProbeText] = useState('')
   const [phase, setPhase] = useState('ready')
   const [answer, setAnswer] = useState('')
   const [elapsed, setElapsed] = useState(0)
@@ -31,7 +39,7 @@ export default function InterviewRoom({ exercise, track, onDone }) {
 
   const done = i >= exercise.questions.length
   const q = exercise.questions[Math.min(i, exercise.questions.length - 1)]
-  const asked = followup ? q.followup : q.ask
+  const asked = followup ? probeText : q.ask
   const target = Math.max(20, Math.min(240, Number(q.seconds) || 90))
 
   useEffect(() => localStorage.setItem(VOICE_KEY, voice ? 'on' : 'off'), [voice])
@@ -97,11 +105,11 @@ export default function InterviewRoom({ exercise, track, onDone }) {
   }
 
   function next() {
-    const probe = !followup && result.score < PASS && q.followup
+    const probe = !followup && result.score < PASS && (spoken(result.followup) || spoken(q.followup))
     setResult(null)
     setAnswer('')
     setPhase('ready')
-    if (probe) return setFollowup(true)
+    if (probe) { setProbeText(probe); return setFollowup(true) }
     setFollowup(false)
     setI((n) => n + 1)
   }
@@ -129,16 +137,22 @@ export default function InterviewRoom({ exercise, track, onDone }) {
     <div className="panes center">
       <section className="pane interview">
         <div className="iv-top">
-          <span className="why">{exercise.role || 'Interviewer'} · question {i + 1} of {exercise.questions.length}{followup ? ', follow-up' : ''}</span>
-          <label className="iv-voice"><input type="checkbox" checked={voice} onChange={(e) => setVoice(e.target.checked)} /> Read questions aloud</label>
+          <span className="why">{shortRole(exercise.role)} <span className="iv-n">Question {i + 1} of {exercise.questions.length}</span>{followup && <span className="iv-tag">Follow-up</span>}</span>
+          {window.speechSynthesis && (
+            <button className="icon-btn" aria-pressed={voice} onClick={() => setVoice(!voice)} aria-label={voice ? 'Stop reading questions aloud' : 'Read questions aloud'} title={voice ? 'Questions are read aloud' : 'Questions are silent'}>
+              <SpeakerIcon on={voice} />
+            </button>
+          )}
         </div>
         <p className="iv-q">{asked}</p>
         {phase === 'ready' && (
-          <div className="row">
-            <button className="btn" onClick={begin}>{SR ? 'Start answering' : 'Start the clock'}</button>
-            {voice && window.speechSynthesis && <button className="btn ghost" onClick={() => speak(asked, true)}>Hear it again</button>}
-            <span className="why">Aim for about {mmss(target)}.{SR ? ' Answer out loud; you can also type.' : ' Speech-to-text isn’t available in this browser, so type (or use a dictation app).'}</span>
-          </div>
+          <>
+            <div className="row">
+              <button className="btn" onClick={begin}>{SR ? 'Start answering' : 'Start the clock'}</button>
+              {voice && window.speechSynthesis && <button className="btn ghost" onClick={() => speak(asked, true)}>Replay</button>}
+            </div>
+            <p className="why iv-hint">Aim for about {mmss(target)}.{SR ? '' : ' Type your answer; this browser can’t take dictation.'}</p>
+          </>
         )}
 
         {phase !== 'ready' && (
@@ -175,7 +189,7 @@ export default function InterviewRoom({ exercise, track, onDone }) {
             {result.missing.length > 0 && <><p className="label">What was missing</p><ul>{result.missing.map((m, k) => <li key={k}>{m}</li>)}</ul></>}
             {result.tighter && <><p className="label">A tighter version, in your words</p><blockquote className="primer">{result.tighter}</blockquote></>}
             <button className="btn" onClick={next}>
-              {!followup && result.score < PASS && q.followup ? 'Take the follow-up' : i + 1 < exercise.questions.length ? 'Next question' : 'Finish'}
+              {!followup && result.score < PASS && (spoken(result.followup) || spoken(q.followup)) ? 'Take the follow-up' : i + 1 < exercise.questions.length ? 'Next question' : 'Finish'}
             </button>
           </div>
         )}

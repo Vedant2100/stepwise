@@ -5,7 +5,7 @@ PASTE = ("You are my interview coach. I have attached my resume and the two job 
          "I am Shashwat, MS Robotics at UCR, interviewing for a robotics field engineer role at Nimble. ") * 6
 PLAN = {"title": "Nimble field engineer interview", "concepts": [{"id": "why-nimble", "name": "Why Nimble", "type": "interview", "summary": "Explain why this role.", "prereqs": []}]}
 IV = {"role": "Hiring manager", "questions": [
-  {"ask": "Why do you want to work at Nimble?", "seconds": 40, "strong": ["specific to Nimble", "ties to field work"], "followup": "What would you do in your first month?"},
+  {"ask": "Why do you want to work at Nimble?", "seconds": 40, "strong": ["specific to Nimble", "ties to field work"], "followup": "You said you liked [the most relevant item they mentioned]. Why?"},
   {"ask": "Tell me about a robot you debugged on site.", "seconds": 60, "strong": ["situation", "method", "result"], "followup": "How did you confirm the root cause?"}]}
 seen = []
 def llm(route):
@@ -15,8 +15,8 @@ def llm(route):
     if 'Decide what it is' in p: out = {"kind": "request", "objective": "Prepare for my Nimble robotics field engineer interview", "missing": ["your resume", "the two job descriptions"]}
     elif 'Break the objective' in p: out = PLAN
     elif 'Mock interview question' in p:
-        weak = 'Why do you want' in p and 'first month' not in p
-        out = {"score": 55 if weak else 85, "verdict": "Too general" if weak else "Clear", "weak": "No specifics about Nimble.", "missing": ["fleet scale"], "tighter": "I like robots that run in real warehouses."}
+        weak = 'Why do you want' in p and 'Which warehouse' not in p
+        out = {"score": 55 if weak else 85, "verdict": "Too general" if weak else "Clear", "weak": "No specifics about Nimble.", "missing": ["fleet scale"], "tighter": "I like robots that run in real warehouses.", "followup": "You mentioned real warehouses. Which warehouse robots have you worked with?"}
     else: out = IV
     route.fulfill(json={"text": json.dumps(out)})
 FAKE_SR = """
@@ -51,7 +51,9 @@ with sync_playwright() as pw:
     p.screenshot(path=f'{OUT}/iv2-graded.png')
     print('3. question read aloud, answer transcribed live, timed, graded with weak/missing/tighter')
     p.get_by_role('button', name='Take the follow-up').click()
-    expect(p.get_by_text('What would you do in your first month?')).to_be_visible()
+    expect(p.get_by_text('You mentioned real warehouses. Which warehouse robots have you worked with?')).to_be_visible()
+    expect(p.get_by_text('[the most relevant')).to_have_count(0)
+    expect(p.locator('.iv-tag')).to_have_text('Follow-up')
     p.get_by_role('button', name='Start answering').click(); p.wait_for_timeout(400)
     p.get_by_role('button', name='Done answering').click()
     p.get_by_role('button', name='Next question').click()
@@ -61,7 +63,7 @@ with sync_playwright() as pw:
     expect(p.locator('.score')).to_contain_text('70')
     p.get_by_role('button', name='Record it').click()
     expect(p.get_by_text('70/100 on Why Nimble')).to_be_visible()
-    print('4. weak answer -> one follow-up; score = average of main questions (55, 85 -> 70), recorded')
+    print('4. weak answer -> one follow-up built from what they said (templated ones dropped); score = average of main questions (55, 85 -> 70), recorded')
     plans = [x for x in seen if 'Break the objective' in x]
     assert 'technical interview preparation' in plans[-1], 'an interview with no round named defaults to technical'
     p.get_by_label('Message').fill('make it recruiter side only, not technical'); p.get_by_label('Message').press('Enter')

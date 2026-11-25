@@ -118,7 +118,7 @@ export default function SettingsScreen({ data, changeTracks, account, theme, set
           <h2>Access code</h2>
           <p className="why">Needed for your own goals and grading.</p>
           <form className="row" onSubmit={saveCode}>
-            <input ref={codeRef} type="password" value={code} onChange={(e) => { setCode(e.target.value); setSaved(false) }} placeholder="Access code" aria-label="Access code" style={{ flex: 1 }} />
+            <input ref={codeRef} className="secret" autoComplete="off" autoCapitalize="off" spellCheck={false} data-1p-ignore data-lpignore="true" value={code} onChange={(e) => { setCode(e.target.value); setSaved(false) }} placeholder="Access code" aria-label="Access code" style={{ flex: 1 }} />
             <button className="btn sm">{saved ? 'Saved' : 'Save'}</button>
           </form>
         </section>
