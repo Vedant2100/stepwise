@@ -1,8 +1,5 @@
 import * as browser from './runner.js'
 
-// Every exercise that involves code is run for real before the learner sees it, so the ground truth
-// (printed output, traced state, passing checks) comes from Python, not from the model.
-// Each takes the Python runtime as an argument so scripts/live-check.mjs can run the same checks in Node.
 
 export async function verifyReadCode(x, { runCode, runTests } = browser) {
   const snippets = []

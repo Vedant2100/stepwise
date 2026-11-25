@@ -3,8 +3,6 @@ import { ENVIRONMENTS, envFor, nextStep } from '../lib/planner.js'
 import { Mark, PanelIcon } from './Icons.jsx'
 import { STARTERS } from '../lib/starters.js'
 
-// The climb, drawn as a staircase rising left to right. Each step's height is its place in the climb;
-// marigold fills it as mastery grows; the flag marks the step the planner would pick next.
 export function Staircase({ concepts, here, onPick, now = Date.now() }) {
   const n = concepts.length
   const W = 264, H = 120, gap = 3
@@ -15,7 +13,6 @@ export function Staircase({ concepts, here, onPick, now = Date.now() }) {
     <svg className="staircase" viewBox={`0 0 ${W} ${H + 18}`} role="img" aria-label="Progress up the climb">
       {concepts.map((c, i) => {
         const { x, h } = geo(i)
-        // Gold rises from the starting guess (empty) to the mastery line (full), so untouched steps stay empty.
         const level = Math.max(0, Math.min(1, (c.pL - BKT.init) / (MASTERED - BKT.init)))
         const fading = c.review && c.review.due <= now
         return (

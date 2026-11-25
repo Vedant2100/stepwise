@@ -4,8 +4,6 @@ import { ask } from '../lib/llm.js'
 import { checkStepPrompt, system } from '../lib/prompts.js'
 import { sameStep } from '../lib/stepcheck.js'
 
-// Derivation pad: the problem and finished steps on the left, the current step with a live math preview on the right.
-// Credit per step: 1 if right on the first try with no hint, 0.5 if right after a hint or retry, 0 if revealed.
 export default function StepWorkspace({ exercise, track, onDone }) {
   const [done, setDone] = useState([])
   const [input, setInput] = useState('')

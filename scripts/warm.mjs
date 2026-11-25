@@ -1,5 +1,3 @@
-// Pre-generates the starter climbs (src/lib/starters.js) into production's shared cache, using the
-// app's own prompts, validators and Python checks, so visitors can start them without an access code.
 // Usage: URL=https://... CODE=... node scripts/warm.mjs
 import { readFileSync } from 'node:fs'
 import { loadPyodide } from 'pyodide'
@@ -48,7 +46,6 @@ async function ask(sys, prompt, share) {
   return parseJSON(data.text)
 }
 
-// Same as the app's makeExercise: one retry that replaces a bad cached entry.
 async function warmExercise(env, concept, track) {
   for (const fresh of [false, true]) {
     try {
@@ -68,7 +65,6 @@ for (const raw of STARTERS) {
   const track = { objective, source: '', ...plan }
   console.log(`${plan.title}: ${plan.concepts.length} concepts`)
   const jobs = plan.concepts.flatMap((c) => WARM_LEVELS.flatMap(({ pL, attempts }) => attempts.map((a) => () => warmExercise(envFor(c.type), { ...c, pL, attempts: a }, track))))
-  // Four at a time: Python checks run one after another anyway, and this keeps the API rate low.
   for (let i = 0; i < jobs.length; i += 4) await Promise.all(jobs.slice(i, i + 4).map((j) => j()))
 }
 console.log(`\n${calls} requests: ${stored} newly stored, ${cached} already cached, ${failed} failed`)

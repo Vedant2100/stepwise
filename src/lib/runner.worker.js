@@ -5,7 +5,6 @@ import CELL from './harness_cell.py?raw'
 
 let py
 
-// op "tests": code against tests; "run": code once with trace(); "cell": a notebook cell (mode run/check/reset).
 onmessage = async ({ data: { id, op, code, tests = [], nb, mode } }) => {
   try {
     py ??= await loadPyodide({ indexURL: `https://cdn.jsdelivr.net/pyodide/v${version}/full/` })

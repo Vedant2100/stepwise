@@ -4,8 +4,6 @@ import { TASK_TYPES } from './planner.js'
 const norm = (s) => s.toLowerCase().replace(/\s+/g, ' ').trim()
 const slug = (s) => norm(s).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 
-// Validates the model's concept plan. Prerequisites may only point to earlier concepts,
-// which keeps the graph acyclic. With a source, each concept's quote must appear in it.
 export function validatePlan(raw, source) {
   if (!raw || !Array.isArray(raw.concepts) || !raw.concepts.length) throw new Error('The plan had no concepts.')
   const concepts = []

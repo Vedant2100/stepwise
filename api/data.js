@@ -1,4 +1,3 @@
-// GET: the signed-in user's saved progress. PUT { version, tracks, deleted }: save it (409 if another device saved first).
 import { sharedStore } from '../server/store.js'
 import { getSession } from '../server/auth.js'
 import { vercel } from '../server/http.js'

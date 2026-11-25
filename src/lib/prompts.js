@@ -1,5 +1,3 @@
-// Prompts for planning, exercise generation and grading. Every prompt asks for JSON only.
-
 const SOURCE_LIMIT = 15_000
 
 export function system(track) {
@@ -13,11 +11,8 @@ export function system(track) {
 }
 
 const sourceBlock = (source) => (source ? `\nSOURCE:\n<<<\n${source.slice(0, SOURCE_LIMIT)}\n>>>\n` : '')
-// The learner's own situation (their background, what they're preparing for). It shapes which concepts
-// and exercises to choose, but it is not teaching material.
 const contextBlock = (context) => (context ? `\nABOUT THE LEARNER (use this to choose and tailor concepts and exercises; it is not teaching material):\n<<<\n${context.slice(0, SOURCE_LIMIT)}\n>>>\n` : '')
 
-// A long paste might be notes to learn from, or a request (possibly with background inside it).
 export const readPastePrompt = (text) => `A learner pasted this message into a learning app:
 <<<
 ${text.slice(0, SOURCE_LIMIT)}

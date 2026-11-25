@@ -9,10 +9,8 @@ export function parseJSON(text) {
   return JSON.parse(text.slice(start, end + 1))
 }
 
-// Cancels every model call in progress (the Stop button).
 export const stopAll = () => inflight.forEach((c) => c.abort())
 
-// share: { variant, fresh } marks a reply as reusable across users (plans and exercises only).
 export async function ask(system, prompt, share) {
   const stop = new AbortController()
   inflight.add(stop)

@@ -10,7 +10,6 @@ function shuffle(list) {
   return a.join('|') === list.join('|') && a.length > 1 ? [...a.slice(1), a[0]] : a
 }
 
-// "order": drag (or use the arrow buttons) into sequence. "buckets": pick an item, then a category.
 export default function SortWorkspace({ exercise, onDone }) {
   return exercise.mode === 'order' ? <Order exercise={exercise} onDone={onDone} /> : <Buckets exercise={exercise} onDone={onDone} />
 }

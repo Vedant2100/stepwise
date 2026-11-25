@@ -1,5 +1,3 @@
-// Key-value store: Upstash Redis when its env vars are set (Vercel Marketplace adds them), otherwise an
-// in-memory map for local development and tests. Values are JSON; ttl is in seconds.
 import { Redis } from '@upstash/redis'
 
 function memoryStore() {
@@ -48,7 +46,6 @@ function redisStore(redis) {
       return r === 'OK'
     },
     del: (k) => redis.del(k),
-    // Atomic compare-and-set on the stored document's version.
     async swapIfVersion(k, expected, next) {
       const ok = await redis.eval(SWAP, [k], [String(expected), JSON.stringify(next)])
       return ok === 1
@@ -67,6 +64,5 @@ export function createStore(env = process.env) {
   return url && token ? redisStore(new Redis({ url, token })) : memoryStore()
 }
 
-// One store per server process, shared by every endpoint.
 let shared
 export const sharedStore = () => (shared ??= createStore())

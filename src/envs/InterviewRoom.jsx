@@ -13,14 +13,10 @@ function speak(text, on) {
   speechSynthesis.speak(Object.assign(new SpeechSynthesisUtterance(text), { rate: 1.02 }))
 }
 
-// A mock interview, one question at a time. The interviewer reads each question aloud (browser voice),
-// the learner answers out loud (browser speech-to-text) or types, against a target time. Each answer
-// gets graded with what was weak, what was missing and a tighter version in the learner's own words.
-// A weak answer earns one follow-up question. The exercise score is the average over the main questions.
 export default function InterviewRoom({ exercise, track, onDone }) {
   const [i, setI] = useState(0)
   const [followup, setFollowup] = useState(false)
-  const [phase, setPhase] = useState('ready') // ready | answering | grading | graded
+  const [phase, setPhase] = useState('ready')
   const [answer, setAnswer] = useState('')
   const [elapsed, setElapsed] = useState(0)
   const [result, setResult] = useState(null)

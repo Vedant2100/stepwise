@@ -3,7 +3,6 @@ import { Mark } from './Icons.jsx'
 
 const SYNC_LABEL = { saving: 'Saving…', synced: 'Everything is saved to your account.', offline: 'Offline. Changes will save when you’re back online.', error: 'Couldn’t save just now. Retrying.' }
 
-// The sign-in screen: one form, its own page, nothing else on screen.
 export default function AccountScreen({ account, onClose }) {
   const [mode, setMode] = useState('login')
   const [name, setName] = useState('')

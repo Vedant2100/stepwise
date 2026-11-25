@@ -2,7 +2,6 @@ import { useState } from 'react'
 import Md from '../components/Md.jsx'
 import CodeView from './CodeView.jsx'
 
-// Accepts Python-ish literals: single quotes, True/False/None, tuples written with ().
 function parse(text) {
   const t = text.trim().replace(/'/g, '"').replace(/\bTrue\b/g, 'true').replace(/\bFalse\b/g, 'false').replace(/\bNone\b/g, 'null').replace(/(^|[^"\w])(-?inf|nan)(?![\w"])/gi, (_, pre, w) => `${pre}"${w.toLowerCase()}"`).replace(/\(/g, '[').replace(/\)/g, ']')
   try {
@@ -14,7 +13,6 @@ function parse(text) {
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b)
 const show = (v) => (typeof v === 'string' ? v : JSON.stringify(v))
 
-// Arrays draw as boxes (changed boxes highlighted), 2D arrays as a grid, anything else as text.
 function Value({ v, prev }) {
   if (Array.isArray(v) && v.every((x) => Array.isArray(x))) {
     return <div className="grid2d">{v.map((row, r) => <div key={r} className="boxes">{row.map((x, c) => <span key={c} className={`box${prev?.[r]?.[c] !== undefined && prev[r][c] !== x ? ' changed' : ''}`}>{show(x)}</span>)}</div>)}</div>
@@ -36,8 +34,6 @@ function State({ state, prev, title }) {
   )
 }
 
-// Predict the traced state after each step; checked against the real run. Then complexity questions.
-// Credit per step: 1 first try, 0.5 second try, 0 if revealed. Score: steps 70%, questions 30%.
 export default function TracerWorkspace({ exercise, onDone }) {
   const { steps, questions } = exercise
   const [k, setK] = useState(0)

@@ -7,7 +7,6 @@ const isDark = () => {
   return t ? t === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches
 }
 
-// Explore with sliders, then predict-and-check. The simulation itself runs in a sandboxed iframe (see simframe.js).
 export default function SimWorkspace({ exercise, onDone }) {
   const page = useMemo(() => simPage(exercise, isDark()), [exercise])
   const [k, setK] = useState(0)

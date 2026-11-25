@@ -1,4 +1,3 @@
-// GET: who is signed in. POST { action: "register" | "login" | "logout", username, password }.
 import { sharedStore } from '../server/store.js'
 import { getSession, login, logout, register } from '../server/auth.js'
 import { vercel } from '../server/http.js'

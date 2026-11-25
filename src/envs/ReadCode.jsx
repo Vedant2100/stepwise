@@ -5,8 +5,6 @@ import CodeWorkspace from './CodeSandbox.jsx'
 
 const norm = (s) => s.replace(/\r/g, '').split('\n').map((l) => l.trimEnd()).join('\n').trim()
 
-// Part 1: predict what each snippet prints (checked against the real output from running it).
-// Part 2: fix one bug so the tests pass. Score: predictions 60%, fix 40% (predictions only when there is no bug to fix).
 export default function ReadCodeWorkspace({ exercise, onDone, active }) {
   const { snippets, debug } = exercise
   const [k, setK] = useState(0)

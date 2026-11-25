@@ -1,5 +1,4 @@
-/* Stepwise: an ascent. Pine for structure, marigold for progress, mist for the ground.
-   The staircase rail in the sidebar is the one bold element; everything else stays quiet. */
+/* theme */
 :root {
   color-scheme: light dark;
   --pine: #123a32;
@@ -430,15 +429,13 @@ textarea:focus, input:focus, select:focus { outline: none; border-color: var(--f
 @media (prefers-reduced-motion: no-preference) { .iv-clock .live::before { animation: blink 1.2s ease-in-out infinite; } }
 @keyframes blink { 50% { opacity: .25; } }
 
-/* Liquid glass (optional; the Glass button in the sidebar footer). Clear, tinted panels that float over
-   a coloured field: bright specular edges, a soft inner glow, pill controls. Same layout and palette. */
+/* liquid glass look */
 :root[data-look='glass'] {
   --field:
-    radial-gradient(38% 42% at 12% 8%, light-dark(#3fae8c, #1d7a5f) 0%, transparent 100%),
-    radial-gradient(34% 40% at 92% 14%, light-dark(#f7b93a, #a8700f) 0%, transparent 100%),
-    radial-gradient(40% 45% at 78% 92%, light-dark(#6cb7e0, #1f5f86) 0%, transparent 100%),
-    radial-gradient(30% 35% at 24% 88%, light-dark(#f19a7c, #7a3a2a) 0%, transparent 100%),
-    light-dark(#dfe9e4, #08110f);
+    radial-gradient(40% 45% at 10% 6%, light-dark(#8cc7b2, #1d5446) 0%, transparent 100%),
+    radial-gradient(32% 38% at 94% 12%, light-dark(#f6cf7a, #6a4a0e) 0%, transparent 100%),
+    radial-gradient(45% 50% at 70% 96%, light-dark(#b5d6c9, #123a32) 0%, transparent 100%),
+    light-dark(#e3ebe7, #08110f);
   --surface: light-dark(rgb(255 255 255 / 0.34), rgb(255 255 255 / 0.07));
   --raised: light-dark(rgb(255 255 255 / 0.3), rgb(255 255 255 / 0.06));
   --line: transparent;
@@ -453,12 +450,10 @@ textarea:focus, input:focus, select:focus { outline: none; border-color: var(--f
   position: relative; border-color: transparent;
   -webkit-backdrop-filter: var(--glass); backdrop-filter: var(--glass); box-shadow: var(--glow);
 }
-/* The specular rim: a gradient border painted only on the edge. */
 :root[data-look='glass'] :is(.card, .pane, .launch, .cbar, .auth-card, .pick, .tr, .btn.ghost, .side, .msg.me)::before {
   content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1.2px; pointer-events: none;
   background: var(--edge); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
 }
-/* Floating sidebar: an inset glass slab tinted pine. */
 :root[data-look='glass'] .app { padding: 12px; gap: 12px; }
 :root[data-look='glass'] .side { top: 12px; height: calc(100dvh - 24px); border-radius: 28px; background: light-dark(rgb(18 58 50 / 0.55), rgb(18 58 50 / 0.35)); }
 :root[data-look='glass'] .ws-head { margin: 10px 10px 0; border-radius: 22px; background: light-dark(rgb(18 58 50 / 0.6), rgb(18 58 50 / 0.4)); }

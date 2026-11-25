@@ -1,6 +1,5 @@
 const KEY = 'stepwise.v1'
 
-// Saved locally: { tracks, deleted, sync: { version, username } }. deleted and sync support account sync.
 export function load() {
   const fresh = { tracks: [], deleted: [], sync: { version: 0, username: null } }
   try {
@@ -30,7 +29,6 @@ export const validTracks = (tracks) =>
     typeof t.source === 'string' && Array.isArray(t.log) && Array.isArray(t.concepts) && t.concepts.every(validConcept) &&
     (t.updatedAt === undefined || isNum(t.updatedAt)))
 
-// Used for localStorage, imported files and the sync API, so it checks the full shape.
 export function parseData(text) {
   const data = JSON.parse(text)
   if (!validTracks(data?.tracks)) throw new Error('This file is not a Stepwise export.')

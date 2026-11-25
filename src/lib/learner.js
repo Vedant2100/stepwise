@@ -1,5 +1,3 @@
-// Learner model: Bayesian Knowledge Tracing per concept, plus SM-2 spacing once a concept is mastered.
-
 export const BKT = { init: 0.1, learn: 0.2, slip: 0.1, guess: 0.2 }
 export const MASTERED = 0.95
 export const PASS = 70
@@ -15,10 +13,8 @@ export function updateMastery(pL, correct) {
   return posterior + (1 - posterior) * learn
 }
 
-// After this many misses in a row the planner moves on and comes back to the concept later.
 export const STUCK = 3
 
-// SM-2 with quality = score / 20 (0–5).
 export function schedule(review, score, now) {
   const q = score / 20
   if (!review) return { ease: 2.5, reps: 1, interval: 1, due: now + DAY }

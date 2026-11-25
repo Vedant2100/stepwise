@@ -16,7 +16,6 @@ const ENV_COMPONENTS = {
   readcode: ReadCodeWorkspace, sort: SortWorkspace, notebook: NotebookWorkspace, trace: TracerWorkspace, interview: InterviewRoom,
 }
 
-// A full-screen workspace for one exercise. It stays mounted (just hidden) while the learner is back in the chat.
 export default function Workspace({ it, track, open, busy, onClose, onSwitch, onDone }) {
   const concept = track.concepts.find((c) => c.id === it.conceptId)
   const Env = ENV_COMPONENTS[it.env]

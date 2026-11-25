@@ -5,7 +5,6 @@ import { verifyNotebook, verifyReadCode, verifyTrace } from './verify.js'
 
 const nonEmpty = (a) => Array.isArray(a) && a.length > 0
 
-// Checks the shape of each environment's exercise, since it comes from the model.
 export const VALID = {
   explain: (x) => typeof x.question === 'string' && nonEmpty(x.rubric),
   steps: (x) => typeof x.problem === 'string' && nonEmpty(x.steps) && x.steps.every((s) => typeof s.expected === 'string'),
@@ -26,7 +25,6 @@ export const VALID = {
     x.params.every((q) => /^[A-Za-z_]\w*$/.test(q.name) && [q.min, q.max, q.step, q.value].every(Number.isFinite) && q.min < q.max),
 }
 
-// Repeat practice on a concept cycles through a few shared variants instead of always generating anew.
 export const VARIANTS = 3
 
 async function attempt(env, concept, track, mode, fresh) {

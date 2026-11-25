@@ -17,8 +17,6 @@ async function readJSON(req) {
   }
 }
 
-// Serves the api/ functions during `npm run dev`, so local development matches Vercel.
-// Without Upstash env vars, accounts and synced data live in memory until the dev server restarts.
 function devApi(env) {
   return {
     name: 'stepwise-dev-api',

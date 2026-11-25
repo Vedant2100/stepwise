@@ -7,7 +7,6 @@ import { Staircase } from './Sidebar.jsx'
 
 const fmt = (t) => new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 
-// The public page for a shared climb (/c/:id): read-only, with one action, start your own copy.
 export default function SharedClimb({ id }) {
   const [snap, setSnap] = useState(null)
   const [error, setError] = useState('')

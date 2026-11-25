@@ -1,10 +1,8 @@
-// Public, read-only snapshots of a climb: its title, objective, concepts and progress. Never the
-// learner's notes (source), answers or log. Anyone with the link can view one and start a copy.
 import { randomBytes } from 'node:crypto'
 import { TASK_TYPES } from '../src/lib/planner.js'
 
 const TTL = 60 * 60 * 24 * 365
-const LIMIT = 20 // new links per IP per hour
+const LINKS_PER_IP_PER_HOUR = 20
 const ID = /^[A-Za-z0-9]{10}$/
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789'
 
@@ -36,7 +34,7 @@ export async function handleShare({ method, body, query, ip }, store) {
   const snap = cleanShare(body)
   if (!snap) return { status: 400, data: { error: 'That climb can’t be shared.' } }
   if (JSON.stringify(snap).length > 60_000) return { status: 413, data: { error: 'That climb is too large to share.' } }
-  if ((await store.incr(`sharerl:${ip || 'unknown'}`, 3600)) > LIMIT) return { status: 429, data: { error: 'Too many links in the last hour. Try again later.' } }
+  if ((await store.incr(`sharerl:${ip || 'unknown'}`, 3600)) > LINKS_PER_IP_PER_HOUR) return { status: 429, data: { error: 'Too many links in the last hour. Try again later.' } }
   for (let i = 0; i < 3; i++) {
     const id = newId()
     if (await store.set(`share:${id}`, snap, { ttl: TTL, nx: true })) return { status: 200, data: { id } }

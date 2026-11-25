@@ -1,5 +1,3 @@
-// Runs Python tests in a Pyodide web worker. A run that takes too long (an infinite loop)
-// kills the worker; the next run starts a fresh one.
 let worker = null
 let warm = false
 let seq = 0
@@ -31,16 +29,13 @@ function call(message, limit) {
 
 export const runTests = (code, tests) => call({ op: 'tests', code, tests: tests.map(({ name, code }) => ({ name, code })) })
 
-// Runs code once; returns { stdout, error, trace } where trace holds each trace(**state) snapshot.
 export const runCode = (code) => call({ op: 'run', code })
 
-// Notebook cells share a namespace per notebook id. Loading numpy/pandas/matplotlib the first time can take a while.
 const NOTEBOOK_LIMIT = 180_000
 export const runCell = (nb, code) => call({ op: 'cell', nb, code, mode: 'run' }, NOTEBOOK_LIMIT)
 export const checkCell = (nb, code) => call({ op: 'cell', nb, code, mode: 'check' }, NOTEBOOK_LIMIT)
 export const resetNotebook = (nb) => call({ op: 'cell', nb, code: '', mode: 'reset' })
 
-// Runs the tests against the hidden reference solution and keeps only the ones it passes.
 export async function verifyCode(exercise) {
   const result = await runTests(exercise.reference, exercise.tests)
   if (result.setup) throw new Error('The reference solution does not run, so the tests could not be checked.')

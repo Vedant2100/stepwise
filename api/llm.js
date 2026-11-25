@@ -1,9 +1,3 @@
-// Serverless proxy to the Anthropic API. The key stays on the server.
-// Vercel runs the default export; vite.config.js mounts callLLM for `npm run dev`.
-//
-// Shared cache: plans and exercises don't depend on who asks, so when the client marks a request
-// cacheable, the reply is stored under a hash of (model, system, prompt, variant) and reused for every
-// user. Gradings and chat replies depend on the learner's own words and are never marked cacheable.
 // Stored replies are served without the access code (they're the same for everyone and cost nothing),
 // which is what lets a visitor start a starter climb straight away. Anything that reaches the model
 // still needs the code.

@@ -11,7 +11,6 @@ async function api(method, body, query = '') {
   return data
 }
 
-// What a link publishes: the plan and progress per concept. Not the notes, answers or history.
 export async function createLink(track) {
   const { id } = await api('POST', {
     title: track.title,
@@ -24,7 +23,6 @@ export async function createLink(track) {
 
 export const fetchClimb = (id) => api('GET', null, `?id=${id}`)
 
-// A copy starts from the bottom: same plan, fresh progress.
 export const copyClimb = (snap) => ({
   id: crypto.randomUUID(),
   objective: snap.objective,

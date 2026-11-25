@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 
 const norm = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
 
-// A flashcard deck. Exact matches count automatically; otherwise the learner judges themselves after seeing the card.
 export default function DrillWorkspace({ exercise, onDone, active }) {
   const [k, setK] = useState(0)
   const [input, setInput] = useState('')

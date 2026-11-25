@@ -1,6 +1,5 @@
 import { ENVIRONMENTS } from './planner.js'
 
-// What the teacher can do with a chat message. Ported from Study Loop's router, trimmed to Stepwise.
 export const ACTIONS = {
   learn: 'they want to learn something new ("topic" = their objective, with every detail they gave)',
   next: 'move on / give me something to practice',
@@ -22,7 +21,6 @@ Pick ONE action:
 ${Object.entries(ACTIONS).map(([k, v]) => `- ${k}: ${v}`).join('\n')}
 Return: {"action":"","say":"1-3 sentences, plain words, or empty","topic":"","env":"","trackId":""}`
 
-// The model's choice is validated: unknown actions become chat, and ids must refer to real things.
 export function normalizeRoute(r, tracks) {
   const action = Object.hasOwn(ACTIONS, r?.action) ? r.action : 'chat'
   return {

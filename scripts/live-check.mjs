@@ -1,4 +1,3 @@
-// Runs real objectives through the deployed /api/llm with the app's own prompts and validators.
 // Usage: URL=https://... CODE=... node scripts/live-check.mjs
 import { readFileSync } from 'node:fs'
 import { loadPyodide } from 'pyodide'
@@ -39,7 +38,6 @@ async function pyRun(harness, vars, code) {
   for (const [k, v] of Object.entries(vars)) py.globals.set(k, v)
   return JSON.parse(py.runPython(harness))
 }
-// Same interface as src/lib/runner.js, backed by Pyodide in Node.
 const node = {
   runTests: async (code, tests) => runTests(code, tests),
   runCode: (code) => pyRun(RUN, { CODE: code }, code),
@@ -124,7 +122,6 @@ for (const { objective, source } of OBJECTIVES) {
     }
     if (env === 'steps') {
       console.log(`    ${ex.steps.length} steps; first expects: ${ex.steps[0].expected}`)
-      // A correct step in other words (the exact text is accepted locally, as in the app).
       const reworded = `${ex.steps[0].expected}`.replace(/\s+/g, ' ').trim()
       const right = await step('check a correct first step', async () => (sameStep(reworded, ex.steps[0].expected) ? { ok: true, local: true } : ask(system(track), checkStepPrompt(ex, 0, [], reworded))))
       const wrong = await step('check a wrong first step', () => ask(system(track), checkStepPrompt(ex, 0, [], 'I am not sure, maybe 42?')))

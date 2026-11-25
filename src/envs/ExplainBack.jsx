@@ -3,14 +3,12 @@ import Md from '../components/Md.jsx'
 import { ask } from '../lib/llm.js'
 import { gradeExplainPrompt, system } from '../lib/prompts.js'
 
-// The passage around the concept's quote, so the learner can check the source after answering.
 function passage(source, quote) {
   const at = quote ? source.toLowerCase().indexOf(quote.toLowerCase()) : -1
   if (at < 0) return ''
   return source.slice(Math.max(0, at - 300), at + quote.length + 300).trim()
 }
 
-// Question (and, after grading, the source passage) on the left; writing pad and rubric checklist on the right.
 export default function ExplainWorkspace({ exercise, track, concept, onDone }) {
   const [answer, setAnswer] = useState('')
   const [result, setResult] = useState(null)

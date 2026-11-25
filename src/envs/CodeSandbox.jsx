@@ -10,8 +10,6 @@ const isDark = () => {
   return t ? t === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches
 }
 
-// IDE layout: problem and hints | editor | tests and console. After the first run, tests rerun as you type.
-// The solution unlocks only after a run, and revealing it caps the score at 50.
 export default function CodeWorkspace({ exercise, onDone, active }) {
   const [code, setCode] = useState(exercise.starter || '')
   const [result, setResult] = useState(null)

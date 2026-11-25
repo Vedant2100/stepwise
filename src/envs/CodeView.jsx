@@ -7,7 +7,6 @@ export const isDark = () => {
   return t ? t === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches
 }
 
-// Python code, highlighted; read-only unless onChange is given.
 export default function CodeView({ value, onChange, height, onRun }) {
   return (
     <div

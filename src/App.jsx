@@ -24,7 +24,6 @@ const item = (kind, props) => ({ id: ++seq, kind, ...props })
 const listJoin = (xs) => (xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`)
 const fmtDate = (t) => new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 
-// A review takes about two minutes, so the nudge can say what keeping things costs.
 function greeting(tracks, now) {
   if (!tracks.length) return { text: 'What do you want to be able to do?' }
   const due = tracks.flatMap((t) => t.concepts).filter((c) => c.review && c.review.due <= now).length
@@ -47,7 +46,6 @@ export default function App() {
   const [activeId, setActiveId] = useState(data.tracks[0]?.id ?? null)
   const [openWs, setOpenWs] = useState(null)
   const [sideOpen, setSideOpen] = useState(false)
-  // Desktop: the sidebar can be collapsed (remembered). Phones: it's a drawer opened from the same button.
   const [sideHidden, setSideHidden] = useState(() => localStorage.getItem('stepwise.sideHidden') === '1')
   useEffect(() => localStorage.setItem('stepwise.sideHidden', sideHidden ? '1' : '0'), [sideHidden])
   const narrow = () => matchMedia('(max-width: 900px)').matches
@@ -91,8 +89,6 @@ export default function App() {
   const push = (...items) => setFeed((f) => [...f, ...items])
   const say = (text, extra) => push(item('t', { text, ...extra }))
   const patch = (id, changes) => setFeed((f) => f.map((x) => (x.id === id ? { ...x, ...changes } : x)))
-  // Every change to objectives goes through here: changed ones get a fresh updatedAt and removed ones a
-  // deletion record, so copies on different devices can be merged per objective.
   function changeTracks(fn) {
     const before = dataRef.current
     const now = Date.now()
@@ -117,7 +113,6 @@ export default function App() {
     setBusy('')
   }
 
-  // context: the learner's own background for this goal (from a pasted request); tailors but doesn't ground.
   async function learn(objective, src, context = '') {
     const text = (src?.text ?? '').slice(0, SOURCE_MAX)
     await run('Planning', async () => {
@@ -132,7 +127,6 @@ export default function App() {
     })
   }
 
-  // Arriving from a shared climb's "Start this climb": add a fresh copy (or reopen an existing one) and begin.
   useEffect(() => {
     const raw = localStorage.getItem(PENDING_KEY)
     if (!raw) return
@@ -153,7 +147,6 @@ export default function App() {
     })
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Due reviews anywhere come first, then the focused objective, then any other.
   function pickNext(focusId) {
     const now = Date.now()
     const tracks = dataRef.current.tracks
@@ -236,7 +229,6 @@ export default function App() {
 
   async function send(text) {
     push(item('me', { text: text.length > 400 ? `${text.slice(0, 400)}… (${text.length.toLocaleString()} characters)` : text }))
-    // Waiting on material a request mentioned: add what they send, or plan without it.
     const waiting = pending.current
     if (waiting) {
       pending.current = null

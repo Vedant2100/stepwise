@@ -18,8 +18,6 @@ function Output({ out }) {
   )
 }
 
-// Cells share one Python namespace. Tasks are checked by hidden asserts that read your variables.
-// Revealing a task's solution halves its credit.
 export default function NotebookWorkspace({ exercise, onDone }) {
   const nb = useRef(`nb-${crypto.randomUUID()}`).current
   const [setupOut, setSetupOut] = useState(null)

@@ -15,13 +15,11 @@ export const ENVIRONMENTS = {
   interview: { label: 'Interview room', for: 'interview' },
 }
 
-// Other workspaces that suit the same material, offered so the learner can try a different angle.
 const ALTERNATIVES = {
   explain: ['drill', 'interview'], steps: ['explain', 'sort'], code: ['readcode', 'trace'], drill: ['explain', 'sort'],
   sim: ['explain', 'drill'], readcode: ['code', 'trace'], sort: ['drill', 'explain'], notebook: ['code', 'sim'],
   trace: ['code', 'readcode'], interview: ['explain', 'drill'],
 }
-// Workspaces the learner hasn't used yet come first.
 export function alternativesFor(env, tracks) {
   const used = new Set(tracks.flatMap((t) => t.log.map((l) => l.env)))
   return [...ALTERNATIVES[env]].sort((a, b) => used.has(a) - used.has(b))
@@ -29,9 +27,6 @@ export function alternativesFor(env, tracks) {
 
 export const envFor = (type) => Object.keys(ENVIRONMENTS).find((k) => ENVIRONMENTS[k].for === type)
 
-// Due reviews first (oldest first). Otherwise, among concepts whose prerequisites are mastered:
-// 1. one you just missed comes straight back, 2. then new concepts in climb order,
-// 3. then ones you've passed but not yet mastered, 4. after STUCK misses in a row a concept waits until last.
 const priority = (c) => {
   const misses = c.misses ?? 0
   if (misses >= STUCK) return 3
