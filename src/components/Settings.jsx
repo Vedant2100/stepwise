@@ -1,10 +1,33 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ACCESS_KEY } from '../lib/llm.js'
 import { download, parseData } from '../lib/storage.js'
 
-export default function Settings({ data, changeTracks }) {
+const SYNC_LABEL = { saving: 'Saving…', synced: 'Everything is saved to your account.', offline: 'Offline. Changes will save when you’re back online.', error: 'Couldn’t save just now. Retrying.' }
+
+function Choice({ label, value, options, onChange }) {
+  return (
+    <div className="choice" role="radiogroup" aria-label={label}>
+      {options.map(([v, text]) => (
+        <button key={v} role="radio" aria-checked={value === v} className={value === v ? 'on' : ''} onClick={() => onChange(v)}>{text}</button>
+      ))}
+    </div>
+  )
+}
+
+export default function SettingsScreen({ data, changeTracks, account, theme, setTheme, look, setLook, onSignIn, focus, onClose }) {
   const [code, setCode] = useState(localStorage.getItem(ACCESS_KEY) ?? '')
+  const [saved, setSaved] = useState(false)
   const [message, setMessage] = useState('')
+  const [busy, setBusy] = useState(false)
+  const codeRef = useRef(null)
+  const backRef = useRef(null)
+
+  useEffect(() => {
+    ;(focus === 'access' ? codeRef : backRef).current?.focus()
+    const esc = (e) => e.key === 'Escape' && onClose()
+    window.addEventListener('keydown', esc)
+    return () => window.removeEventListener('keydown', esc)
+  }, [focus, onClose])
 
   async function importFile(file) {
     try {
@@ -18,29 +41,76 @@ export default function Settings({ data, changeTracks }) {
     }
   }
 
+  async function signOut() {
+    setBusy(true)
+    setMessage('')
+    try {
+      await account.signOut()
+    } catch (e) {
+      setMessage(e.message)
+    }
+    setBusy(false)
+  }
+
+  function saveCode(e) {
+    e.preventDefault()
+    localStorage.setItem(ACCESS_KEY, code.trim())
+    setSaved(true)
+  }
+
   return (
-    <>
-      <h3 style={{ marginTop: 0 }}>Settings &amp; data</h3>
-      <label>
-        <span className="why">Access code (only if this deployment asks for one)</span>
-        <input
-          type="password"
-          value={code}
-          onChange={(e) => {
-            setCode(e.target.value)
-            localStorage.setItem(ACCESS_KEY, e.target.value)
-          }}
-        />
-      </label>
-      <div className="row">
-        <button className="btn ghost sm" onClick={() => download(data)} disabled={!data.tracks.length}>Export JSON</button>
-        <label className="btn ghost sm">
-          Import JSON
-          <input type="file" accept=".json,application/json" hidden onChange={(e) => e.target.files[0] && importFile(e.target.files[0])} />
-        </label>
+    <div className="auth settings" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+      <button ref={backRef} className="btn ghost sm auth-close" onClick={onClose}>Back</button>
+      <div className="auth-card settings-card">
+        <h1 id="settings-title">Settings</h1>
+
+        <section>
+          <h2>Account</h2>
+          {account.username ? (
+            <>
+              <p>Signed in as <b>{account.username}</b>. <span className="why">{SYNC_LABEL[account.status] ?? ''}</span></p>
+              <button className="btn ghost sm" disabled={busy} onClick={signOut}>{busy ? 'Signing out…' : 'Sign out'}</button>
+              <p className="why small">Signing out removes your progress from this browser. It stays in your account.</p>
+            </>
+          ) : (
+            <>
+              <p className="why">Sign in to keep your progress in your account and pick it up on any device.</p>
+              <div className="row">
+                <button className="btn sm" onClick={() => onSignIn('login')}>Sign in</button>
+                <button className="btn ghost sm" onClick={() => onSignIn('register')}>Create account</button>
+              </div>
+            </>
+          )}
+        </section>
+
+        <section>
+          <h2>Appearance</h2>
+          <div className="setting"><span>Theme</span><Choice label="Theme" value={theme} onChange={setTheme} options={[['', 'System'], ['light', 'Light'], ['dark', 'Dark']]} /></div>
+          <div className="setting"><span>Look</span><Choice label="Look" value={look} onChange={setLook} options={[['solid', 'Solid'], ['glass', 'Liquid glass']]} /></div>
+        </section>
+
+        <section>
+          <h2>Access code</h2>
+          <p className="why">Needed to start your own goals and to have answers graded. Ready-made climbs work without it.</p>
+          <form className="row" onSubmit={saveCode}>
+            <input ref={codeRef} type="password" value={code} onChange={(e) => { setCode(e.target.value); setSaved(false) }} placeholder="Access code" aria-label="Access code" style={{ flex: 1 }} />
+            <button className="btn sm">{saved ? 'Saved' : 'Save'}</button>
+          </form>
+        </section>
+
+        <section>
+          <h2>Your data</h2>
+          <p className="why">Progress is kept in this browser, and in your account when you’re signed in. Export makes a file you can keep or import elsewhere.</p>
+          <div className="row">
+            <button className="btn ghost sm" onClick={() => download(data)} disabled={!data.tracks.length}>Export JSON</button>
+            <label className="btn ghost sm">
+              Import JSON
+              <input type="file" accept=".json,application/json" hidden onChange={(e) => e.target.files[0] && importFile(e.target.files[0])} />
+            </label>
+          </div>
+        </section>
+        {message && <p role="status">{message}</p>}
       </div>
-      {message && <p>{message}</p>}
-      <p className="why">Progress is kept in this browser, and in your account when you’re signed in. Export makes a file you can keep or import elsewhere.</p>
-    </>
+    </div>
   )
 }

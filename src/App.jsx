@@ -5,6 +5,7 @@ import Sidebar from './components/Sidebar.jsx'
 import { PanelIcon } from './components/Icons.jsx'
 import Workspace from './components/Workspace.jsx'
 import AccountScreen from './components/AccountScreen.jsx'
+import SettingsScreen from './components/Settings.jsx'
 import ShareDialog from './components/ShareDialog.jsx'
 import { PENDING_KEY, copyClimb } from './lib/share.js'
 import { makeExercise } from './lib/exercise.js'
@@ -68,6 +69,8 @@ export default function App() {
   const end = useRef(null)
   const account = useAccount(data, dataRef, setData)
   const [authOpen, setAuthOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const closeSettings = useCallback(() => setSettingsOpen(false), [])
   const closeAuth = useCallback(() => setAuthOpen(false), [])
   const [sharing, setSharing] = useState(null)
   const closeShare = useCallback(() => setSharing(null), [])
@@ -300,7 +303,7 @@ export default function App() {
     if (feed.length > 1) say('What do you want to be able to do next? Paste or attach notes if you want me to teach only from them.')
   }
 
-  const actions = { next, switchEnv, finish, remove, changeTracks, push, say, openWorkspace: setOpenWs, account, signIn: () => setAuthOpen(true) }
+  const actions = { next, switchEnv, finish, remove, changeTracks, push, say, openWorkspace: setOpenWs, account, signIn: () => setAuthOpen(true), openSettings: (focus) => setSettingsOpen(focus) }
   const active = data.tracks.find((t) => t.id === activeId)
   const hero = feed.length === 1 && !busy && !data.tracks.length
 
@@ -321,7 +324,21 @@ export default function App() {
 
   return (
     <div className={`app${sideHidden ? ' side-hidden' : ''}`}>
-      {authOpen && <AccountScreen account={account} onClose={closeAuth} />}
+      {settingsOpen && (
+        <SettingsScreen
+          data={data}
+          changeTracks={changeTracks}
+          account={account}
+          theme={theme}
+          setTheme={setTheme}
+          look={look}
+          setLook={setLook}
+          focus={settingsOpen}
+          onSignIn={(mode) => setAuthOpen(mode)}
+          onClose={closeSettings}
+        />
+      )}
+      {authOpen && <AccountScreen account={account} mode={authOpen === true ? 'login' : authOpen} onClose={closeAuth} />}
       {sharing && <ShareDialog track={sharing} onClose={closeShare} />}
       <Sidebar
         tracks={data.tracks}
@@ -332,14 +349,11 @@ export default function App() {
         onHide={hideSide}
         onNew={newObjective}
         onPick={practice}
-        onSettings={() => { setSideOpen(false); push(item('settings')) }}
+        onSettings={() => { setSideOpen(false); setSettingsOpen('top') }}
         account={account}
-        onAccount={() => { setSideOpen(false); setAuthOpen(true) }}
+        onAccount={() => { setSideOpen(false); account.username ? setSettingsOpen('top') : setAuthOpen(true) }}
         onShare={(t) => { setSideOpen(false); setSharing(t) }}
         dark={dark}
-        toggleTheme={() => setTheme(dark ? 'light' : 'dark')}
-        glass={look === 'glass'}
-        toggleLook={() => setLook(look === 'glass' ? 'solid' : 'glass')}
         busy={Boolean(busy)}
         onStarter={(s) => { setSideOpen(false); push(item('me', { text: s })); learn(s) }}
       />

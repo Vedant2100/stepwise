@@ -3,8 +3,8 @@ import { Mark } from './Icons.jsx'
 
 const SYNC_LABEL = { saving: 'Saving…', synced: 'Everything is saved to your account.', offline: 'Offline. Changes will save when you’re back online.', error: 'Couldn’t save just now. Retrying.' }
 
-export default function AccountScreen({ account, onClose }) {
-  const [mode, setMode] = useState('login')
+export default function AccountScreen({ account, mode: initial = 'login', onClose }) {
+  const [mode, setMode] = useState(initial)
   const [name, setName] = useState('')
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)

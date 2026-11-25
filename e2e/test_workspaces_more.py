@@ -42,6 +42,8 @@ with sync_playwright() as pw:
     shot = lambda n: page.screenshot(path=f'{OUT}/n-{n}.png')
     def open_concept(name):
         if ws().count(): ws().get_by_role('button', name='Back to chat').click()
+        fold = page.locator('.side details.fold', has_text='concepts')
+        if fold.get_attribute('open') is None: fold.locator('summary').click()
         page.locator('.side .stair', has_text=name).click()
 
     # read & debug (first concept opens automatically)

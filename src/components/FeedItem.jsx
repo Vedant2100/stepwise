@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import Md from './Md.jsx'
 import Progress from './Progress.jsx'
-import Settings from './Settings.jsx'
 import { EnvIcon, Mark } from './Icons.jsx'
 import { ACCESS_KEY } from '../lib/llm.js'
 import { ENVIRONMENTS, alternativesFor, envFor } from '../lib/planner.js'
@@ -52,16 +51,27 @@ export default function FeedItem({ it, data, setData, actions, busy, openWs }) {
       if (!track) return null
       return (
         <Teacher wide>
-          <p>Here’s the climb for <b>{track.title}</b>: {track.concepts.length} concepts, each with the practice that suits it. We start at the bottom.</p>
-          <ol className="plan-stairs">
-            {track.concepts.map((c, i) => (
-              <li key={c.id} style={{ '--i': i }}>
-                <span>{c.name}</span>
-                <small>{TYPE_LABEL[c.type]}, practiced in {ENVIRONMENTS[envFor(c.type)].label.toLowerCase()}</small>
-                {c.grounded === false && <span className="warn">Quote not found in your source</span>}
-              </li>
-            ))}
-          </ol>
+          <p>Here’s the climb for <b>{track.title}</b>: {track.concepts.length} concepts, each with the practice that suits it. We start at step 1.</p>
+          <div className="plan-card">
+            <div className="plan-envs">
+              {[...new Set(track.concepts.map((c) => envFor(c.type)))].map((env) => {
+                const Icon = EnvIcon[env]
+                const n = track.concepts.filter((c) => envFor(c.type) === env).length
+                return <span key={env} className="plan-env"><Icon /> {ENVIRONMENTS[env].label} <b>{n}</b></span>
+              })}
+            </div>
+            <ol className="plan-list">
+              {track.concepts.map((c) => {
+                const Icon = EnvIcon[envFor(c.type)]
+                return (
+                  <li key={c.id} title={`${TYPE_LABEL[c.type]}, practiced in ${ENVIRONMENTS[envFor(c.type)].label.toLowerCase()}`}>
+                    <Icon />
+                    <span>{c.name}{c.grounded === false && <span className="warn">Quote not found in your source</span>}</span>
+                  </li>
+                )
+              })}
+            </ol>
+          </div>
         </Teacher>
       )
 
@@ -103,11 +113,13 @@ export default function FeedItem({ it, data, setData, actions, busy, openWs }) {
     case 'progress':
       return <Teacher wide><Progress tracks={data.tracks} actions={actions} busy={busy} /></Teacher>
 
-    case 'settings':
-      return <Teacher wide><Settings data={data} changeTracks={actions.changeTracks} /></Teacher>
-
     case 'access':
-      return <Teacher><AccessPrompt /></Teacher>
+      return (
+        <Teacher>
+          <p>This needs an access code: starting your own goals and grading answers call the model. Ready-made climbs work without one.</p>
+          <div className="row"><button className="btn sm" onClick={() => actions.openSettings('access')}>Enter access code</button></div>
+        </Teacher>
+      )
 
     case 'confirmDelete':
       return <Teacher><ConfirmDelete track={track} onYes={() => actions.remove(it.trackId)} /></Teacher>
@@ -115,24 +127,6 @@ export default function FeedItem({ it, data, setData, actions, busy, openWs }) {
     default:
       return null
   }
-}
-
-function AccessPrompt() {
-  const [code, setCode] = useState('')
-  const [saved, setSaved] = useState(false)
-  return (
-    <div>
-      <p>This deployment needs an access code before I can call the model.</p>
-      {saved ? (
-        <p className="good">Saved. Send your message again.</p>
-      ) : (
-        <form className="row" onSubmit={(e) => { e.preventDefault(); localStorage.setItem(ACCESS_KEY, code); setSaved(true) }}>
-          <input type="password" value={code} onChange={(e) => setCode(e.target.value)} placeholder="Access code" aria-label="Access code" style={{ flex: 1 }} />
-          <button className="btn sm" disabled={!code}>Save</button>
-        </form>
-      )}
-    </div>
-  )
 }
 
 function ConfirmDelete({ track, onYes }) {

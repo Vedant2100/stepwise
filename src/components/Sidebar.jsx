@@ -1,6 +1,7 @@
+import { useState } from 'react'
 import { BKT, MASTERED, isMastered } from '../lib/learner.js'
 import { ENVIRONMENTS, envFor, nextStep } from '../lib/planner.js'
-import { Mark, PanelIcon } from './Icons.jsx'
+import { GearIcon, Mark, PanelIcon } from './Icons.jsx'
 import { STARTERS } from '../lib/starters.js'
 
 export function Staircase({ concepts, here, onPick, now = Date.now() }) {
@@ -44,7 +45,9 @@ function Climb({ track, onPick, onShare }) {
       </div>
       <Staircase concepts={track.concepts} here={here} onPick={onPick} />
       {here && <p className="next-up">Next up: <b>{track.concepts.find((c) => c.id === here).name}</b></p>}
-      <div className="climb">
+      <details className="fold">
+        <summary>All {track.concepts.length} concepts</summary>
+        <div className="climb">
         {track.concepts.map((c) => {
           const locked = !c.prereqs.every(done)
           const state = c.id === here ? 'here' : isMastered(c) ? 'done' : locked ? 'locked' : ''
@@ -58,16 +61,20 @@ function Climb({ track, onPick, onShare }) {
             </button>
           )
         })}
-      </div>
+        </div>
+      </details>
     </div>
   )
 }
 
+const SHOWN = 4
 const SYNC_LABEL = { saving: 'Saving…', synced: 'Synced', offline: 'Offline, will retry', error: 'Couldn’t sync, retrying' }
 
-export default function Sidebar({ tracks, activeId, setActiveId, open, onClose, onNew, onPick, onSettings, dark, toggleTheme, glass, toggleLook, account, onAccount, onShare, onHide, onStarter, busy }) {
+export default function Sidebar({ tracks, activeId, setActiveId, open, onClose, onNew, onPick, onSettings, account, onAccount, onShare, onHide, onStarter, busy }) {
   const have = new Set(tracks.map((t) => t.objective.toLowerCase()))
   const starters = STARTERS.filter((s) => !have.has(s.toLowerCase()))
+  const [allGoals, setAllGoals] = useState(false)
+  const shown = allGoals || tracks.length <= SHOWN ? tracks : [...tracks.slice(0, SHOWN), ...tracks.slice(SHOWN).filter((t) => t.id === activeId)]
   const active = tracks.find((t) => t.id === activeId)
   return (
     <>
@@ -81,29 +88,32 @@ export default function Sidebar({ tracks, activeId, setActiveId, open, onClose, 
         <div>
           <h2>Objectives</h2>
           <div className="goals">
-            {tracks.map((t) => {
+            {shown.map((t) => {
               const done = t.concepts.filter(isMastered).length
+              const twin = tracks.some((o) => o !== t && o.title === t.title) && t.createdAt
               return (
-                <button key={t.id} className="goal" aria-current={t.id === activeId} onClick={() => setActiveId(t.id)}>
+                <button key={t.id} className="goal" aria-current={t.id === activeId} onClick={() => setActiveId(t.id)} title={`${t.title}: ${done} of ${t.concepts.length} mastered`}>
                   <span>{t.title}</span>
+                  <small aria-label={`${done} of ${t.concepts.length} mastered`}>{twin ? `${new Date(t.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} · ` : ''}{done}/{t.concepts.length}</small>
                   <div className="meter"><i style={{ width: `${(done / t.concepts.length) * 100}%` }} /></div>
-                  <small>{done} of {t.concepts.length} mastered{tracks.some((o) => o !== t && o.title === t.title) && t.createdAt ? `, started ${new Date(t.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}` : ''}</small>
                 </button>
               )
             })}
           </div>
+          {tracks.length > SHOWN && (
+            <button className="link side-link" onClick={() => setAllGoals(!allGoals)}>{allGoals ? 'Show fewer' : `Show all ${tracks.length}`}</button>
+          )}
           <button className="btn ghost sm new" onClick={onNew}>New objective</button>
         </div>
       )}
       {active && <Climb track={active} onPick={(c) => onPick(active, c)} onShare={() => onShare(active)} />}
       {tracks.length > 0 && starters.length > 0 && (
-        <div>
-          <h2>Ready-made climbs</h2>
-          <p className="next-up" style={{ margin: 0 }}>Start instantly, free.</p>
+        <details className="fold">
+          <summary>Ready-made climbs, free</summary>
           <div className="starters">
             {starters.map((s) => <button key={s} onClick={() => onStarter(s)} disabled={busy}>{s}</button>)}
           </div>
-        </div>
+        </details>
       )}
       {!tracks.length && (
         <div className="empty-climb">
@@ -111,21 +121,16 @@ export default function Sidebar({ tracks, activeId, setActiveId, open, onClose, 
           <p>Your goals and the climb toward each one will show up here.</p>
         </div>
       )}
-      <div className="who">
+      <div className="side-foot">
         {account.username ? (
-          <>
-            <span>Signed in as <b>{account.username}</b></span>
-            <small className={`sync ${account.status}`}>{SYNC_LABEL[account.status]}</small>
-          </>
+          <button className="who" onClick={onAccount} title={SYNC_LABEL[account.status]}>
+            <span className={`sync-dot ${account.status}`} aria-hidden="true" />
+            <span><b>{account.username}</b><small>{SYNC_LABEL[account.status]}</small></span>
+          </button>
         ) : (
-          <button className="btn gold sm" onClick={onAccount}>Sign in to sync</button>
+          <button className="btn gold xs" onClick={onAccount}>Sign in to sync</button>
         )}
-      </div>
-      <div className="side-foot" style={{ marginTop: 0 }}>
-        <button className="btn ghost sm" onClick={onSettings}>Settings</button>
-        {account.username && <button className="btn ghost sm" onClick={onAccount}>Account</button>}
-        <button className="btn ghost sm" onClick={toggleTheme}>{dark ? 'Light mode' : 'Dark mode'}</button>
-        <button className="btn ghost sm" onClick={toggleLook} aria-pressed={glass}>Liquid glass</button>
+        <button className="icon-btn" onClick={onSettings} aria-label="Settings" title="Settings"><GearIcon /></button>
       </div>
     </aside>
     </>

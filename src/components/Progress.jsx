@@ -8,9 +8,10 @@ export default function Progress({ tracks, actions, busy }) {
   return tracks.map((t) => {
     const done = t.concepts.filter(isMastered).length
     return (
-      <details key={t.id} className="tr" style={{ display: 'block' }}>
+      <details key={t.id} className="tr">
         <summary>
-          {t.title} <span className="why">({done} of {t.concepts.length} mastered, {t.log.length} sessions)</span>
+          <b>{t.title}</b>
+          <span className="why">{done} of {t.concepts.length} mastered · {t.log.length} {t.log.length === 1 ? 'session' : 'sessions'}</span>
           <div className="bar"><i className={done === t.concepts.length ? 'ok' : ''} style={{ width: `${(done / t.concepts.length) * 100}%` }} /></div>
         </summary>
         <ul className="plan" style={{ listStyle: 'none', paddingLeft: 0 }}>

@@ -34,8 +34,8 @@ with sync_playwright() as pw:
     dlg.get_by_label('Username').fill(USER.capitalize()); dlg.get_by_label('Password').fill('correct horse')
     dlg.get_by_role('button', name='Create account').click()
     expect(dlg).to_have_count(0)
-    expect(laptop.get_by_text(f'Signed in as {USER}')).to_be_visible()
-    expect(laptop.locator('.sync')).to_have_text('Synced', timeout=10000)
+    expect(laptop.locator('.who')).to_contain_text(USER)
+    expect(laptop.locator('.who small')).to_have_text('Synced', timeout=10000)
     print('1. laptop: progress made signed-out, then account created, synced')
 
     # second device: phone-sized, signs in, gets laptop progress
@@ -52,7 +52,7 @@ with sync_playwright() as pw:
     expect(dlg).to_have_count(0)
     phone.get_by_role('button', name='Show sidebar').click()
     expect(phone.locator('.goal')).to_have_count(2)
-    expect(phone.locator('.sync')).to_have_text('Synced', timeout=10000)
+    expect(phone.locator('.who small')).to_have_text('Synced', timeout=10000)
     print('2. phone: wrong password refused; signed in; both objectives present (merge)')
 
     # laptop picks up the phone's objective after reload; then deletes one; phone sees deletion
@@ -65,14 +65,17 @@ with sync_playwright() as pw:
     laptop.locator('details.tr', has_text='Phone goal').locator('summary').click()
     laptop.locator('details.tr', has_text='Phone goal').get_by_role('button', name='Delete').click()
     expect(laptop.locator('.goal')).to_have_count(1)
-    expect(laptop.locator('.sync')).to_have_text('Synced', timeout=10000)
+    expect(laptop.locator('.who small')).to_have_text('Synced', timeout=10000)
     phone.reload(); phone.get_by_role('button', name='Show sidebar').click()
     expect(phone.locator('.goal')).to_have_count(1, timeout=10000)
     print('3. laptop reload sees phone objective; deletion on laptop reaches phone')
 
     # sign out clears this browser; signing back in restores
-    phone.get_by_role('button', name='Account').click()
-    phone.get_by_role('button', name='Sign out').click()
+    phone.get_by_role('button', name='Settings').click()
+    phone.get_by_role('dialog').get_by_role('button', name='Sign out').click()
+    expect(phone.get_by_role('dialog').get_by_role('button', name='Sign in', exact=True)).to_be_visible()
+    phone.screenshot(path=f'{OUT}/settings-phone.png')
+    phone.get_by_role('button', name='Back').click()
     expect(phone.get_by_role('dialog')).to_have_count(0)
     phone.get_by_role('button', name='Show sidebar').click()
     expect(phone.locator('.goal')).to_have_count(0)
