@@ -48,7 +48,7 @@ with sync_playwright() as pw:
         page.locator('.side .stair', has_text=name).click()
 
     # read & debug (first concept opens automatically)
-    expect(ws().locator('.chip')).to_have_text('Read & debug', timeout=120000)
+    expect(ws().locator('.tab.on')).to_have_text('Read & debug', timeout=120000)
     expect(ws().get_by_text('Snippet 1 of 2')).to_be_visible()      # the erroring snippet was dropped
     ws().get_by_label('Predicted output').fill('12'); ws().get_by_role('button', name='Check').click()
     expect(ws().get_by_text('Correct.')).to_be_visible(); ws().get_by_role('button', name='Next snippet').click()
@@ -66,7 +66,7 @@ with sync_playwright() as pw:
     print('read & debug: real outputs, bad snippet dropped, retry credit, bug fix reruns as typed, score 85')
 
     # sort & sequence with keyboard arrows
-    open_concept('Steps of merge sort'); expect(ws().locator('.chip')).to_have_text('Sort & sequence')
+    open_concept('Steps of merge sort'); expect(ws().locator('.tab.on')).to_have_text('Sort & sequence')
     expect(ws().locator('.sortitem')).to_have_count(3)
     want = ["Split the list in half", "Sort each half recursively", "Merge the two sorted halves"]
     for target, item in enumerate(want):
@@ -78,7 +78,7 @@ with sync_playwright() as pw:
     print('sort & sequence: reordered with arrow buttons, 3/3')
 
     # notebook
-    open_concept('Summary statistics'); expect(ws().locator('.chip')).to_have_text('Data notebook')
+    open_concept('Summary statistics'); expect(ws().locator('.tab.on')).to_have_text('Data notebook')
     expect(ws().get_by_text('Broken check')).to_have_count(0)        # its check failed on its own solution
     expect(ws().get_by_text('1 task(s) whose checks')).to_be_visible()
     cell = ws().locator('.cell').nth(1).locator('.cm-content')
@@ -91,7 +91,7 @@ with sync_playwright() as pw:
     print('notebook: setup ran, shared namespace, value + stdout shown, hidden check passed, broken task removed')
 
     # tracer
-    open_concept('Bubble sort'); expect(ws().locator('.chip')).to_have_text('Algorithm tracer')
+    open_concept('Bubble sort'); expect(ws().locator('.tab.on')).to_have_text('Algorithm tracer')
     expect(ws().get_by_text('Step 1 of 2')).to_be_visible()
     ws().get_by_label('Value of array').fill('[1, 3, 2]'); ws().get_by_label('Value of array').press('Enter')
     expect(ws().get_by_text('Right.')).to_be_visible(); ws().get_by_role('button', name='Next step').click()

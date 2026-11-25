@@ -57,7 +57,7 @@ with sync_playwright() as pw:
     record = lambda: ws().get_by_role('button', name=re.compile('^Record'))
 
     # explain
-    expect(ws()).to_have_count(1); expect(ws().locator('.chip')).to_have_text('Explain it back')
+    expect(ws()).to_have_count(1); expect(ws().locator('.tab.on')).to_have_text('Explain it back')
     expect(ws().get_by_text('Revealed after you answer')).to_have_count(2)
     ws().get_by_label('Your explanation').fill('Attention mixes the values together.')
     ws().get_by_role('button', name='Submit').click()
@@ -69,7 +69,7 @@ with sync_playwright() as pw:
 
     # steps: first step accepted locally (no model call)
     page.get_by_role('button', name='Next exercise').last.click()
-    expect(ws().locator('.chip')).to_have_text('Step workspace')
+    expect(ws().locator('.tab.on')).to_have_text('Step workspace')
     n0 = len(calls)
     ws().get_by_label('Current step').fill('$e^{0} = 1$'.replace('{0}', '0'))
     expect(ws().locator('.katex').first).to_be_visible()
@@ -84,7 +84,7 @@ with sync_playwright() as pw:
 
     # code IDE: rerun as you type
     page.get_by_role('button', name='Next exercise').last.click()
-    expect(ws().locator('.chip')).to_have_text('Code sandbox', timeout=120000)
+    expect(ws().locator('.tab.on')).to_have_text('Code sandbox', timeout=120000)
     ws().get_by_role('button', name='Run tests').click()
     expect(ws().get_by_text('0/2', exact=False).first).to_be_visible(timeout=120000)
     ws().locator('.cm-content').click(); page.keyboard.press('Control+A'); page.keyboard.press('Delete')
@@ -96,7 +96,7 @@ with sync_playwright() as pw:
 
     # drill with keyboard
     page.get_by_role('button', name='Next exercise').last.click()
-    expect(ws().locator('.chip')).to_have_text('Retrieval drill')
+    expect(ws().locator('.tab.on')).to_have_text('Retrieval drill')
     ws().get_by_label('Your answer').fill('1/sqrt(d_k)'); ws().get_by_label('Your answer').press('Enter')
     ws().get_by_label('Your answer').press('Enter')   # blank: flip
     expect(ws().locator('.flash .back')).to_have_text('softmax'); shot('drill')
@@ -105,7 +105,7 @@ with sync_playwright() as pw:
 
     # simulation in sandbox
     page.get_by_role('button', name='Next exercise').last.click()
-    expect(ws().locator('.chip')).to_have_text('Simulation')
+    expect(ws().locator('.tab.on')).to_have_text('Simulation')
     frame = ws().frame_locator('iframe.sim')
     expect(frame.locator('svg rect')).to_have_count(3)
     first = frame.locator('svg text').first.text_content()
