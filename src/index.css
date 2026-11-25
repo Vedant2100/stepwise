@@ -467,14 +467,17 @@ textarea:focus, input:focus, select:focus { outline: none; border-color: var(--f
 }
 :root[data-look='glass'] body, :root[data-look='glass'] .ws { background: var(--field); background-attachment: fixed; }
 :root[data-look='glass'] :is(.card, .pane, .launch, .cbar, .auth-card, .pick, .tr, .res, .btn.ghost, .att, .side, .ws-head, .msg.me, .state, .sortitem, .bucket) {
-  position: relative; border-color: transparent;
+  border-color: transparent;
   -webkit-backdrop-filter: var(--glass); backdrop-filter: var(--glass); box-shadow: var(--glow);
 }
+/* the sidebar keeps its own positioning (sticky on desktop, a fixed drawer on phones) */
+:root[data-look='glass'] :is(.card, .pane, .launch, .cbar, .auth-card, .pick, .tr, .res, .btn.ghost, .att, .ws-head, .msg.me, .state, .sortitem, .bucket) { position: relative; }
 :root[data-look='glass'] :is(.card, .pane, .launch, .cbar, .auth-card, .pick, .tr, .btn.ghost, .side, .msg.me)::before {
   content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1.2px; pointer-events: none;
   background: var(--edge); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
 }
-:root[data-look='glass'] .app { padding: 12px; gap: 12px; }
+:root[data-look='glass'] .app { padding: 12px; gap: 12px; box-sizing: border-box; }
+:root[data-look='glass'] .main { min-height: calc(100dvh - 24px); }
 :root[data-look='glass'] .side { top: 12px; height: calc(100dvh - 24px); border-radius: 28px; background: light-dark(rgb(18 58 50 / 0.78), rgb(18 58 50 / 0.4)); }
 :root[data-look='glass'] .ws-head { margin: 10px 10px 0; border-radius: 22px; background: light-dark(rgb(18 58 50 / 0.6), rgb(18 58 50 / 0.4)); }
 :root[data-look='glass'] .cbar { border-radius: 999px; padding: 8px; }
@@ -487,7 +490,8 @@ textarea:focus, input:focus, select:focus { outline: none; border-color: var(--f
 :root[data-look='glass'] input, :root[data-look='glass'] textarea { background: light-dark(rgb(255 255 255 / 0.5), rgb(0 0 0 / 0.2)); border-color: light-dark(rgb(255 255 255 / 0.8), rgb(255 255 255 / 0.12)); }
 @media (max-width: 900px) {
   :root[data-look='glass'] .app { padding: 0; }
-  :root[data-look='glass'] .side { top: 0; height: 100dvh; border-radius: 0 28px 28px 0; }
+  :root[data-look='glass'] .main { min-height: 100dvh; }
+  :root[data-look='glass'] .side { top: 0; height: 100dvh; border-radius: 0 28px 28px 0; background: light-dark(#123a32, #10261f); -webkit-backdrop-filter: none; backdrop-filter: none; }
 }
 @media (prefers-reduced-transparency: reduce) {
   :root[data-look='glass'] { --surface: light-dark(#ffffff, #14221e); --raised: light-dark(#f6f8f6, #1a2b26); --glass: none; }
