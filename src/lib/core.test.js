@@ -228,7 +228,7 @@ https://colab.research.google.com/github/a/b/c.ipynb
 2. A good post
 https://example.com/post?utm_source=chatgpt.com
 
-3. Someone on X
+3. Someone on X: "a thread https://t.co/abc123"
 https://x.com/someone/status/1
 
 4. Another post
@@ -248,6 +248,6 @@ https://jobs.ashbyhq.com/somewhere/123/application`
   it('drops duplicates (ignoring tracking and anchors) and links that are not articles', () => {
     const { articles, skipped } = pickArticles(findUrls(exportFile))
     expect(articles).toEqual(['https://example.com/post?utm_source=chatgpt.com', 'https://blog.example.org/2026/11/01/idea.html'])
-    expect(skipped).toBe(3)
+    expect(skipped).toBe(4)
   })
 })

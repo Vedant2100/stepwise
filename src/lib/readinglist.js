@@ -8,7 +8,7 @@ const norm = (s) => s.toLowerCase().replace(/\s+/g, ' ')
 
 export const findUrls = (text) => [...new Set(text.match(/https?:\/\/[^\s<>"')\]]+/g) ?? [])].map((u) => u.replace(/[.,;:]+$/, ''))
 
-const NOT_ARTICLES = /(colab\.research\.google\.com|(\/\/|\.)x\.com\b|twitter\.com|youtube\.com|youtu\.be|linkedin\.com|ashbyhq\.com|greenhouse\.io|lever\.co|google\.com\/about\/careers|vscode\.dev|docs\.craft\.do|drawboard\.com|\/login\b)/i
+const NOT_ARTICLES = /(colab\.research\.google\.com|(\/\/|\.)x\.com\b|twitter\.com|\/\/t\.co\/|youtube\.com|youtu\.be|linkedin\.com|ashbyhq\.com|greenhouse\.io|lever\.co|google\.com\/about\/careers|vscode\.dev|docs\.craft\.do|drawboard\.com|\/login\b)/i
 
 export function isReadingList(text) {
   const urls = findUrls(text).length
