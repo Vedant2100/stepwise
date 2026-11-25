@@ -1,0 +1,11 @@
+{
+  "appId": "com.vedant2100.stepwise",
+  "appName": "Stepwise",
+  "webDir": "dist",
+  "server": {
+    "url": "https://stepwise-topaz-nine.vercel.app",
+    "allowNavigation": ["stepwise-topaz-nine.vercel.app"]
+  },
+  "android": { "allowMixedContent": false },
+  "ios": { "contentInset": "always" }
+}

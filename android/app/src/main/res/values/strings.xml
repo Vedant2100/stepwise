@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Stepwise</string>
+    <string name="title_activity_main">Stepwise</string>
+    <string name="package_name">com.vedant2100.stepwise</string>
+    <string name="custom_url_scheme">com.vedant2100.stepwise</string>
+</resources>
