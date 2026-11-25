@@ -16,7 +16,7 @@ const py = await loadPyodide()
 const issues = []
 let calls = 0
 
-async function ask(sys, prompt) {
+async function ask(sys, prompt, retried = false) {
   calls++
   const t0 = Date.now()
   const res = await fetch(`${URL}/api/llm`, {
@@ -26,7 +26,14 @@ async function ask(sys, prompt) {
   })
   const data = await res.json()
   if (!res.ok) throw new Error(`HTTP ${res.status}: ${data.error}`)
-  const out = parseJSON(data.text)
+  let out
+  try {
+    out = parseJSON(data.text)
+  } catch (e) {
+    if (retried) throw e
+    console.log('    (reply was not JSON; asking once more, as the app does)')
+    return ask(sys, prompt, true)
+  }
   console.log(`    (${Date.now() - t0} ms)`)
   return out
 }
