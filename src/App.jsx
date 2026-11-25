@@ -55,6 +55,11 @@ export default function App() {
   const hideSide = () => (narrow() ? setSideOpen(false) : setSideHidden(true))
   const [systemDark, setSystemDark] = useState(() => matchMedia('(prefers-color-scheme: dark)').matches)
   const [theme, setTheme] = useState(() => localStorage.getItem('stepwise.theme') ?? '')
+  const [look, setLook] = useState(() => localStorage.getItem('stepwise.look') ?? 'solid')
+  useEffect(() => {
+    document.documentElement.dataset.look = look
+    localStorage.setItem('stepwise.look', look)
+  }, [look])
   const dark = theme ? theme === 'dark' : systemDark
   const dataRef = useRef(data)
   const end = useRef(null)
@@ -334,6 +339,10 @@ export default function App() {
         onShare={(t) => { setSideOpen(false); setSharing(t) }}
         dark={dark}
         toggleTheme={() => setTheme(dark ? 'light' : 'dark')}
+        glass={look === 'glass'}
+        toggleLook={() => setLook(look === 'glass' ? 'solid' : 'glass')}
+        busy={Boolean(busy)}
+        onStarter={(s) => { setSideOpen(false); push(item('me', { text: s })); learn(s) }}
       />
       <div className="main">
         {hero ? (

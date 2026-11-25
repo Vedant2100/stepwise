@@ -57,9 +57,12 @@ export default function Composer({ busy, source, setSource, onSend, hasOpen, has
         <button className="btn" disabled={busy || !text.trim()}>{hasTracks ? 'Send' : 'Start'}</button>
       </div>
       {!hasTracks && centered && (
-        <div className="examples">
-          {STARTERS.map((e) => <button key={e} type="button" className="pick" onClick={() => onSend(e)} disabled={busy}>{e}</button>)}
-        </div>
+        <>
+          <p className="examples-label">Ready-made climbs, free and instant:</p>
+          <div className="examples">
+            {STARTERS.map((e) => <button key={e} type="button" className="pick" onClick={() => onSend(e)} disabled={busy}>{e}</button>)}
+          </div>
+        </>
       )}
     </form>
   )

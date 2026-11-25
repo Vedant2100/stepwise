@@ -256,12 +256,13 @@ textarea:focus, input:focus, select:focus { outline: none; border-color: var(--f
 .side .icon-btn { color: #a9c2b8; }
 .app.side-hidden { grid-template-columns: minmax(0, 1fr); }
 .app.side-hidden .side { display: none; }
-.app.side-hidden .menu { display: inline-grid; position: fixed; top: 14px; left: 14px; z-index: 20; color: var(--mute); }
+.icon-btn.menu { display: none; }
+.app.side-hidden .icon-btn.menu { display: inline-grid; position: fixed; top: 14px; left: 14px; z-index: 20; color: var(--mute); }
 @media (max-width: 900px) {
   .app { grid-template-columns: minmax(0, 1fr); }
   .side { position: fixed; inset: 0 auto 0 0; width: min(320px, 86vw); z-index: 30; transform: translateX(-100%); transition: transform 180ms ease; box-shadow: 0 0 60px #0006; }
   .side.open { transform: none; }
-  .menu { display: inline-grid; }
+  .icon-btn.menu { display: inline-grid; }
   .app.side-hidden .side { display: flex; }
   .app.side-hidden .menu { position: static; }
   .main-head { display: flex; gap: 12px; align-items: center; padding-top: 14px; }
@@ -428,3 +429,58 @@ textarea:focus, input:focus, select:focus { outline: none; border-color: var(--f
 .iv-clock .live::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--brick); margin-right: 6px; }
 @media (prefers-reduced-motion: no-preference) { .iv-clock .live::before { animation: blink 1.2s ease-in-out infinite; } }
 @keyframes blink { 50% { opacity: .25; } }
+
+/* Liquid glass (optional; the Glass button in the sidebar footer). Clear, tinted panels that float over
+   a coloured field: bright specular edges, a soft inner glow, pill controls. Same layout and palette. */
+:root[data-look='glass'] {
+  --field:
+    radial-gradient(38% 42% at 12% 8%, light-dark(#3fae8c, #1d7a5f) 0%, transparent 100%),
+    radial-gradient(34% 40% at 92% 14%, light-dark(#f7b93a, #a8700f) 0%, transparent 100%),
+    radial-gradient(40% 45% at 78% 92%, light-dark(#6cb7e0, #1f5f86) 0%, transparent 100%),
+    radial-gradient(30% 35% at 24% 88%, light-dark(#f19a7c, #7a3a2a) 0%, transparent 100%),
+    light-dark(#dfe9e4, #08110f);
+  --surface: light-dark(rgb(255 255 255 / 0.34), rgb(255 255 255 / 0.07));
+  --raised: light-dark(rgb(255 255 255 / 0.3), rgb(255 255 255 / 0.06));
+  --line: transparent;
+  --glass: blur(16px) saturate(190%) brightness(light-dark(1.06, 0.92));
+  --edge: linear-gradient(135deg, rgb(255 255 255 / 0.95), rgb(255 255 255 / 0.15) 35%, rgb(255 255 255 / 0.05) 60%, rgb(255 255 255 / 0.6));
+  --glow:
+    inset 0 1px 1px rgb(255 255 255 / 0.75), inset 0 -1px 2px rgb(255 255 255 / 0.18),
+    inset 0 0 24px rgb(255 255 255 / light-dark(0.25, 0.04)), 0 24px 60px -30px rgb(4 24 18 / 0.55);
+}
+:root[data-look='glass'] body, :root[data-look='glass'] .ws { background: var(--field); background-attachment: fixed; }
+:root[data-look='glass'] :is(.card, .pane, .launch, .cbar, .auth-card, .pick, .tr, .res, .btn.ghost, .att, .side, .ws-head, .msg.me, .state, .sortitem, .bucket) {
+  position: relative; border-color: transparent;
+  -webkit-backdrop-filter: var(--glass); backdrop-filter: var(--glass); box-shadow: var(--glow);
+}
+/* The specular rim: a gradient border painted only on the edge. */
+:root[data-look='glass'] :is(.card, .pane, .launch, .cbar, .auth-card, .pick, .tr, .btn.ghost, .side, .msg.me)::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1.2px; pointer-events: none;
+  background: var(--edge); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
+}
+/* Floating sidebar: an inset glass slab tinted pine. */
+:root[data-look='glass'] .app { padding: 12px; gap: 12px; }
+:root[data-look='glass'] .side { top: 12px; height: calc(100dvh - 24px); border-radius: 28px; background: light-dark(rgb(18 58 50 / 0.55), rgb(18 58 50 / 0.35)); }
+:root[data-look='glass'] .ws-head { margin: 10px 10px 0; border-radius: 22px; background: light-dark(rgb(18 58 50 / 0.6), rgb(18 58 50 / 0.4)); }
+:root[data-look='glass'] .cbar { border-radius: 999px; padding: 8px; }
+:root[data-look='glass'] .composer { background: none; }
+:root[data-look='glass'] .launch, :root[data-look='glass'] .pane, :root[data-look='glass'] .card { border-radius: 26px; }
+:root[data-look='glass'] .msg.me { background: light-dark(rgb(29 84 70 / 0.7), rgb(29 84 70 / 0.5)); }
+:root[data-look='glass'] .btn:not(.ghost) { box-shadow: inset 0 1px 1px rgb(255 255 255 / 0.45), 0 8px 20px -10px rgb(4 24 18 / 0.6); }
+:root[data-look='glass'] .launch.open { box-shadow: var(--glow), 0 0 0 2px var(--gold); }
+:root[data-look='glass'] .cbar textarea { background: transparent; border-color: transparent; }
+:root[data-look='glass'] input, :root[data-look='glass'] textarea { background: light-dark(rgb(255 255 255 / 0.5), rgb(0 0 0 / 0.2)); border-color: light-dark(rgb(255 255 255 / 0.8), rgb(255 255 255 / 0.12)); }
+@media (max-width: 900px) {
+  :root[data-look='glass'] .app { padding: 0; }
+  :root[data-look='glass'] .side { top: 0; height: 100dvh; border-radius: 0 28px 28px 0; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  :root[data-look='glass'] { --surface: light-dark(#ffffff, #14221e); --raised: light-dark(#f6f8f6, #1a2b26); --glass: none; }
+}
+.side .btn[aria-pressed='true'] { border-color: var(--gold); color: var(--gold); }
+
+/* ready-made climbs */
+.starters { display: flex; flex-direction: column; gap: 2px; margin-top: 6px; }
+.starters button { text-align: left; background: none; border: 0; color: #d8e4de; font: 15px/1.35 var(--body); padding: 6px 8px; border-radius: 10px; cursor: pointer; }
+.starters button:hover:not(:disabled) { background: #ffffff14; color: #fff; }
+.examples-label { margin: 18px 0 -8px; font-size: 14px; color: var(--mute); }

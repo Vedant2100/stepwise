@@ -1,6 +1,7 @@
 import { BKT, MASTERED, isMastered } from '../lib/learner.js'
 import { ENVIRONMENTS, envFor, nextStep } from '../lib/planner.js'
 import { Mark, PanelIcon } from './Icons.jsx'
+import { STARTERS } from '../lib/starters.js'
 
 // The climb, drawn as a staircase rising left to right. Each step's height is its place in the climb;
 // marigold fills it as mastery grows; the flag marks the step the planner would pick next.
@@ -67,7 +68,9 @@ function Climb({ track, onPick, onShare }) {
 
 const SYNC_LABEL = { saving: 'Saving…', synced: 'Synced', offline: 'Offline, will retry', error: 'Couldn’t sync, retrying' }
 
-export default function Sidebar({ tracks, activeId, setActiveId, open, onClose, onNew, onPick, onSettings, dark, toggleTheme, account, onAccount, onShare, onHide }) {
+export default function Sidebar({ tracks, activeId, setActiveId, open, onClose, onNew, onPick, onSettings, dark, toggleTheme, glass, toggleLook, account, onAccount, onShare, onHide, onStarter, busy }) {
+  const have = new Set(tracks.map((t) => t.objective.toLowerCase()))
+  const starters = STARTERS.filter((s) => !have.has(s.toLowerCase()))
   const active = tracks.find((t) => t.id === activeId)
   return (
     <>
@@ -96,6 +99,15 @@ export default function Sidebar({ tracks, activeId, setActiveId, open, onClose, 
         </div>
       )}
       {active && <Climb track={active} onPick={(c) => onPick(active, c)} onShare={() => onShare(active)} />}
+      {tracks.length > 0 && starters.length > 0 && (
+        <div>
+          <h2>Ready-made climbs</h2>
+          <p className="next-up" style={{ margin: 0 }}>Start instantly, free.</p>
+          <div className="starters">
+            {starters.map((s) => <button key={s} onClick={() => onStarter(s)} disabled={busy}>{s}</button>)}
+          </div>
+        </div>
+      )}
       {!tracks.length && (
         <div className="empty-climb">
           <Staircase concepts={[0.15, 0.3, 0.45, 0.6, 0.75].map((v, i) => ({ id: String(i), name: '', pL: 0 }))} onPick={() => {}} />
@@ -116,6 +128,7 @@ export default function Sidebar({ tracks, activeId, setActiveId, open, onClose, 
         <button className="btn ghost sm" onClick={onSettings}>Settings</button>
         {account.username && <button className="btn ghost sm" onClick={onAccount}>Account</button>}
         <button className="btn ghost sm" onClick={toggleTheme}>{dark ? 'Light mode' : 'Dark mode'}</button>
+        <button className="btn ghost sm" onClick={toggleLook} aria-pressed={glass}>Liquid glass</button>
       </div>
     </aside>
     </>
